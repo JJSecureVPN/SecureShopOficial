@@ -2,6 +2,8 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import PlanesPage from "./pages/PlanesPage/index";
 import RevendedoresPage from "./pages/RevendedoresPage";
+import RevendedoresCreditosPage from "./pages/RevendedoresPage/CreditosPage";
+import RevendedoresValidezPage from "./pages/RevendedoresPage/ValidezPage";
 import ServersPage from "./pages/ServersPage/index";
 import AboutPage from "./pages/AboutPage/index";
 import SuccessPage from "./pages/SuccessPage";
@@ -15,7 +17,6 @@ import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import Header from "./components/Header";
 import { PromoHeader } from "./components/PromoHeader";
-import ScrollToTop from "./components/ScrollToTop";
 import Footer from "./components/Footer";
 import PageLoading from "./components/PageLoading";
 import { LiveChat } from "./components/LiveChat";
@@ -28,7 +29,10 @@ import DonationSuccessPage from "./pages/DonationSuccessPage";
 import SponsorsPage from "./pages/SponsorsPage/index";
 import NoticiasPage from "./pages/NoticiasPage";
 import HelpPage from "./pages/HelpPage";
+import HelpCenter from "./pages/HelpCenter";
+import AdminHelpCenter from "./pages/AdminHelpCenter";
 import { useRegisterActiveSession } from "./hooks/useRegisterActiveSession";
+import { useLenis } from "./hooks/useLenis";
 
 const TRANSITION_DURATION = 600;
 
@@ -40,6 +44,9 @@ const AppContent = () => {
 
   // Registrar sesión activa del usuario
   useRegisterActiveSession();
+
+  // Inicializar smooth scroll con Lenis
+  useLenis(isLoading);
 
   const promoHeaderTipo = displayLocation.pathname === "/revendedores" ? "revendedores" : "planes";
 
@@ -59,8 +66,7 @@ const AppContent = () => {
   }, [location, displayLocation, setIsLoading]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <ScrollToTop />
+    <div className="flex flex-col min-h-screen bg-zinc-900 text-white">
       {isLoading && <PageLoading />}
       {displayLocation.pathname !== "/chat" && <PromoHeader tipo={promoHeaderTipo} />}
       <Header />
@@ -74,6 +80,8 @@ const AppContent = () => {
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/planes" element={<PlanesPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/revendedores" element={<RevendedoresPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
+          <Route path="/revendedores/creditos" element={<RevendedoresCreditosPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
+          <Route path="/revendedores/validez" element={<RevendedoresValidezPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/estado" element={<ServersPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/sobre-nosotros" element={<AboutPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/success" element={<SuccessPage />} />
@@ -84,6 +92,8 @@ const AppContent = () => {
           <Route path="/noticias" element={<NoticiasPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/ayuda" element={<HelpPage />} />
+          <Route path="/ayuda/tutoriales" element={<HelpCenter />} />
+          <Route path="/ayuda/tutoriales/admin" element={<AdminHelpCenter />} />
           <Route path="/terminos" element={<TermsPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/privacidad" element={<PrivacyPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/155908348" element={<AdminToolsPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />

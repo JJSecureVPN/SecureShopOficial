@@ -71,23 +71,23 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
   };
 
   return (
-    <div className="border-t border-purple-100 bg-white p-3 md:p-4 relative">
+    <div className="border-t border-zinc-700 bg-zinc-900 p-3 md:p-4 relative">
       {/* Emoji Picker */}
       {showEmojis && (
         <div 
           ref={emojiPickerRef}
-          className="absolute bottom-full left-0 right-0 mb-2 mx-3 bg-white rounded-2xl shadow-xl border border-purple-200 overflow-hidden z-50"
+          className="absolute bottom-full left-0 right-0 mb-2 mx-3 bg-zinc-800 rounded-2xl shadow-xl border border-zinc-700 overflow-hidden z-50"
         >
           {/* Tabs de categorías */}
-          <div className="flex border-b border-purple-100 bg-purple-50/50">
+          <div className="flex border-b border-zinc-700 bg-zinc-800">
             {Object.keys(EMOJI_CATEGORIES).map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
                 className={`flex-1 py-2 text-sm transition-colors ${
                   activeCategory === category 
-                    ? 'bg-white text-purple-600 border-b-2 border-purple-500' 
-                    : 'text-gray-500 hover:bg-purple-100/50'
+                    ? 'bg-zinc-900 text-purple-400 border-b-2 border-purple-500' 
+                    : 'text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 {category.split(' ')[0]}
@@ -102,7 +102,7 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
                 <button
                   key={idx}
                   onClick={() => insertEmoji(emoji)}
-                  className="w-8 h-8 flex items-center justify-center text-xl hover:bg-purple-100 rounded-lg transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-xl hover:bg-zinc-700 rounded-lg transition-colors"
                 >
                   {emoji}
                 </button>
@@ -113,7 +113,7 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
       )}
 
       {/* Composer */}
-      <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50/80 to-white p-2 shadow-sm">
+      <div className="rounded-2xl border border-zinc-700 bg-zinc-800 p-2 shadow-sm">
         <div className="flex items-start gap-2">
           {/* Botón de Emojis */}
           <button
@@ -121,8 +121,8 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
             disabled={disabled || isSending}
             className={`flex-shrink-0 w-10 h-10 md:w-[42px] md:h-[42px] flex items-center justify-center rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed border ${
               showEmojis
-                ? 'bg-purple-100 text-purple-700 border-purple-300'
-                : 'bg-white text-gray-500 hover:bg-purple-50 hover:text-purple-700 border-purple-200'
+                ? 'bg-purple-800 text-white border-purple-700'
+                : 'bg-zinc-700 text-zinc-200 hover:bg-zinc-700 hover:text-white border-zinc-700'
             }`}
             title="Emojis"
             aria-label="Emojis"
@@ -140,7 +140,7 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
               placeholder={placeholder || 'Escribe tu mensaje...'}
               disabled={disabled || isSending}
               rows={1}
-              className="w-full px-4 py-2.5 bg-white border border-purple-200 rounded-xl resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed leading-5"
+              className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm text-zinc-100 placeholder-zinc-500 disabled:opacity-50 disabled:cursor-not-allowed leading-5"
               style={{ minHeight: '42px', maxHeight: '120px' }}
             />
           </div>
@@ -149,7 +149,7 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
           <button
             onClick={handleSend}
             disabled={!message.trim() || isSending || disabled}
-            className="flex-shrink-0 w-10 h-10 md:w-[42px] md:h-[42px] flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-md shadow-purple-200 disabled:shadow-none"
+            className="flex-shrink-0 w-10 h-10 md:w-[42px] md:h-[42px] flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-md shadow-black/40 disabled:shadow-none"
             title="Enviar mensaje"
             aria-label="Enviar mensaje"
           >
@@ -167,8 +167,8 @@ export function ChatInput({ onSend, isSending, disabled, placeholder }: ChatInpu
         </div>
 
         {/* Ayuda de teclado (oculta en móvil) */}
-        <p className="hidden sm:block text-[11px] text-gray-400 mt-2 px-1">
-          Presiona <kbd className="px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px]">Enter</kbd> para enviar, <kbd className="px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px]">Shift+Enter</kbd> para nueva línea
+        <p className="hidden sm:block text-[11px] text-zinc-400 mt-2 px-1">
+          Presiona <kbd className="px-1 py-0.5 bg-zinc-800 text-zinc-200 rounded text-[10px]">Enter</kbd> para enviar, <kbd className="px-1 py-0.5 bg-zinc-800 text-zinc-200 rounded text-[10px]">Shift+Enter</kbd> para nueva línea
         </p>
       </div>
     </div>

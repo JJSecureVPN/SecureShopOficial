@@ -31,7 +31,7 @@ interface ProfileNavSidebarProps {
   onSectionChange: (section: ProfileSection) => void;
   emailVerificado: boolean;
   onSignOut: () => void;
-  hasSuscripcionActiva: boolean;
+  suscripcionesActivas?: number;
   ticketsPendientes?: number;
 }
 
@@ -42,12 +42,12 @@ export function ProfileNavSidebar({
   onSectionChange,
   emailVerificado,
   onSignOut,
-  hasSuscripcionActiva,
+  suscripcionesActivas = 0,
   ticketsPendientes = 0,
 }: ProfileNavSidebarProps) {
   const navItems: NavItem[] = [
     { id: 'overview', label: 'Resumen', icon: <UserIcon className="w-5 h-5" /> },
-    ...(hasSuscripcionActiva ? [{ id: 'subscription' as ProfileSection, label: 'Mi Suscripción', icon: <Shield className="w-5 h-5" /> }] : []),
+    { id: 'subscription' as ProfileSection, label: 'Mis Suscripciones', icon: <Shield className="w-5 h-5" />, badge: suscripcionesActivas > 0 ? suscripcionesActivas : undefined },
     { id: 'referidos', label: 'Referidos', icon: <Gift className="w-5 h-5" /> },
     { id: 'tickets', label: 'Soporte', icon: <MessageCircle className="w-5 h-5" />, badge: ticketsPendientes },
     { id: 'history', label: 'Historial', icon: <History className="w-5 h-5" /> },
@@ -61,13 +61,13 @@ export function ProfileNavSidebar({
       transition={{ duration: 0.3 }}
     >
       {/* Card del usuario */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+      <div className="bg-zinc-900/50 rounded-2xl border border-zinc-700 shadow-sm overflow-hidden">
         {/* Header con gradiente */}
-        <div className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-5 py-6">
+        <div className="relative bg-gradient-to-br from-orange-600 via-orange-700 to-orange-900 px-5 py-6">
           {/* Patrón decorativo */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-orange-400/10 rounded-full translate-y-1/2 -translate-x-1/2" />
           </div>
           
           <div className="relative flex items-center gap-4">
@@ -89,11 +89,11 @@ export function ProfileNavSidebar({
               <CardTitle className="!text-white truncate">
                 {profile?.nombre || user.user_metadata?.full_name || 'Usuario'}
               </CardTitle>
-              <SmallText className="!text-purple-200 truncate">
+              <SmallText className="!text-orange-200 truncate">
                 {user.email}
               </SmallText>
               {emailVerificado && (
-                <span className="inline-flex items-center gap-1 text-xs text-green-300 mt-1">
+                <span className="inline-flex items-center gap-1 text-xs text-green-400 mt-1">
                   <BadgeCheck className="w-3.5 h-3.5" />
                   Verificado
                 </span>
@@ -104,7 +104,7 @@ export function ProfileNavSidebar({
           {/* Saldo */}
           {(profile?.saldo ?? 0) > 0 && (
             <div className="relative mt-4 bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-purple-100">
+              <div className="flex items-center gap-2 text-orange-100">
                 <Wallet className="w-4 h-4" />
                 <span className="text-sm">Saldo</span>
               </div>
@@ -123,12 +123,12 @@ export function ProfileNavSidebar({
               onClick={() => onSectionChange(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
                 activeSection === item.id
-                  ? 'bg-purple-50 text-purple-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-orange-500/20 text-orange-400'
+                  : 'text-zinc-400 hover:bg-zinc-800'
               }`}
             >
               <span className={`transition-colors ${
-                activeSection === item.id ? 'text-purple-600' : 'text-gray-400 group-hover:text-gray-500'
+                activeSection === item.id ? 'text-orange-400' : 'text-zinc-500 group-hover:text-zinc-400'
               }`}>
                 {item.icon}
               </span>
@@ -148,7 +148,7 @@ export function ProfileNavSidebar({
         <div className="p-2 pt-0">
           <button
             onClick={onSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors text-sm font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium"
           >
             <LogOut className="w-5 h-5" />
             <span>Cerrar sesión</span>

@@ -228,7 +228,7 @@ const SuccessPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-white text-gray-600 pt-16 md:pt-14">
         <Clock className="h-16 w-16 text-indigo-600 animate-pulse" />
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
         <p className="text-sm">{loadingMessage}</p>
       </div>
     );
@@ -491,8 +491,8 @@ const SuccessPage: React.FC = () => {
             </div>
             <p>
               Escribinos a
-              <a href="mailto:soporte@jjsecure.com" className="ml-1 text-gray-900 font-medium hover:text-indigo-600">
-                soporte@jjsecure.com
+              <a href="mailto:jjsecurevpn@gmail.com" className="ml-1 text-gray-900 font-medium hover:text-indigo-600">
+                jjsecurevpn@gmail.com
               </a>
               o hablá al WhatsApp oficial.
             </p>

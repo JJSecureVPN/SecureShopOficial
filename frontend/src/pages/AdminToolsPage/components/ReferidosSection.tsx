@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Gift,
   Settings,
-  Users,
   DollarSign,
   Save,
   Loader2,
@@ -26,20 +25,6 @@ interface ReferralSettingsAdmin {
   updated_at: string;
 }
 
-interface Referido {
-  id: string;
-  referrer_id: string;
-  referred_id: string;
-  referral_code: string;
-  purchase_amount: number;
-  reward_amount: number;
-  reward_percentage: number;
-  status: string;
-  created_at: string;
-  referrer?: { email: string; nombre: string };
-  referred?: { email: string; nombre: string };
-}
-
 export function ReferidosSection() {
   // Estado de configuración
   const [settings, setSettings] = useState<ReferralSettingsAdmin | null>(null);
@@ -47,10 +32,6 @@ export function ReferidosSection() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
-
-  // Estado de lista de referidos
-  const [referidos, setReferidos] = useState<Referido[]>([]);
-  const [loadingReferidos, setLoadingReferidos] = useState(false);
 
   // Estado de ajuste de saldo
   const [ajusteEmail, setAjusteEmail] = useState('');
@@ -60,11 +41,27 @@ export function ReferidosSection() {
   const [ajusteSuccess, setAjusteSuccess] = useState<string | null>(null);
   const [ajusteError, setAjusteError] = useState<string | null>(null);
 
+  // Estado para usuarios con saldo
+  const [usuariosSaldo, setUsuariosSaldo] = useState<any[]>([]);
+  const [loadingUsuariosSaldo, setLoadingUsuariosSaldo] = useState(false);
+
   // Cargar configuración
   useEffect(() => {
     loadSettings();
-    loadReferidos();
+    loadUsuariosConSaldo();
   }, []);
+
+  const loadUsuariosConSaldo = async () => {
+    try {
+      setLoadingUsuariosSaldo(true);
+      const data = await referidosService.getUsuariosConSaldo(50);
+      setUsuariosSaldo(data);
+    } catch (error) {
+      console.error('[ReferidosSection] Error cargando usuarios con saldo:', error);
+    } finally {
+      setLoadingUsuariosSaldo(false);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -76,18 +73,6 @@ export function ReferidosSection() {
       setSettingsError('Error cargando configuración');
     } finally {
       setLoadingSettings(false);
-    }
-  };
-
-  const loadReferidos = async () => {
-    try {
-      setLoadingReferidos(true);
-      const data = await referidosService.getAllReferidos(50);
-      setReferidos(data);
-    } catch (error) {
-      console.error('[ReferidosSection] Error cargando referidos:', error);
-    } finally {
-      setLoadingReferidos(false);
     }
   };
 
@@ -139,6 +124,8 @@ export function ReferidosSection() {
         setAjusteEmail('');
         setAjusteMonto('');
         setAjusteDescripcion('');
+        // Recargar la lista de usuarios con saldo después del ajuste
+        await loadUsuariosConSaldo();
         setTimeout(() => setAjusteSuccess(null), 3000);
       } else {
         setAjusteError(result.mensaje);
@@ -171,7 +158,7 @@ export function ReferidosSection() {
     return (
       <div className="bg-neutral-800/50 rounded-xl border border-neutral-700 p-8">
         <div className="flex items-center justify-center gap-2">
-          <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
           <span className="text-neutral-400">Cargando configuración de referidos...</span>
         </div>
       </div>
@@ -398,80 +385,68 @@ export function ReferidosSection() {
         </div>
       </div>
 
-      {/* Lista de referidos recientes */}
+      {/* Usuarios con Saldo */}
       <div className="bg-neutral-800/50 rounded-xl border border-neutral-700 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-neutral-400" />
-            <h3 className="font-semibold text-white">Referidos Recientes</h3>
+            <DollarSign className="w-5 h-5 text-neutral-400" />
+            <h3 className="font-semibold text-white">Usuarios con Saldo</h3>
           </div>
           <button
-            onClick={loadReferidos}
-            disabled={loadingReferidos}
+            onClick={loadUsuariosConSaldo}
+            disabled={loadingUsuariosSaldo}
             className="flex items-center gap-1 px-3 py-1 text-sm text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${loadingReferidos ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loadingUsuariosSaldo ? 'animate-spin' : ''}`} />
             Actualizar
           </button>
         </div>
 
-        {loadingReferidos ? (
+        {loadingUsuariosSaldo ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
           </div>
-        ) : referidos.length === 0 ? (
+        ) : usuariosSaldo.length === 0 ? (
           <div className="text-center py-8 text-neutral-500">
-            No hay referidos registrados aún
+            No hay usuarios con saldo
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-2 font-medium text-neutral-400">Referidor</th>
-                  <th className="text-left py-3 px-2 font-medium text-neutral-400">Referido</th>
-                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Compra</th>
-                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Comisión</th>
-                  <th className="text-center py-3 px-2 font-medium text-neutral-400">Estado</th>
-                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Fecha</th>
+                  <th className="text-left py-3 px-2 font-medium text-neutral-400">Usuario</th>
+                  <th className="text-left py-3 px-2 font-medium text-neutral-400">Email</th>
+                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Saldo Actual</th>
+                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Total Ganado</th>
+                  <th className="text-center py-3 px-2 font-medium text-neutral-400">Código</th>
+                  <th className="text-right py-3 px-2 font-medium text-neutral-400">Registro</th>
                 </tr>
               </thead>
               <tbody>
-                {referidos.map((ref) => (
-                  <tr key={ref.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30">
+                {usuariosSaldo.map((usuario) => (
+                  <tr key={usuario.id} className="border-b border-neutral-700/50 hover:bg-neutral-700/30">
                     <td className="py-3 px-2">
                       <div className="font-medium text-white">
-                        {ref.referrer?.nombre || ref.referrer?.email?.split('@')[0] || 'N/A'}
+                        {usuario.nombre || usuario.email?.split('@')[0] || 'N/A'}
                       </div>
-                      <div className="text-xs text-neutral-500">{ref.referrer?.email || '-'}</div>
                     </td>
                     <td className="py-3 px-2">
-                      <div className="font-medium text-white">
-                        {ref.referred?.nombre || ref.referred?.email?.split('@')[0] || 'N/A'}
-                      </div>
-                      <div className="text-xs text-neutral-500">{ref.referred?.email || '-'}</div>
-                    </td>
-                    <td className="py-3 px-2 text-right font-medium text-white">
-                      {formatCurrency(ref.purchase_amount)}
+                      <div className="font-medium text-white">{usuario.email}</div>
                     </td>
                     <td className="py-3 px-2 text-right font-medium text-green-400">
-                      +{formatCurrency(ref.reward_amount)}
+                      {formatCurrency(usuario.saldo)}
+                    </td>
+                    <td className="py-3 px-2 text-right font-medium text-blue-400">
+                      {formatCurrency(usuario.total_earned)}
                     </td>
                     <td className="py-3 px-2 text-center">
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          ref.status === 'completed'
-                            ? 'bg-green-500/20 text-green-400'
-                            : ref.status === 'pending'
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-neutral-700 text-neutral-400'
-                        }`}
-                      >
-                        {ref.status === 'completed' ? 'Completado' : ref.status === 'pending' ? 'Pendiente' : ref.status}
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+                        {usuario.referral_code || 'N/A'}
                       </span>
                     </td>
                     <td className="py-3 px-2 text-right text-neutral-400">
-                      {formatDate(ref.created_at)}
+                      {formatDate(usuario.created_at)}
                     </td>
                   </tr>
                 ))}

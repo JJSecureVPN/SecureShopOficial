@@ -42,10 +42,10 @@ export function OverviewSection({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <SectionTitle className="!text-gray-900">
+        <SectionTitle className="!text-white">
           ¡Hola, {profile?.nombre?.split(' ')[0] || 'Usuario'}! 👋
         </SectionTitle>
-        <BodyText className="mt-1">
+        <BodyText className="mt-1 text-zinc-400">
           Bienvenido a tu panel de cuenta
         </BodyText>
       </div>
@@ -55,7 +55,7 @@ export function OverviewSection({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 rounded-2xl p-6 text-white"
+          className="relative overflow-hidden bg-gradient-to-r from-orange-600 via-orange-700 to-orange-800 rounded-2xl p-6 text-white"
         >
           {/* Decoración */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -71,9 +71,9 @@ export function OverviewSection({
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-purple-200 text-xs uppercase tracking-wider">Plan activo</p>
+                <p className="text-orange-200 text-xs uppercase tracking-wider">Plan activo</p>
                 <h3 className="text-lg font-bold truncate">{suscripcionActiva.plan_nombre}</h3>
-                <p className="text-purple-200 text-sm">@{suscripcionActiva.servex_username}</p>
+                <p className="text-orange-200 text-sm">@{suscripcionActiva.servex_username}</p>
               </div>
             </div>
             
@@ -82,7 +82,7 @@ export function OverviewSection({
                 <div className={`text-2xl sm:text-3xl font-bold ${diasRestantes <= 7 ? 'text-yellow-300' : ''}`}>
                   {diasRestantes}
                 </div>
-                <div className="text-xs text-purple-200">días</div>
+                <div className="text-xs text-orange-200">días</div>
               </div>
               <button
                 onClick={() => onNavigate('subscription')}
@@ -102,15 +102,15 @@ export function OverviewSection({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-zinc-900/50 rounded-xl border border-zinc-700 p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-lg bg-blue-900/30 flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{totalCompras}</p>
-              <p className="text-xs text-gray-500">Compras</p>
+              <p className="text-2xl font-bold text-white">{totalCompras}</p>
+              <p className="text-xs text-zinc-400">Compras</p>
             </div>
           </div>
         </motion.div>
@@ -119,15 +119,15 @@ export function OverviewSection({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-zinc-900/50 rounded-xl border border-zinc-700 p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 rounded-lg bg-orange-900/30 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(profile?.saldo || 0)}</p>
-              <p className="text-xs text-gray-500">Saldo</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(profile?.saldo || 0)}</p>
+              <p className="text-xs text-zinc-400">Saldo</p>
             </div>
           </div>
         </motion.div>
@@ -136,15 +136,15 @@ export function OverviewSection({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-zinc-900/50 rounded-xl border border-zinc-700 p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 rounded-lg bg-green-900/30 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-green-400" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">{formatDate(user.created_at)}</p>
-              <p className="text-xs text-gray-500">Miembro</p>
+              <p className="text-sm font-bold text-white">{formatDate(user.created_at)}</p>
+              <p className="text-xs text-zinc-400">Miembro</p>
             </div>
           </div>
         </motion.div>
@@ -153,15 +153,15 @@ export function OverviewSection({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white rounded-xl border border-gray-200 p-4"
+          className="bg-zinc-900/50 rounded-xl border border-zinc-700 p-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-orange-600" />
+            <div className="w-10 h-10 rounded-lg bg-orange-900/30 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-orange-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{diasRestantes || '-'}</p>
-              <p className="text-xs text-gray-500">Días restantes</p>
+              <p className="text-2xl font-bold text-white">{diasRestantes || '-'}</p>
+              <p className="text-xs text-zinc-400">Días restantes</p>
             </div>
           </div>
         </motion.div>
@@ -172,49 +172,49 @@ export function OverviewSection({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+        className="bg-zinc-900/50 rounded-xl border border-zinc-700 overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-gray-100">
-          <CardTitle className="!text-gray-900">Acciones rápidas</CardTitle>
+        <div className="px-5 py-4 border-b border-zinc-700">
+          <CardTitle className="!text-white">Acciones rápidas</CardTitle>
         </div>
         <div className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={() => onNavigate('referidos')}
-              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-100 border border-purple-200/50 text-purple-700 transition-all group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 transition-all group"
             >
-              <div className="w-10 h-10 rounded-lg bg-purple-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-lg bg-orange-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Gift className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <p className="font-medium">Invitar amigos</p>
-                <p className="text-xs text-purple-500">Gana recompensas</p>
+                <p className="font-medium text-white">Invitar amigos</p>
+                <p className="text-xs text-orange-400">Gana recompensas</p>
               </div>
             </button>
             
             <button
               onClick={() => onNavigate('tickets')}
-              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-100 border border-blue-200/50 text-blue-700 transition-all group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 transition-all group"
             >
               <div className="w-10 h-10 rounded-lg bg-blue-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <p className="font-medium">Soporte</p>
-                <p className="text-xs text-blue-500">¿Necesitas ayuda?</p>
+                <p className="font-medium text-white">Soporte</p>
+                <p className="text-xs text-blue-400">¿Necesitas ayuda?</p>
               </div>
             </button>
             
             <button
               onClick={() => onNavigate('history')}
-              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:from-emerald-100 hover:to-emerald-100 border border-emerald-200/50 text-emerald-700 transition-all group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 transition-all group"
             >
-              <div className="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-lg bg-green-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                 <History className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <p className="font-medium">Historial</p>
-                <p className="text-xs text-emerald-500">Ver compras</p>
+                <p className="font-medium text-white">Historial</p>
+                <p className="text-xs text-green-400">Ver compras</p>
               </div>
             </button>
           </div>

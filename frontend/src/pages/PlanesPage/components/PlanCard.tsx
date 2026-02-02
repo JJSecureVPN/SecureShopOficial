@@ -1,6 +1,7 @@
-import { Zap, Check, Star, ArrowRight } from "lucide-react";
+import { Zap, Star, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Plan } from "../../../types";
+import { RefineButton } from "../../../components/RefineButton";
 
 interface PlanCardProps {
   plan: Plan;
@@ -9,7 +10,7 @@ interface PlanCardProps {
   onSelect: () => void;
 }
 
-export function PlanCard({ plan, precioPorDia, isPopular = false, onSelect }: PlanCardProps) {
+export function PlanCard({ plan, isPopular = false, onSelect }: PlanCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,14 +21,14 @@ export function PlanCard({ plan, precioPorDia, isPopular = false, onSelect }: Pl
       className={`
         relative flex h-full flex-col rounded-2xl p-6 sm:p-8 transition-all duration-300
         ${isPopular 
-          ? 'bg-gradient-to-br from-purple-50 via-purple-50/70 to-white ring-2 ring-purple-300 shadow-xl shadow-purple-200/40' 
-          : 'bg-white border border-gray-200 hover:border-purple-200 hover:shadow-lg'
+          ? 'bg-zinc-900/80 ring-2 ring-indigo-500/30 shadow-xl shadow-indigo-500/10' 
+          : 'bg-zinc-900/50 border border-zinc-700 hover:border-indigo-500/30 hover:shadow-xl shadow-lg'
         }
       `}
     >
       {/* Badge "Más Popular" */}
-      {isPopular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg">
+        {isPopular && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-indigo-600 text-white shadow-lg">
           <Star className="h-3.5 w-3.5 fill-current" />
           Más Popular
         </div>
@@ -36,80 +37,44 @@ export function PlanCard({ plan, precioPorDia, isPopular = false, onSelect }: Pl
       {/* Header */}
       <div className="mb-6 pt-2">
         <div className="flex items-center justify-between mb-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
-            <Zap className="h-3 w-3" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400">
+            <Zap className="h-3 w-3 text-orange-400" />
             {plan.dias} días
           </span>
           {isPopular && (
-            <span className="text-xs font-medium text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+            <span className="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
               Mejor valor
             </span>
           )}
         </div>
-        <h3 className="font-serif text-xl sm:text-2xl font-medium text-purple-800">
+        <h3 className="font-serif text-xl sm:text-2xl font-medium text-white">
           {plan.connection_limit === 1 
             ? '1 dispositivo' 
             : `Hasta ${plan.connection_limit} dispositivos`
           }
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-zinc-400 mt-1">
           Conexión simultánea
         </p>
       </div>
 
-      {/* Precio */}
-      <div className="mb-6 pb-6 border-b border-gray-100">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl sm:text-5xl font-bold text-purple-800">
-            ${plan.precio}
-          </span>
-          <span className="text-sm text-gray-500 ml-1">
-            ARS
-          </span>
-        </div>
-        <p className="text-sm text-gray-500 mt-2">
-          Equivale a <span className="font-semibold text-purple-600">${precioPorDia}/día</span>
-        </p>
-      </div>
+      {/* Precio removido - tarjeta simplificada */}
 
-      {/* Features */}
-      <ul className="flex-1 space-y-3 mb-6">
-        {[
-          `Conecta ${plan.connection_limit} dispositivos a la vez`,
-          'Velocidad ilimitada de VPN',
-          'Servidores premium en +15 países',
-          'Soporte prioritario 24/7',
-          'Sin registros de actividad',
-        ].map((feature, index) => (
-          <li 
-            key={index} 
-            className="flex items-start gap-3 text-sm text-gray-600"
-          >
-            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
-              <Check className="h-3 w-3 text-purple-600" />
-            </div>
-            {feature}
-          </li>
-        ))}
-      </ul>
+      {/* Detalles simplificados: lista de características removida por solicitud */}
+
 
       {/* CTA Button */}
-      <button
+      <RefineButton
         onClick={onSelect}
-        className={`group w-full rounded-xl px-6 py-3.5 text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-          isPopular
-            ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 shadow-lg shadow-purple-500/25'
-            : 'bg-purple-800 text-white hover:bg-purple-900'
+        variant="primary"
+        className={`w-full ${
+          isPopular ? '' : ''
         }`}
       >
         Obtener plan
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-      </button>
-
-      {/* Footer text */}
-      <p className="mt-4 text-xs text-center text-gray-400">
-        ✓ Pago seguro con Mercado Pago
-      </p>
+      </RefineButton>
+      {/* Footer removido */}
     </motion.div>
   );
 }

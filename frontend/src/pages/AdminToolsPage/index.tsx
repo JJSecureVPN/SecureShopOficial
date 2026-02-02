@@ -16,6 +16,7 @@ import {
   SponsorsSection,
   PlanesSection,
   ReferidosSection,
+  TicketsSoporteSection,
 } from "./components";
 import { CuponFormState, PromoConfig, HeroPromoConfig } from "./types";
 import {
@@ -27,7 +28,10 @@ import {
   Percent,
   Gift,
   ChevronRight,
+  LifeBuoy,
+  BookOpen,
 } from "lucide-react";
+import AdminHelpCenter from "../AdminHelpCenter";
 
 // Tipos de secciones disponibles
 type AdminSection = 
@@ -37,7 +41,9 @@ type AdminSection =
   | "cupones" 
   | "noticias" 
   | "descuentos" 
-  | "referidos";
+  | "referidos"
+  | "tutorials"
+  | "tickets";
 
 interface NavItem {
   id: AdminSection;
@@ -48,12 +54,14 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" />, description: "Resumen general" },
+  { id: "tickets", label: "Soporte", icon: <LifeBuoy className="w-5 h-5" />, description: "Gestionar tickets de soporte" },
   { id: "planes", label: "Planes", icon: <Package className="w-5 h-5" />, description: "Gestionar planes VPN" },
   { id: "sponsors", label: "Sponsors", icon: <Users className="w-5 h-5" />, description: "Gestionar sponsors" },
   { id: "cupones", label: "Cupones", icon: <Ticket className="w-5 h-5" />, description: "Crear y gestionar cupones" },
   { id: "noticias", label: "Avisos", icon: <Bell className="w-5 h-5" />, description: "Configurar avisos" },
   { id: "descuentos", label: "Descuentos", icon: <Percent className="w-5 h-5" />, description: "Descuentos globales" },
   { id: "referidos", label: "Referidos", icon: <Gift className="w-5 h-5" />, description: "Programa de referidos" },
+  { id: "tutorials", label: "Tutoriales", icon: <BookOpen className="w-5 h-5" />, description: "Revisar tutoriales enviados" },
 ];
 
 interface AdminToolsPageProps {
@@ -67,6 +75,7 @@ const INITIAL_CUPON_FORM: CuponFormState = {
   valor: "",
   limite_uso: "",
   fecha_expiracion: "",
+  oculto: false,
   planes_aplicables: [],
 };
 
@@ -304,6 +313,7 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
         valor: parseFloat(cuponForm.valor),
         limite_uso: cuponForm.limite_uso ? parseInt(cuponForm.limite_uso) : undefined,
         fecha_expiracion: fechaExpiracionISO,
+        oculto: cuponForm.oculto,
         planes_aplicables: planesAplicables,
       });
 
@@ -645,6 +655,20 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
         return (
           <div className="border border-neutral-800 rounded-2xl bg-neutral-900/50 p-6">
             <ReferidosSection />
+          </div>
+        );
+
+      case "tickets":
+        return (
+          <div className="border border-neutral-800 rounded-2xl bg-neutral-900/50 p-6">
+            <TicketsSoporteSection />
+          </div>
+        );
+
+      case "tutorials":
+        return (
+          <div className="border border-neutral-800 rounded-2xl bg-neutral-900/50 p-6">
+            <AdminHelpCenter />
           </div>
         );
 

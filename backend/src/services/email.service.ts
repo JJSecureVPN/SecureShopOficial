@@ -635,12 +635,30 @@ class EmailService {
     createdAt?: string;
   }): Promise<boolean> {
     const safeAsunto = datos.asunto || "(sin asunto)";
-    const safeCreatedAt = datos.createdAt || new Date().toISOString();
     const safeContent = datos.content || "";
 
-    const ticketIdHtml = escapeHtml(String(datos.ticketId || ""));
+    // Formatear fecha legible
+    let fechaLegible = "";
+    try {
+      const fecha = datos.createdAt ? new Date(datos.createdAt) : new Date();
+      fechaLegible = fecha.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } catch {
+      fechaLegible = datos.createdAt || new Date().toISOString();
+    }
+
+    // Ticket ID corto (primeros 8 caracteres)
+    const ticketIdCorto = (datos.ticketId || "").substring(0, 8).toUpperCase();
+
+    const ticketIdHtml = escapeHtml(ticketIdCorto);
     const asuntoHtml = escapeHtml(safeAsunto);
-    const createdAtHtml = escapeHtml(safeCreatedAt);
+    const createdAtHtml = escapeHtml(fechaLegible);
     const contentHtml = escapeHtml(safeContent);
 
     const html = `
@@ -668,7 +686,7 @@ class EmailService {
           </div>
           <div class="content">
             <div class="box">
-              <div class="row"><span class="label">Ticket:</span> <span class="value">${ticketIdHtml}</span></div>
+              <div class="row"><span class="label">Ticket:</span> <span class="value">#${ticketIdHtml}</span></div>
               <div class="row"><span class="label">Fecha:</span> <span class="value">${createdAtHtml}</span></div>
             </div>
 
@@ -708,14 +726,31 @@ class EmailService {
       "jazmincardozoh05@gmail.com";
 
     const safeAsunto = datos.asunto || "(sin asunto)";
-    const safeCreatedAt = datos.createdAt || new Date().toISOString();
     const safeContent = datos.content || "";
 
-    const ticketIdHtml = escapeHtml(String(datos.ticketId || ""));
-    const userIdHtml = escapeHtml(String(datos.userId || ""));
+    // Formatear fecha legible
+    let fechaLegible = "";
+    try {
+      const fecha = datos.createdAt ? new Date(datos.createdAt) : new Date();
+      fechaLegible = fecha.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } catch {
+      fechaLegible = datos.createdAt || new Date().toISOString();
+    }
+
+    // Ticket ID corto (primeros 8 caracteres)
+    const ticketIdCorto = (datos.ticketId || "").substring(0, 8).toUpperCase();
+
+    const ticketIdHtml = escapeHtml(ticketIdCorto);
     const userEmailHtml = escapeHtml(String(datos.userEmail || ""));
     const asuntoHtml = escapeHtml(safeAsunto);
-    const createdAtHtml = escapeHtml(safeCreatedAt);
+    const createdAtHtml = escapeHtml(fechaLegible);
     const contentHtml = escapeHtml(safeContent);
 
     const html = `
@@ -743,9 +778,8 @@ class EmailService {
           </div>
           <div class="content">
             <div class="box">
-              <div class="row"><span class="label">Ticket:</span> <span class="value">${ticketIdHtml}</span></div>
-              <div class="row"><span class="label">Usuario:</span> <span class="value">${userIdHtml}</span></div>
-              <div class="row"><span class="label">Email:</span> <span class="value">${userEmailHtml}</span></div>
+              <div class="row"><span class="label">Ticket:</span> <span class="value">#${ticketIdHtml}</span></div>
+              <div class="row"><span class="label">Email:</span> <a href="mailto:${userEmailHtml}">${userEmailHtml}</a></div>
               <div class="row"><span class="label">Fecha:</span> <span class="value">${createdAtHtml}</span></div>
             </div>
 

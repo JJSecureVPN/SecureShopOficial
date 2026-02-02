@@ -3,7 +3,7 @@ import { ServexService } from './servex.service';
 import { MercadoPagoService } from './mercadopago.service';
 import { configService } from './config.service';
 import emailService from './email.service';
-import { cuponesService } from './cupones.service';
+import { cuponesSupabaseService } from './cupones-supabase.service';
 import { supabaseService } from './supabase.service';
 import { RenovacionAutoRetryConfig } from '../types';
 
@@ -151,28 +151,46 @@ export class RenovacionService {
       const revendedorDB = this.db.buscarRevendedorPorUsername(busqueda);
       if (revendedorDB) {
         let servexId = revendedorDB.servex_revendedor_id;
-        const maxUsersDb =
-          revendedorDB.servex_max_users ?? revendedorDB.max_users ?? 0;
         
-        // 🔧 AUTO-REPARACIÓN: Si el ID es 0 o null, intentar obtenerlo de Servex
-        if (!servexId || servexId === 0) {
-          console.warn(`[Renovacion] ⚠️ Revendedor ${revendedorDB.servex_username} tiene ID inválido (${servexId}), intentando reparar...`);
-          try {
-            const revendedorServex = await this.servex.buscarRevendedorPorUsername(revendedorDB.servex_username);
-            if (revendedorServex && revendedorServex.id) {
-              servexId = revendedorServex.id;
-              // Actualizar la DB con el ID correcto
+        // 🔧 SIEMPRE CONSULTAR SERVEX para obtener datos actuales (max_users, expiration_date, etc)
+        console.log(`[Renovacion] 🔄 Revendedor encontrado en DB local, obteniendo datos actuales de Servex...`);
+        try {
+          const revendedorServex = await this.servex.buscarRevendedorPorUsername(revendedorDB.servex_username);
+          if (revendedorServex && revendedorServex.id) {
+            servexId = revendedorServex.id;
+            
+            // Si el ID cambió, actualizar la DB
+            if (servexId !== revendedorDB.servex_revendedor_id) {
               this.db.actualizarServexIdRevendedor(revendedorDB.servex_username, servexId);
-              console.log(`[Renovacion] ✅ ID reparado automáticamente: ${revendedorDB.servex_username} -> ID: ${servexId}`);
-            } else {
-              console.error(`[Renovacion] ❌ No se pudo encontrar el revendedor ${revendedorDB.servex_username} en Servex para reparar`);
+              console.log(`[Renovacion] ✅ ID actualizado en DB: ${revendedorDB.servex_username} -> ID: ${servexId}`);
             }
-          } catch (repairError: any) {
-            console.error(`[Renovacion] ❌ Error reparando ID del revendedor:`, repairError.message);
+            
+            console.log(`[Renovacion] ✅ Revendedor con datos actuales de Servex: ${revendedorServex.username} (ID: ${servexId}, max_users: ${revendedorServex.max_users}, expiration: ${revendedorServex.expiration_date})`);
+            return {
+              encontrado: true,
+              tipo: 'revendedor',
+              datos: {
+                servex_revendedor_id: servexId,
+                servex_username: revendedorServex.username,
+                servex_account_type: revendedorServex.account_type,
+                max_users: revendedorServex.max_users || 0,
+                expiration_date: revendedorServex.expiration_date,
+                cliente_nombre: revendedorDB.cliente_nombre,
+                cliente_email: revendedorDB.cliente_email,
+                plan_nombre: revendedorDB.plan_nombre
+              }
+            };
+          } else {
+            console.error(`[Renovacion] ❌ No se pudo obtener datos actuales de Servex para ${revendedorDB.servex_username}`);
           }
+        } catch (servexError: any) {
+          console.error(`[Renovacion] ❌ Error consultando Servex:`, servexError.message);
+          // Continuar con datos de DB local como fallback
         }
         
-        console.log(`[Renovacion] ✅ Revendedor encontrado en DB local: ${revendedorDB.servex_username} (ID: ${servexId}, max_users: ${maxUsersDb})`);
+        // Fallback: usar datos de DB local si falla Servex
+        const maxUsersDb = revendedorDB.servex_max_users ?? revendedorDB.max_users ?? 0;
+        console.log(`[Renovacion] ⚠️ Usando datos de DB local como fallback: ${revendedorDB.servex_username} (ID: ${servexId}, max_users: ${maxUsersDb})`);
         return {
           encontrado: true,
           tipo: 'revendedor',
@@ -294,7 +312,7 @@ export class RenovacionService {
       const codigoNormalizado = input.codigoCupon.trim().toUpperCase();
       console.log(`[Renovacion] Validando cupón ${codigoNormalizado} para renovación`);
 
-      const validacion = await cuponesService.validarCupon(
+      const validacion = await cuponesSupabaseService.validarCupon(
         codigoNormalizado,
         input.planId,
         input.clienteEmail
@@ -313,7 +331,7 @@ export class RenovacionService {
 
       descuentoAplicado = Math.min(
         precioBase,
-        Math.round(cuponesService.calcularDescuento(cuponAplicado, precioBase))
+        Math.round(cuponesSupabaseService.calcularDescuento(cuponAplicado, precioBase))
       );
 
       console.log(
@@ -472,15 +490,23 @@ export class RenovacionService {
     // 2. Obtener planes de revendedores con overrides de configuración aplicados
     const planesBase = this.db.obtenerPlanesRevendedores();
     console.log(`[Renovacion] 📊 Planes base obtenidos: ${planesBase.length} planes`);
+    console.log(`[Renovacion] 📊 Planes base:`, JSON.stringify(planesBase.map((p: any) => ({id: p.id, max_users: p.max_users, account_type: p.account_type, precio: p.precio})), null, 2));
     const planesConOverrides =
       configService.aceptarOverridesAListaPlanesRevendedor(planesBase, {
         forNewCustomers: false,
       });
     console.log(`[Renovacion] 📊 Planes con overrides: ${planesConOverrides.length} planes`);
+    console.log(`[Renovacion] 📊 Planes con overrides:`, JSON.stringify(planesConOverrides.map((p: any) => ({id: p.id, max_users: p.max_users, account_type: p.account_type, precio: p.precio})), null, 2));
     
     // 3. Calcular precio según el plan seleccionado
     const tipoRenovacion = input.tipoRenovacion || 'validity';
-    const cantidad = input.cantidadSeleccionada || 5;
+    let cantidad = input.cantidadSeleccionada || 5;
+    
+    // Para renovaciones de validity, usar la cantidad de usuarios actuales del revendedor
+    if (tipoRenovacion === 'validity' && revendedorExistente.max_users) {
+      cantidad = revendedorExistente.max_users;
+      console.log(`[Renovacion] 📊 Validity: Usando usuarios actuales del revendedor: ${cantidad}`);
+    }
     
     console.log(`[Renovacion] 🔍 Buscando plan con: tipo=${tipoRenovacion}, cantidad=${cantidad}`);
     console.log(`[Renovacion] 📋 Planes disponibles: ${JSON.stringify(planesConOverrides.map((p: any) => ({id: p.id, max_users: p.max_users, account_type: p.account_type, precio: p.precio})))}`);
@@ -497,8 +523,65 @@ export class RenovacionService {
       ) || null;
     }
 
+    // Si no hay plan exacto, buscar el plan inmediatamente inferior y calcular precio proporcional
     if (!planSeleccionado) {
-      console.warn(`[Renovacion] ⚠️ No se encontró un plan exacto para tipo=${tipoRenovacion}, cantidad=${cantidad}. Usando defaults.`);
+      const planesMismoTipo = planesConOverrides
+        .filter((p: any) => p.account_type === tipoRenovacion && p.max_users > 0)
+        .sort((a: any, b: any) => a.max_users - b.max_users);
+
+      if (planesMismoTipo.length > 0) {
+        // Buscar el plan inmediatamente inferior
+        const planInferior = planesMismoTipo.reverse().find((p: any) => p.max_users < cantidad);
+        
+        if (planInferior) {
+          // Buscar el plan superior para calcular mejor el precio
+          const planSuperior = planesMismoTipo.find((p: any) => p.max_users > cantidad);
+          
+          if (planSuperior) {
+            // Interpolar entre el plan inferior y superior
+            const rangoUsuarios = planSuperior.max_users - planInferior.max_users;
+            const rangoPrecio = planSuperior.precio - planInferior.precio;
+            const usuariosExtra = cantidad - planInferior.max_users;
+            const precioExtra = (usuariosExtra / rangoUsuarios) * rangoPrecio;
+            
+            planSeleccionado = {
+              ...planInferior,
+              max_users: cantidad,
+              precio: Math.round(planInferior.precio + precioExtra),
+              calculado: true
+            };
+            
+            console.log(`[Renovacion] 📊 Precio calculado por interpolación: ${planInferior.max_users} usuarios ($${planInferior.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio}) → ${planSuperior.max_users} usuarios ($${planSuperior.precio})`);
+          } else {
+            // Solo hay plan inferior, calcular proporcional
+            const precioPorUsuario = planInferior.precio / planInferior.max_users;
+            planSeleccionado = {
+              ...planInferior,
+              max_users: cantidad,
+              precio: Math.round(precioPorUsuario * cantidad),
+              calculado: true
+            };
+            
+            console.log(`[Renovacion] 📊 Precio calculado proporcional desde plan inferior: ${planInferior.max_users} usuarios ($${planInferior.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio})`);
+          }
+        } else {
+          // Usar el plan más pequeño disponible como base
+          const planMinimo = planesMismoTipo[planesMismoTipo.length - 1];
+          const precioPorUsuario = planMinimo.precio / planMinimo.max_users;
+          planSeleccionado = {
+            ...planMinimo,
+            max_users: cantidad,
+            precio: Math.round(precioPorUsuario * cantidad),
+            calculado: true
+          };
+          
+          console.log(`[Renovacion] 📊 Precio calculado desde plan mínimo: ${planMinimo.max_users} usuarios ($${planMinimo.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio})`);
+        }
+      }
+    }
+
+    if (!planSeleccionado) {
+      console.warn(`[Renovacion] ⚠️ No se encontró un plan para tipo=${tipoRenovacion}, cantidad=${cantidad}. Usando defaults.`);
     }
 
     let precioBase = planSeleccionado?.precio ? Math.round(Number(planSeleccionado.precio)) : 0;
@@ -523,7 +606,7 @@ export class RenovacionService {
       const codigoNormalizado = input.codigoCupon.trim().toUpperCase();
       console.log(`[Renovacion] Validando cupón ${codigoNormalizado} para renovación de revendedor`);
 
-      const validacion = await cuponesService.validarCupon(
+      const validacion = await cuponesSupabaseService.validarCupon(
         codigoNormalizado,
         planSeleccionado?.id ?? input.planId,
         input.clienteEmail
@@ -543,7 +626,7 @@ export class RenovacionService {
 
       descuentoAplicado = Math.min(
         precioBase,
-        Math.round(cuponesService.calcularDescuento(cuponAplicado, precioBase))
+        Math.round(cuponesSupabaseService.calcularDescuento(cuponAplicado, precioBase))
       );
 
       console.log(`[Renovacion] Cupón ${cuponAplicado.codigo} aplicado. Descuento: $${descuentoAplicado}. Precio base: $${precioBase}`);
@@ -709,26 +792,34 @@ export class RenovacionService {
           console.log(`[Renovacion] servex_id: ${renovacion.servex_id}, dias_agregados: ${renovacion.dias_agregados}`);
 
           if (tipoRenovacion === 'validity') {
-            // Renovación de validez: Siempre 30 días fijos + REEMPLAZAR max_users
-            console.log(`[Renovacion] Validity: Agregando 30 días fijos y estableciendo límite a ${cantidad} usuarios`);
+            // Renovación de validez: MANTENER usuarios actuales y agregar 30 días
+            console.log(`[Renovacion] Validity: Agregando 30 días, manteniendo usuarios actuales`);
             
-            // Calcular nueva fecha de vencimiento (hoy + 30 días)
-            const fechaVencimiento = new Date();
+            // Obtener datos actuales del revendedor
+            const revendedorActual = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
+            const usuariosActuales = revendedorActual?.max_users || 0;
+            
+            console.log(`[Renovacion] Usuarios actuales: ${usuariosActuales} (se mantienen)`);
+            
+            // Calcular nueva fecha de vencimiento (fecha actual de expiración + 30 días)
+            // Si la cuenta ya expiró o no tiene fecha, usar la fecha actual
+            const fechaBase = revendedorActual?.expiration_date ? new Date(revendedorActual.expiration_date) : new Date();
+            const fechaVencimiento = new Date(fechaBase);
             fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
             const expirationDate = fechaVencimiento.toISOString().split('T')[0]; // Formato YYYY-MM-DD
             
-            console.log(`[Renovacion] Nueva fecha de vencimiento: ${expirationDate}`);
+            console.log(`[Renovacion] Fecha actual expiración: ${fechaBase.toISOString().split('T')[0]}, nueva fecha: ${expirationDate}`);
             
-            // Actualizar: cambiar a validity, establecer límite de usuarios y fecha de vencimiento
+            // Actualizar: cambiar fecha de vencimiento, MANTENER usuarios
             await this.servex.actualizarRevendedor(renovacion.servex_id, {
-              max_users: cantidad,
+              max_users: usuariosActuales,
               account_type: 'validity',
               expiration_date: expirationDate
             }, renovacion.servex_username);
 
             this.db.actualizarDatosRevendedorPorServexId({
               servexId: renovacion.servex_id,
-              maxUsers: cantidad,
+              maxUsers: usuariosActuales,
               expiracion: expirationDate,
               accountType: 'validity'
             });
@@ -773,7 +864,30 @@ export class RenovacionService {
       } else {
         // 4. Ejecutar renovación simple de días en Servex
         if (renovacion.tipo === 'cliente') {
-          await this.servex.renovarCliente(renovacion.servex_id, renovacion.dias_agregados);
+          try {
+            await this.servex.renovarCliente(renovacion.servex_id, renovacion.dias_agregados);
+          } catch (renovarError: any) {
+            const mensajeError = renovarError.message?.toLowerCase() || '';
+            const esAccesoDenegado = mensajeError.includes('acesso negado') || 
+                                     mensajeError.includes('access denied') ||
+                                     mensajeError.includes('403');
+            
+            if (esAccesoDenegado) {
+              console.log('[Renovacion] ⚠️ Cliente no accesible en Servex, intentando recrear...');
+              
+              // Intentar recrear el cliente
+              const nuevoCliente = await this.recrearClienteEnServex(renovacion);
+              
+              if (nuevoCliente) {
+                console.log(`[Renovacion] ✅ Cliente recreado exitosamente: ID ${nuevoCliente.id}, username: ${nuevoCliente.username}`);
+                // No es necesario renovar ya que el cliente recién creado ya tiene los días
+              } else {
+                throw new Error('No se pudo recrear el cliente en Servex');
+              }
+            } else {
+              throw renovarError;
+            }
+          }
         } else if (renovacion.tipo === 'revendedor') {
           await this.servex.renovarRevendedor(renovacion.servex_id, renovacion.dias_agregados);
         }
@@ -784,7 +898,7 @@ export class RenovacionService {
       // Aplicar cupón si corresponde
       if (renovacion.cupon_id && estadoPrevio !== 'aprobado') {
         try {
-          await cuponesService.aplicarCupon(renovacion.cupon_id);
+          await cuponesSupabaseService.aplicarCuponSimple(renovacion.cupon_id);
           console.log(`[Renovacion] ✅ Cupón ${renovacion.cupon_id} marcado como utilizado`);
         } catch (cuponError: any) {
           console.error('[Renovacion] ⚠️ Error aplicando cupón:', cuponError.message);
@@ -1032,6 +1146,93 @@ export class RenovacionService {
       return await this.servex.buscarRevendedorPorUsername(username);
     } catch (error) {
       console.error('[Renovacion] Error obteniendo revendedor actualizado:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Recrea un cliente en Servex cuando fue eliminado pero tiene una renovación pagada
+   * Usa los mismos datos que tenía originalmente (username, password, etc.)
+   */
+  private async recrearClienteEnServex(renovacion: any): Promise<any | null> {
+    try {
+      console.log(`[Renovacion] 🔄 Intentando recrear cliente ${renovacion.servex_username} en Servex...`);
+
+      // 1. Buscar el pago original para obtener los datos del cliente
+      const pagoOriginal = this.db.buscarClientePorUsername(renovacion.servex_username);
+      
+      if (!pagoOriginal) {
+        console.error(`[Renovacion] ❌ No se encontró pago original para ${renovacion.servex_username}`);
+        return null;
+      }
+
+      // 2. Obtener categorías activas
+      const categorias = await this.servex.obtenerCategoriasActivas();
+      if (categorias.length === 0) {
+        console.error('[Renovacion] ❌ No hay categorías activas disponibles en Servex');
+        return null;
+      }
+      const categoria = categorias[0];
+
+      // 3. Determinar connection_limit (del pago original o de datos_nuevos si es upgrade)
+      let connectionLimit = pagoOriginal.servex_connection_limit || 1;
+      if (renovacion.datos_nuevos) {
+        try {
+          const datosNuevos = JSON.parse(renovacion.datos_nuevos);
+          if (datosNuevos.connection_limit) {
+            connectionLimit = datosNuevos.connection_limit;
+          }
+        } catch (e) {
+          // Ignorar error de parseo
+        }
+      }
+
+      // 4. Crear el cliente con los días de la renovación
+      const clienteData = {
+        username: pagoOriginal.servex_username,
+        password: pagoOriginal.servex_password,
+        category_id: categoria.id,
+        connection_limit: connectionLimit,
+        duration: renovacion.dias_agregados,
+        type: 'user' as const,
+        observation: `Cliente recreado: ${renovacion.cliente_nombre} - Email: ${renovacion.cliente_email} - Renovación ID: ${renovacion.id}`,
+      };
+
+      console.log('[Renovacion] 📋 Datos para recrear cliente:', JSON.stringify(clienteData, null, 2));
+
+      const clienteCreado = await this.servex.crearCliente(clienteData);
+
+      // 5. Actualizar la base de datos local con el nuevo ID
+      this.db.actualizarCuentaServexPorUsername(
+        pagoOriginal.servex_username,
+        clienteCreado.id,
+        clienteCreado.expiration_date,
+        connectionLimit
+      );
+
+      // 6. Actualizar el servex_id en la renovación
+      this.db.actualizarServexIdRenovacion(renovacion.id, clienteCreado.id);
+
+      console.log(`[Renovacion] ✅ Cliente recreado: ID ${clienteCreado.id}, expira: ${clienteCreado.expiration_date}`);
+
+      // 7. Enviar email de confirmación con las credenciales (ya que es como una nueva cuenta)
+      try {
+        const expiracionFormateada = new Date(clienteCreado.expiration_date).toLocaleDateString('es-AR');
+        await emailService.enviarCredencialesCliente(renovacion.cliente_email, {
+          username: clienteCreado.username,
+          password: pagoOriginal.servex_password,
+          categoria: categoria.name,
+          expiracion: expiracionFormateada,
+          servidores: [],
+        });
+        console.log(`[Renovacion] ✅ Credenciales reenviadas a ${renovacion.cliente_email}`);
+      } catch (emailError: any) {
+        console.error('[Renovacion] ⚠️ Error enviando email de credenciales:', emailError.message);
+      }
+
+      return clienteCreado;
+    } catch (error: any) {
+      console.error('[Renovacion] ❌ Error recreando cliente:', error.message);
       return null;
     }
   }

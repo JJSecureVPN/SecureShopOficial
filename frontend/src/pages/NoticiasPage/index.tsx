@@ -11,8 +11,8 @@ export default function NoticiasPage() {
   const [selected, setSelected] = useState<{ id: string; preview?: Noticia } | null>(null);
 
   return (
-    <div className="bg-white text-gray-900">
-      <section className="min-h-screen bg-gradient-to-b from-purple-200/50 via-purple-50/30 to-white">
+    <div className="bg-zinc-900 text-zinc-100">
+      <section className="min-h-screen bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-20 pb-12">
           <div className="mb-8">
             <Title as="h1">Noticias</Title>
@@ -22,21 +22,21 @@ export default function NoticiasPage() {
           </div>
 
           {loading && (
-            <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-6">
-              <Subtitle>Cargando noticias…</Subtitle>
+            <div className="bg-zinc-800/60 backdrop-blur-sm border border-zinc-700 rounded-2xl p-6">
+              <Subtitle className="text-zinc-200">Cargando noticias…</Subtitle>
             </div>
           )}
 
           {!loading && error && (
-            <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-6">
-              <Subtitle className="text-red-600">{error}</Subtitle>
+            <div className="bg-zinc-800/60 backdrop-blur-sm border border-rose-800 rounded-2xl p-6">
+              <Subtitle className="text-rose-300">{error}</Subtitle>
             </div>
           )}
 
           {!loading && !error && noticias.length === 0 && (
-            <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-8 text-center">
+            <div className="bg-zinc-800/60 backdrop-blur-sm border border-zinc-700 rounded-2xl p-8 text-center">
               <Title as="h3" center className="mb-2">Todavía no hay noticias</Title>
-              <Subtitle center>
+              <Subtitle center className="text-zinc-300">
                 Cuando publiquemos avisos o novedades, van a aparecer acá.
               </Subtitle>
             </div>

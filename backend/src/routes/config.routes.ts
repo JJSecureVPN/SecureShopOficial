@@ -1,12 +1,13 @@
 import express, { Request, Response } from "express";
 import { configService } from "../services/config.service";
 import { preciosSyncService } from "../services/precios-sync.service";
+import { planesSupabaseService } from "../services/planes-supabase.service";
 
 const router = express.Router();
 
 /**
  * POST /api/config/activar-promo
- * Activa la promoción por una duración configurable
+ * Activa la promoción por una duración configurable (AHORA USA SUPABASE)
  * Body: { duracion_horas: number, tipo?: "planes" | "revendedores", descuento_porcentaje?: number, solo_nuevos?: boolean, solo_renovaciones?: boolean }
  */
 router.post("/activar-promo", async (req: Request, res: Response) => {
@@ -56,112 +57,33 @@ router.post("/activar-promo", async (req: Request, res: Response) => {
       });
     }
 
-    const now = new Date().toISOString();
-
-    // Si es "planes" o ambos
+    // Usar Supabase para activar promociones
     if (tipo === "planes") {
-      const configPlanes = configService.leerConfigPlanes();
-      if (!configPlanes.promo_config) {
-        configPlanes.promo_config = {
-          activa: false,
-          activada_en: null,
-          duracion_horas: 12,
-          auto_desactivar: true,
-          descuento_porcentaje: 20,
-          solo_nuevos: false,
-          solo_renovaciones: false,
-        };
-      }
-      configPlanes.promo_config.activa = true;
-      configPlanes.promo_config.activada_en = now;
-      configPlanes.promo_config.duracion_horas = duracion_horas;
-      configPlanes.promo_config.auto_desactivar = true;
-      configPlanes.promo_config.descuento_porcentaje = descuento_porcentaje;
-      configPlanes.promo_config.solo_nuevos = solo_nuevos;
-      configPlanes.promo_config.solo_renovaciones = solo_renovaciones;
-      configPlanes.ultima_actualizacion = now;
-
-      // 🆕 Recalcular precios en overrides basándose en descuento_porcentaje
-      if (configPlanes.precios_normales && configPlanes.overrides) {
-        const factorDescuento = (100 - descuento_porcentaje) / 100;
-        for (const [planId, precioNormal] of Object.entries(configPlanes.precios_normales)) {
-          const precioConDescuento = Math.round((precioNormal as number) * factorDescuento);
-          if (!configPlanes.overrides[planId]) {
-            configPlanes.overrides[planId] = {};
-          }
-          const override = configPlanes.overrides[planId];
-          if (typeof override === 'object') {
-            override.precio = precioConDescuento;
-          }
-          console.log(`[CONFIG-ROUTE] Actualizado plan ${planId}: ${precioNormal} ARS -> ${precioConDescuento} ARS (${descuento_porcentaje}% OFF)`);
-        }
-      }
-
-      if (configPlanes.hero && configPlanes.hero.promocion) {
-        configPlanes.hero.promocion.habilitada = true;
-      }
-
-      console.log("[CONFIG-ROUTE] 💾 Guardando config de planes...");
-      configService.guardarConfigPlanes(configPlanes);
-      console.log("[CONFIG-ROUTE] ✅ Config de planes guardada");
+      console.log(`[CONFIG-ROUTE] 🚀 Activando promo VPN en Supabase: ${descuento_porcentaje}% por ${duracion_horas}h`);
+      await planesSupabaseService.activarPromocionVPN(
+        duracion_horas,
+        descuento_porcentaje,
+        undefined // texto opcional
+      );
+      console.log("[CONFIG-ROUTE] ✅ Promo VPN activada en Supabase");
     }
 
-    // Si es "revendedores" o ambos
     if (tipo === "revendedores") {
-      const configRevendedores = configService.leerConfigRevendedores();
-      if (!configRevendedores.promo_config) {
-        configRevendedores.promo_config = {
-          activa: false,
-          activada_en: null,
-          duracion_horas: 12,
-          auto_desactivar: true,
-          descuento_porcentaje: 20,
-          solo_nuevos: false,
-          solo_renovaciones: false,
-        };
-      }
-      configRevendedores.promo_config.activa = true;
-      configRevendedores.promo_config.activada_en = now;
-      configRevendedores.promo_config.duracion_horas = duracion_horas;
-      configRevendedores.promo_config.auto_desactivar = true;
-      configRevendedores.promo_config.descuento_porcentaje = descuento_porcentaje;
-      configRevendedores.promo_config.solo_nuevos = solo_nuevos;
-      configRevendedores.promo_config.solo_renovaciones = solo_renovaciones;
-      configRevendedores.ultima_actualizacion = now;
-
-      // 🆕 Recalcular precios en overrides basándose en descuento_porcentaje
-      if (configRevendedores.precios_normales && configRevendedores.overrides) {
-        const factorDescuento = (100 - descuento_porcentaje) / 100;
-        for (const [planId, precioNormal] of Object.entries(configRevendedores.precios_normales)) {
-          const precioConDescuento = Math.round((precioNormal as number) * factorDescuento);
-          if (!configRevendedores.overrides[planId]) {
-            configRevendedores.overrides[planId] = {};
-          }
-          const override = configRevendedores.overrides[planId];
-          if (typeof override === 'object') {
-            override.precio = precioConDescuento;
-          }
-          console.log(`[CONFIG-ROUTE] Actualizado plan revendedor ${planId}: ${precioNormal} ARS -> ${precioConDescuento} ARS (${descuento_porcentaje}% OFF)`);
-        }
-      }
-
-      if (configRevendedores.hero && configRevendedores.hero.promocion) {
-        configRevendedores.hero.promocion.habilitada = true;
-      }
-
-      console.log("[CONFIG-ROUTE] 💾 Guardando config de revendedores...");
-      configService.guardarConfigRevendedores(configRevendedores);
-      console.log("[CONFIG-ROUTE] ✅ Config de revendedores guardada");
+      console.log(`[CONFIG-ROUTE] 🚀 Activando promo Revendedores en Supabase: ${descuento_porcentaje}% por ${duracion_horas}h`);
+      await planesSupabaseService.activarPromocionRevendedor(
+        duracion_horas,
+        descuento_porcentaje,
+        undefined, // texto opcional
+        solo_nuevos,
+        solo_renovaciones
+      );
+      console.log("[CONFIG-ROUTE] ✅ Promo Revendedores activada en Supabase");
     }
-
-    // Limpiar caché
-    configService.limpiarCache();
-    console.log("[CONFIG-ROUTE] 🔄 Caché limpiado");
 
     return res.status(200).json({
       success: true,
       mensaje: `Promoción de ${tipo} activada con ${descuento_porcentaje}% de descuento por ${duracion_horas} hora(s)`,
-      timestamp: now,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error activando promo:", error);
@@ -174,10 +96,10 @@ router.post("/activar-promo", async (req: Request, res: Response) => {
 
 /**
  * POST /api/config/desactivar-promo
- * Desactiva la promoción inmediatamente
+ * Desactiva la promoción inmediatamente (AHORA USA SUPABASE)
  * Body: { tipo?: "planes" | "revendedores" }
  */
-router.post("/desactivar-promo", (req: Request, res: Response) => {
+router.post("/desactivar-promo", async (req: Request, res: Response) => {
   try {
     const { tipo = "planes" } = req.body;
 
@@ -187,62 +109,23 @@ router.post("/desactivar-promo", (req: Request, res: Response) => {
       });
     }
 
-    const now = new Date().toISOString();
-
-    // Si es "planes"
+    // Usar Supabase para desactivar promociones
     if (tipo === "planes") {
-      const config = configService.leerConfigPlanes();
-      if (!config.promo_config) {
-        config.promo_config = {
-          activa: false,
-          activada_en: null,
-          duracion_horas: 12,
-          auto_desactivar: true,
-          solo_nuevos: false,
-        };
-      }
-      config.promo_config.activa = false;
-      config.promo_config.activada_en = null;
-      config.ultima_actualizacion = now;
-
-      if (config.hero && config.hero.promocion) {
-        config.hero.promocion.habilitada = false;
-      }
-
-      configService.guardarConfigPlanes(config);
-      console.log("[CONFIG-ROUTE] ✅ Config de planes desactivada");
+      console.log("[CONFIG-ROUTE] 🛑 Desactivando promo VPN en Supabase");
+      await planesSupabaseService.desactivarPromocionVPN();
+      console.log("[CONFIG-ROUTE] ✅ Promo VPN desactivada en Supabase");
     }
 
-    // Si es "revendedores"
     if (tipo === "revendedores") {
-      const config = configService.leerConfigRevendedores();
-      if (!config.promo_config) {
-        config.promo_config = {
-          activa: false,
-          activada_en: null,
-          duracion_horas: 12,
-          auto_desactivar: true,
-          solo_nuevos: false,
-        };
-      }
-      config.promo_config.activa = false;
-      config.promo_config.activada_en = null;
-      config.ultima_actualizacion = now;
-
-      if (config.hero && config.hero.promocion) {
-        config.hero.promocion.habilitada = false;
-      }
-
-      configService.guardarConfigRevendedores(config);
-      console.log("[CONFIG-ROUTE] ✅ Config de revendedores desactivada");
+      console.log("[CONFIG-ROUTE] 🛑 Desactivando promo Revendedores en Supabase");
+      await planesSupabaseService.desactivarPromocionRevendedor();
+      console.log("[CONFIG-ROUTE] ✅ Promo Revendedores desactivada en Supabase");
     }
-
-    configService.limpiarCache();
 
     return res.status(200).json({
       success: true,
       mensaje: `Promoción de ${tipo} desactivada`,
-      timestamp: now,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error desactivando promo:", error);
@@ -373,40 +256,47 @@ router.post("/sync-todo", async (_req: Request, res: Response) => {
 
 /**
  * GET /api/config/promo-status
+ * Obtiene el estado actual de la promoción VPN (AHORA USA SUPABASE)
  */
-router.get("/promo-status", (_req: Request, res: Response) => {
+router.get("/promo-status", async (req: Request, res: Response) => {
   try {
-    const config = configService.leerConfigPlanes();
+    // Logging temporal para detectar Origin real desde WebView/Capacitor
+    console.log("[PROMO-STATUS][CORS-DEBUG] origin:", req.headers.origin, "referer:", req.headers.referer);
 
-    // Auto-desactivar si ya expiró (evita quedar clavada en activa si el timer aún no corrió)
-    if (config.promo_config?.activa && config.promo_config?.auto_desactivar) {
-      const activadaEnRaw = config.promo_config.activada_en;
-      const duracionHoras = config.promo_config.duracion_horas || 12;
-      if (activadaEnRaw) {
-        const activadaEn = new Date(activadaEnRaw);
-        const venceEn = new Date(activadaEn.getTime() + duracionHoras * 60 * 60 * 1000);
-        const ahora = new Date();
-        if (ahora >= venceEn) {
-          const nowIso = ahora.toISOString();
-          config.promo_config.activa = false;
-          config.promo_config.activada_en = null;
-          (config.promo_config as any).desactivada_en = nowIso;
-          config.ultima_actualizacion = nowIso;
-          if (config.hero?.promocion) {
-            config.hero.promocion.habilitada = false;
-          }
-          configService.guardarConfigPlanes(config);
-          configService.limpiarCache();
-        }
+    const config = await planesSupabaseService.obtenerPromocionesConfig();
+
+    // Verificar expiración automáticamente
+    if (config?.vpn_activa && config?.vpn_activada_en && config?.vpn_duracion_horas) {
+      const activadaEn = new Date(config.vpn_activada_en);
+      const venceEn = new Date(activadaEn.getTime() + config.vpn_duracion_horas * 60 * 60 * 1000);
+      const ahora = new Date();
+      
+      if (ahora >= venceEn) {
+        // Auto-desactivar
+        console.log("[CONFIG-ROUTE] ⏰ Promo VPN expirada, desactivando...");
+        await planesSupabaseService.desactivarPromocionVPN();
+        
+        return res.status(200).json({
+          promo_config: {
+            activa: false,
+            activada_en: null,
+            duracion_horas: config.vpn_duracion_horas || 12,
+            auto_desactivar: true,
+            descuento_porcentaje: config.vpn_descuento_porcentaje || 20,
+            solo_nuevos: false,
+            solo_renovaciones: false,
+          },
+        });
       }
     }
 
     return res.status(200).json({
-      promo_config: config.promo_config || {
-        activa: false,
-        activada_en: null,
-        duracion_horas: 0,
+      promo_config: {
+        activa: config?.vpn_activa || false,
+        activada_en: config?.vpn_activada_en || null,
+        duracion_horas: config?.vpn_duracion_horas || 12,
         auto_desactivar: true,
+        descuento_porcentaje: config?.vpn_descuento_porcentaje || 20,
         solo_nuevos: false,
         solo_renovaciones: false,
       },
@@ -433,43 +323,46 @@ router.get("/test", (_req: Request, res: Response) => {
 
 /**
  * GET /api/config/promo-status-revendedores
- * Obtiene el estado actual de la promoción para revendedores y tiempo restante
+ * Obtiene el estado actual de la promoción para revendedores (AHORA USA SUPABASE)
  */
-router.get("/promo-status-revendedores", (_req: Request, res: Response) => {
+router.get("/promo-status-revendedores", async (_req: Request, res: Response) => {
   try {
-    const config = configService.leerConfigRevendedores();
+    const config = await planesSupabaseService.obtenerPromocionesConfig();
 
-    // Auto-desactivar si ya expiró (evita quedar clavada en activa si el timer aún no corrió)
-    if (config.promo_config?.activa && config.promo_config?.auto_desactivar) {
-      const activadaEnRaw = config.promo_config.activada_en;
-      const duracionHoras = config.promo_config.duracion_horas || 12;
-      if (activadaEnRaw) {
-        const activadaEn = new Date(activadaEnRaw);
-        const venceEn = new Date(activadaEn.getTime() + duracionHoras * 60 * 60 * 1000);
-        const ahora = new Date();
-        if (ahora >= venceEn) {
-          const nowIso = ahora.toISOString();
-          config.promo_config.activa = false;
-          config.promo_config.activada_en = null;
-          (config.promo_config as any).desactivada_en = nowIso;
-          config.ultima_actualizacion = nowIso;
-          if (config.hero?.promocion) {
-            config.hero.promocion.habilitada = false;
-          }
-          configService.guardarConfigRevendedores(config);
-          configService.limpiarCache();
-        }
+    // Verificar expiración automáticamente
+    if (config?.revendedor_activa && config?.revendedor_activada_en && config?.revendedor_duracion_horas) {
+      const activadaEn = new Date(config.revendedor_activada_en);
+      const venceEn = new Date(activadaEn.getTime() + config.revendedor_duracion_horas * 60 * 60 * 1000);
+      const ahora = new Date();
+      
+      if (ahora >= venceEn) {
+        // Auto-desactivar
+        console.log("[CONFIG-ROUTE] ⏰ Promo Revendedores expirada, desactivando...");
+        await planesSupabaseService.desactivarPromocionRevendedor();
+        
+        return res.status(200).json({
+          promo_config: {
+            activa: false,
+            activada_en: null,
+            duracion_horas: config.revendedor_duracion_horas || 12,
+            auto_desactivar: true,
+            descuento_porcentaje: config.revendedor_descuento_porcentaje || 20,
+            solo_nuevos: config.revendedor_solo_nuevos || false,
+            solo_renovaciones: config.revendedor_solo_renovaciones || false,
+          },
+        });
       }
     }
 
     return res.status(200).json({
-      promo_config: config.promo_config || {
-        activa: false,
-        activada_en: null,
-        duracion_horas: 0,
+      promo_config: {
+        activa: config?.revendedor_activa || false,
+        activada_en: config?.revendedor_activada_en || null,
+        duracion_horas: config?.revendedor_duracion_horas || 12,
         auto_desactivar: true,
-        solo_nuevos: false,
-        solo_renovaciones: false,
+        descuento_porcentaje: config?.revendedor_descuento_porcentaje || 20,
+        solo_nuevos: config?.revendedor_solo_nuevos || false,
+        solo_renovaciones: config?.revendedor_solo_renovaciones || false,
       },
     });
   } catch (error) {

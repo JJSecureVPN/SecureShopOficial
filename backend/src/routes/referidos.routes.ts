@@ -172,6 +172,21 @@ router.put('/admin/settings', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/referidos/admin/usuarios-saldo
+ * Obtiene todos los usuarios que tienen saldo
+ */
+router.get('/admin/usuarios-saldo', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const usuarios = await referidosService.getUsuariosConSaldo(limit);
+    res.json(usuarios);
+  } catch (error: any) {
+    console.error('[Referidos Route] Error obteniendo usuarios con saldo:', error);
+    res.status(500).json({ error: 'Error obteniendo usuarios con saldo' });
+  }
+});
+
+/**
  * GET /api/referidos/admin/all
  * Obtiene todos los referidos del sistema
  */

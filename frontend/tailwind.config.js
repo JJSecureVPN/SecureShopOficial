@@ -7,17 +7,18 @@ export default {
   theme: {
     extend: {
       // ============================================
-      // SISTEMA DE FUENTES - Inspirado en Proton VPN
+      // SISTEMA DE FUENTES - Inspirado en Refine.dev
       // ============================================
       fontFamily: {
-        // Inter - Textos generales (igual que Proton VPN)
+        // Inter - Textos generales (igual que Refine.dev)
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         // Fraunces - Títulos (alternativa gratuita a ABC Arizona)
         serif: ['Fraunces', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-        // Syne - Elementos destacados (igual que Proton VPN)
-        display: ['Syne', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        // Monospace
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+        // JetBrains Mono - Para código y elementos técnicos (igual que Refine.dev)
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+        // Display - Para elementos destacados
+        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Tourney removed (unused)
       },
       fontSize: {
         // Tamaños exactos de ProtonVPN con line-heights optimizados
@@ -48,10 +49,58 @@ export default {
         'wider': '0.025em',
       },
       colors: {
+        // ============================================
+        // PALETA DE COLORES - Inspirada en Refine.dev
+        // ============================================
+        
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        
+        // Zinc - Colores principales de Refine.dev (fondos oscuros)
+        zinc: {
+          50: '#fafafa',
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a',  // Fondo secundario Refine
+          900: '#18181b',  // Fondo principal Refine
+          950: '#09090b',
+        },
+        
+        // Orange - Color de acento de Refine.dev
+        orange: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',  // Acento principal Refine
+          500: '#f97316',  // Acento secundario Refine
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
+        },
+        
+        // Colores de marca Refine
+        refine: {
+          dark: '#18181b',        // zinc-900
+          darkAlt: '#27272a',     // zinc-800
+          orange: '#fb923c',      // orange-400
+          orangeAlt: '#f97316',   // orange-500
+          text: '#ffffff',
+          textMuted: '#a1a1aa',   // zinc-400
+          border: '#3f3f46',      // zinc-700
+        },
+        
         neutral: {
           850: '#1a202c',
         },
-        // Colores exactos de ProtonVPN
+        
+        // Mantenemos los colores de ProtonVPN para compatibilidad
         purple: {
           50: '#F8F7FF',
           100: '#EFEAFF',
@@ -61,10 +110,10 @@ export default {
           500: '#6D4AFF',
           600: '#5B3FD6',
           700: '#4A32AD',
-          800: 'rgb(55, 37, 128)',  // Exacto de ProtonVPN
+          800: 'rgb(55, 37, 128)',
           900: '#240053',
         },
-        // Grises exactos de ProtonVPN
+        
         gray: {
           50: '#f9fafb',
           100: '#f3f4f6',
@@ -72,16 +121,18 @@ export default {
           300: '#d1d5db',
           400: '#9ca3af',
           500: '#6b7280',
-          600: '#4b5563',  // rgb(75, 85, 99) - Proton gray-600
+          600: '#4b5563',
           700: '#374151',
-          800: '#1f2937',  // Proton text oscuro
+          800: '#1f2937',
           900: '#111827',
         },
+        
         proton: {
           purple: '#6D4AFF',
           darkPurple: '#372580',
           light: '#F8F7FF',
         },
+        
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

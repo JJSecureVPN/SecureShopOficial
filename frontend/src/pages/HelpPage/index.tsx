@@ -1,175 +1,52 @@
 import { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  ChevronDown, 
-  ChevronRight,
-  BookOpen,
-  Download,
-  CreditCard,
-  HelpCircle,
-  MessageCircle,
-  Smartphone,
-  Monitor,
-  Settings,
-  Shield,
-  RefreshCw,
-  ExternalLink
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Search, BookOpen, HelpCircle, MessageCircle, RefreshCw, ExternalLink, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
-interface HelpCategory {
+interface Tutorial {
   id: string;
-  nombre: string;
-  slug: string;
-  descripcion: string | null;
-  orden: number;
-  activo: boolean;
+  title: string;
+  author_name: string;
+  author_email?: string | null;
+  author_phone?: string | null;
+  content?: string | null;
+  content_html_url?: string | null;
+  images?: string[] | null;
+  created_at?: string | null;
 }
 
-interface HelpArticle {
-  id: string;
-  categoria_id: string;
-  titulo: string;
-  slug: string;
-  resumen: string | null;
-  contenido_md: string;
-  estado: 'borrador' | 'publicado' | 'archivado';
-  visible_para: 'todos' | 'clientes' | 'admin';
-  prioridad: number;
-}
-
-const categoryIcons: Record<string, typeof BookOpen> = {
-  'instalacion': Download,
-  'cuenta-compras': CreditCard,
-  'problemas': Settings,
-  'seguridad': Shield,
-  'default': HelpCircle,
-};
-
-const platformGuides = [
-  { 
-    name: 'Android', 
-    icon: Smartphone, 
-    color: 'bg-green-100 text-green-600',
-    description: 'Instalación en celulares y tablets'
-  },
-  { 
-    name: 'Android TV', 
-    icon: Monitor, 
-    color: 'bg-purple-100 text-purple-600',
-    description: 'Instalación en Smart TV y TV Box'
-  },
-];
-
-// FAQs predefinidas (fallback si no hay en DB)
-const defaultFAQs = [
-  {
-    categoria: 'Cuenta y Compras',
-    preguntas: [
-      {
-        pregunta: '¿Cómo compro un plan VPN?',
-        respuesta: 'Visita nuestra página de Planes, selecciona el plan que mejor se adapte a tus necesidades, elige la cantidad de días y dispositivos, y procede al pago con MercadoPago. Recibirás tus credenciales por email inmediatamente.'
-      },
-      {
-        pregunta: '¿Qué métodos de pago aceptan?',
-        respuesta: 'Aceptamos todos los métodos disponibles en MercadoPago: tarjetas de crédito/débito, transferencia bancaria, Rapipago, Pago Fácil, y más.'
-      },
-      {
-        pregunta: '¿Cómo renuevo mi suscripción?',
-        respuesta: 'Ve a la página de Planes, selecciona "Renovar cuenta existente", ingresa tu username y sigue los pasos. Tu tiempo se acumulará al existente.'
-      },
-      {
-        pregunta: '¿Puedo usar el VPN en múltiples dispositivos?',
-        respuesta: 'Sí, dependiendo del plan que elijas puedes conectar 1, 2 o más dispositivos simultáneamente. Puedes ver la cantidad en los detalles de cada plan.'
-      },
-    ]
-  },
-  {
-    categoria: 'Instalación en Android',
-    preguntas: [
-      {
-        pregunta: '¿Cómo instalo el VPN en mi celular Android?',
-        respuesta: 'Descarga la aplicación JJSecure VPN desde Google Play Store o desde el enlace que te enviamos por email. Abre la app, ingresa tu usuario y contraseña, y conecta con un solo toque.'
-      },
-      {
-        pregunta: '¿Cómo instalo el VPN en mi tablet?',
-        respuesta: 'El proceso es el mismo que en celular: descarga JJSecure VPN desde Google Play, instálala, ingresa tus credenciales y listo.'
-      },
-      {
-        pregunta: '¿Qué versión de Android necesito?',
-        respuesta: 'JJSecure VPN funciona en Android 5.0 (Lollipop) o superior. La mayoría de los dispositivos de los últimos 8 años son compatibles.'
-      },
-    ]
-  },
-  {
-    categoria: 'Instalación en TV',
-    preguntas: [
-      {
-        pregunta: '¿Cómo instalo el VPN en mi Smart TV?',
-        respuesta: 'Si tu TV tiene Android TV, puedes instalar JJSecure VPN desde Google Play Store directamente en la TV. Busca "JJSecure" e instálala.'
-      },
-      {
-        pregunta: '¿Funciona en TV Box?',
-        respuesta: 'Sí, JJSecure VPN funciona en cualquier TV Box con Android (Xiaomi Mi Box, Amazon Fire TV, etc). Descarga la app desde Play Store o instala el APK.'
-      },
-      {
-        pregunta: '¿Cómo instalo en Fire TV Stick?',
-        respuesta: 'En Fire TV Stick, ve a Configuración > Mi Fire TV > Opciones de desarrollador > Activar "Apps de orígenes desconocidos". Luego usa una app como Downloader para instalar nuestro APK.'
-      },
-    ]
-  },
-  {
-    categoria: 'Problemas comunes',
-    preguntas: [
-      {
-        pregunta: 'No puedo conectarme al VPN',
-        respuesta: 'Verifica que tus credenciales sean correctas, que tu suscripción esté activa, y que tengas conexión a internet. Si el problema persiste, prueba cambiar de servidor o reinicia la aplicación.'
-      },
-      {
-        pregunta: 'La conexión es lenta',
-        respuesta: 'Prueba conectarte a un servidor diferente, preferiblemente el más cercano a tu ubicación. Si usas WiFi, verifica la señal. También puedes probar reiniciar tu router.'
-      },
-      {
-        pregunta: 'Se desconecta frecuentemente',
-        respuesta: 'Esto puede deberse a una conexión inestable. Activa la opción "Reconexión automática" en la app. Si persiste, contacta a soporte indicando qué servidor usas.'
-      },
-      {
-        pregunta: '¿Cómo veo cuántos días me quedan?',
-        respuesta: 'Ingresa a tu Perfil en nuestra web para ver el estado de tu cuenta, días restantes e historial de compras. También puedes ver el tiempo restante directamente en la app.'
-      },
-    ]
-  },
-];
+// platformGuides removed (no se usan)
 
 export default function HelpPage() {
-  const [categories, setCategories] = useState<HelpCategory[]>([]);
-  const [articles, setArticles] = useState<HelpArticle[]>([]);
+  const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedFAQs, setExpandedFAQs] = useState<Set<string>>(new Set());
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [selectedHtmlUrl, setSelectedHtmlUrl] = useState<string | null>(null);
+  const [selectedHtmlTitle, setSelectedHtmlTitle] = useState<string | null>(null);
+  // Bloquear scroll del body cuando un modal esté abierto
+  useEffect(() => {
+    const open = !!selectedImage || !!selectedHtmlUrl;
+    if (open) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [selectedImage, selectedHtmlUrl]);
+  
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: categoriesData } = await supabase
-          .from('help_categories')
+        const { data } = await supabase
+          .from('help_tutorials')
           .select('*')
-          .eq('activo', true)
-          .order('orden');
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
 
-        const { data: articlesData } = await supabase
-          .from('help_articles')
-          .select('*')
-          .eq('estado', 'publicado')
-          .in('visible_para', ['todos', 'clientes'])
-          .order('prioridad', { ascending: false });
-
-        setCategories(categoriesData || []);
-        setArticles(articlesData || []);
+        setTutorials((data as Tutorial[] ) || []);
       } catch (error) {
-        console.error('Error fetching help data:', error);
+        console.error('Error fetching tutorials:', error);
       } finally {
         setLoading(false);
       }
@@ -177,55 +54,34 @@ export default function HelpPage() {
 
     fetchData();
   }, []);
-
-  const toggleFAQ = (id: string) => {
-    setExpandedFAQs(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  // Filter FAQs by search
-  const filteredFAQs = useMemo(() => {
-    if (!searchQuery.trim()) return defaultFAQs;
-
-    const query = searchQuery.toLowerCase();
-    return defaultFAQs
-      .map(cat => ({
-        ...cat,
-        preguntas: cat.preguntas.filter(
-          p => p.pregunta.toLowerCase().includes(query) || 
-               p.respuesta.toLowerCase().includes(query)
-        )
-      }))
-      .filter(cat => cat.preguntas.length > 0);
-  }, [searchQuery]);
+  // Filter tutorials by search (title/content)
+  const filteredTutorials = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return tutorials;
+    return tutorials.filter(t => (t.title || '').toLowerCase().includes(q) || (t.content || '').toLowerCase().includes(q));
+  }, [searchQuery, tutorials]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
+      <div className="min-h-screen bg-zinc-900 flex items-center justify-center text-zinc-100">
+        <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <>
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
       {/* Header */}
-      <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white">
+      <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 text-white">
         <div className="max-w-5xl mx-auto px-4 py-16 text-center">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-80" />
+            <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-80 text-emerald-400" />
             <h1 className="text-4xl font-bold mb-3">Centro de Ayuda</h1>
-            <p className="text-purple-200 text-lg max-w-2xl mx-auto">
+            <p className="text-zinc-300 text-lg max-w-2xl mx-auto">
               Encuentra respuestas rápidas a tus preguntas o contacta con nuestro equipo de soporte
             </p>
           </motion.div>
@@ -238,175 +94,82 @@ export default function HelpPage() {
             className="max-w-xl mx-auto mt-8"
           >
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar en preguntas frecuentes..."
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-gray-800 placeholder-gray-400 shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-zinc-800 text-zinc-100 placeholder-zinc-500 shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
+            </div>
+            <div className="mt-4 text-center">
+              <Link to="/ayuda/tutoriales" className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full text-sm font-semibold">Crear un tutorial</Link>
             </div>
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-12">
-        {/* Quick Links - Platform Guides */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-12"
-        >
-          <h2 className="text-xl font-bold text-purple-800 mb-4">Guías de Instalación</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {platformGuides.map((platform) => {
-              const Icon = platform.icon;
-              return (
-                <a
-                  key={platform.name}
-                  href="#"
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-purple-200 transition-all group"
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${platform.color} mb-3 group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <p className="font-semibold text-gray-800">{platform.name}</p>
-                  <p className="text-sm text-gray-500 mt-1">{platform.description}</p>
-                </a>
-              );
-            })}
-          </div>
-        </motion.div>
+        {/* (Se quitaron guías y categorías hardcodeadas; sólo se muestran tutoriales de la comunidad) */}
 
-        {/* Categories from DB (if any) */}
-        {categories.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-12"
-          >
-            <h2 className="text-xl font-bold text-purple-800 mb-4">Categorías</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {categories.map((category) => {
-                const Icon = categoryIcons[category.slug] || categoryIcons.default;
-                const articleCount = articles.filter(a => a.categoria_id === category.id).length;
-                
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
-                    className={`bg-white rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all text-left ${
-                      selectedCategory === category.id ? 'border-purple-400 ring-2 ring-purple-100' : 'border-gray-100 hover:border-purple-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-100">
-                        <Icon className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-800">{category.nombre}</p>
-                        <p className="text-sm text-gray-500">{articleCount} artículos</p>
-                      </div>
-                    </div>
-                    {category.descripcion && (
-                      <p className="text-sm text-gray-500 mt-3">{category.descripcion}</p>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Articles for selected category */}
-        <AnimatePresence>
-          {selectedCategory && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-12"
-            >
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {articles
-                  .filter(a => a.categoria_id === selectedCategory)
-                  .map((article) => (
-                    <div
-                      key={article.id}
-                      className="p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-800">{article.titulo}</p>
-                          {article.resumen && (
-                            <p className="text-sm text-gray-500 mt-1">{article.resumen}</p>
-                          )}
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* FAQs */}
+        {/* Tutoriales de la comunidad (desde Supabase) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-xl font-bold text-purple-800 mb-4">Preguntas Frecuentes</h2>
-          
-          {filteredFAQs.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
-              <HelpCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600">No se encontraron resultados para "{searchQuery}"</p>
-              <p className="text-sm text-gray-400 mt-1">Intenta con otros términos o contacta a soporte</p>
+          <h2 className="text-xl font-bold text-zinc-100 mb-4">Tutoriales de la Comunidad</h2>
+
+          {filteredTutorials.length === 0 ? (
+            <div className="bg-zinc-800 rounded-2xl p-8 text-center border border-zinc-700">
+              <HelpCircle className="w-12 h-12 text-zinc-400 mx-auto mb-3" />
+              <p className="text-zinc-300">No hay tutoriales publicados todavía.</p>
+              <p className="text-sm text-zinc-400 mt-1">Puedes ser el primero en crear uno.</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {filteredFAQs.map((category, catIndex) => (
-                <div key={catIndex} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="p-4 bg-gray-50 border-b border-gray-100">
-                    <h3 className="font-semibold text-purple-800">{category.categoria}</h3>
+              {filteredTutorials.map((t) => (
+                <div key={t.id} className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-sm overflow-hidden p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-zinc-100">{t.title}</h3>
+                      <p className="text-sm text-zinc-400">Por {t.author_name}{t.author_email ? ` • ${t.author_email}` : ''}</p>
+                      {t.created_at && <p className="text-xs text-zinc-500 mt-1">{new Date(t.created_at).toLocaleString()}</p>}
+                    </div>
                   </div>
-                  <div className="divide-y divide-gray-50">
-                    {category.preguntas.map((faq, faqIndex) => {
-                      const id = `${catIndex}-${faqIndex}`;
-                      const isExpanded = expandedFAQs.has(id);
-                      
-                      return (
-                        <div key={id}>
+
+                  {t.images && t.images.length > 0 && (
+                    <div className="mt-3 flex gap-3 flex-wrap">
+                      {t.images.map((img, idx) => {
+                        const bucket = (import.meta.env.VITE_SUPABASE_HELP_BUCKET as string) || 'help-center';
+                        const url = supabase.storage.from(bucket).getPublicUrl(img).data.publicUrl;
+                        return (
                           <button
-                            onClick={() => toggleFAQ(id)}
-                            className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors"
-                          >
-                            <p className="font-medium text-gray-800 pr-4">{faq.pregunta}</p>
-                            <ChevronDown className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            key={idx}
+                            onClick={() => { setSelectedImage(url); setSelectedTitle(t.title); }}
+                            className="focus:outline-none"
+                            aria-label={`Abrir imagen ${t.title}`}>
+                            <img src={url} alt={t.title} className="w-28 h-20 object-cover rounded-md border border-zinc-700" />
                           </button>
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <div className="px-4 pb-4 text-gray-600 text-sm leading-relaxed">
-                                  {faq.respuesta}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {t.content_html_url ? (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => { setSelectedHtmlUrl(`/api/help-center/html/${t.id}`); setSelectedHtmlTitle(t.title); }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md transition-all duration-200"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Visualizar
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-zinc-300 text-sm">{(t.content || '').slice(0, 300)}{(t.content || '').length > 300 ? '…' : ''}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -418,22 +181,22 @@ export default function HelpPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-8 text-center text-white"
+          className="mt-12 bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl p-8 text-center text-zinc-100"
         >
-          <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-80" />
+          <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-80 text-emerald-400" />
           <h3 className="text-2xl font-bold mb-2">¿No encontraste lo que buscabas?</h3>
-          <p className="text-purple-200 mb-6">Nuestro equipo de soporte está disponible para ayudarte</p>
+          <p className="text-zinc-300 mb-6">Nuestro equipo de soporte está disponible para ayudarte</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/chat"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-purple-700 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-800 text-zinc-100 rounded-xl font-semibold hover:bg-zinc-700 transition-colors"
             >
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-5 h-5 text-emerald-400" />
               Chat en vivo
             </a>
             <a
               href="/perfil?section=support"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-500/30 text-white rounded-xl font-semibold hover:bg-purple-500/40 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
             >
               <ExternalLink className="w-5 h-5" />
               Crear ticket
@@ -442,5 +205,46 @@ export default function HelpPage() {
         </motion.div>
       </div>
     </div>
+    {/* Modal - imagen ampliada */}
+    {selectedImage && (
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 hide-scrollbar"
+        onClick={() => { setSelectedImage(null); setSelectedTitle(null); }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden rounded-md hide-scrollbar"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900">
+            <div className="text-sm font-semibold text-zinc-100">{selectedTitle}</div>
+            <button onClick={() => { setSelectedImage(null); setSelectedTitle(null); }} className="text-zinc-300 hover:text-white">✕</button>
+          </div>
+          <div className="flex-1 overflow-auto bg-zinc-800 p-4 rounded-b-md hide-scrollbar min-h-0 flex items-center justify-center">
+            <img src={selectedImage} alt={selectedTitle || 'Imagen'} className="max-w-full max-h-[80vh] object-contain rounded" />
+          </div>
+        </motion.div>
+      </div>
+    )}
+  
+    {/* Modal HTML preview (sandboxed iframe) */}
+    {selectedHtmlUrl && (
+      <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 hide-scrollbar" onClick={() => { setSelectedHtmlUrl(null); setSelectedHtmlTitle(null); }}>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-4xl w-full h-[80vh] flex flex-col overflow-hidden rounded-md hide-scrollbar" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900">
+            <div className="text-sm font-semibold text-zinc-100">{selectedHtmlTitle || 'Previsualización'}</div>
+            <button onClick={() => { setSelectedHtmlUrl(null); setSelectedHtmlTitle(null); }} className="text-zinc-300 hover:text-white">✕</button>
+          </div>
+          <div className="flex-1 overflow-auto bg-zinc-800 p-2 rounded-b-md hide-scrollbar min-h-0">
+            <iframe src={selectedHtmlUrl || undefined} title="HTML Preview" className="w-full h-full border-0 min-h-0" sandbox="allow-forms allow-popups allow-modals allow-orientation-lock allow-pointer-lock"></iframe>
+          </div>
+        </motion.div>
+      </div>
+    )}
+    </>
   );
 }

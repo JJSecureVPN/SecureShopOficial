@@ -194,10 +194,10 @@ export class SupabaseService {
   async savePurchaseToHistory(
     email: string,
     purchase: Omit<PurchaseHistoryRecord, 'user_id'>
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     if (!this.client || !this.enabled) {
       console.log('[Supabase] Servicio no habilitado, omitiendo guardado de historial');
-      return false;
+      return null;
     }
 
     try {
@@ -206,27 +206,29 @@ export class SupabaseService {
 
       if (!user) {
         console.log(`[Supabase] Usuario con email ${email} no encontrado. La compra no se guardará en historial hasta que se registre.`);
-        return false;
+        return null;
       }
 
       // Guardar en historial
-      const { error } = await this.client
+      const { data, error } = await this.client
         .from('purchase_history')
         .insert({
           user_id: user.id,
           ...purchase,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error('[Supabase] Error guardando compra en historial:', error);
-        return false;
+        return null;
       }
 
-      console.log(`[Supabase] Compra guardada en historial para usuario ${email}`);
-      return true;
+      console.log(`[Supabase] Compra guardada en historial para usuario ${email}, ID: ${data.id}`);
+      return data.id;
     } catch (error) {
       console.error('[Supabase] Error guardando compra:', error);
-      return false;
+      return null;
     }
   }
 
@@ -244,7 +246,7 @@ export class SupabaseService {
     servexExpiracion?: string;
     servexConnectionLimit?: number;
     mpPaymentId?: string;
-  }): Promise<boolean> {
+  }): Promise<string | null> {
     return this.savePurchaseToHistory(data.email, {
       tipo: data.tipo,
       plan_nombre: data.planNombre,

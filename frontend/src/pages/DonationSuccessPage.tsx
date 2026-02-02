@@ -61,7 +61,7 @@ const DonationSuccessPage = () => {
     return (
       <div className="min-h-screen text-gray-900 pt-16 flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
           <p className="text-gray-600 text-sm">
             Confirmando tu donación... ({reintentos}/{MAX_REINTENTOS})
           </p>

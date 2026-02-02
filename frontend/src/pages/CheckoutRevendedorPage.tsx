@@ -155,12 +155,12 @@ const CheckoutRevendedorPage: React.FC = () => {
 
   if (!plan) {
     return (
-      <div className="min-h-screen bg-white pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-900 pt-20 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <ShoppingBag className="w-6 h-6 text-purple-600" />
+          <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <ShoppingBag className="w-6 h-6 text-orange-500" />
           </div>
-          <p className="text-gray-500">Cargando plan...</p>
+          <p className="text-zinc-400">Cargando plan...</p>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ const CheckoutRevendedorPage: React.FC = () => {
   const precioFinal = plan.precio - descuentoAplicado;
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24">
+    <div className="min-h-screen bg-zinc-900 pt-20 md:pt-24">
       <main>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
@@ -181,14 +181,14 @@ const CheckoutRevendedorPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-400 text-sm font-medium mb-4">
                   <Users className="w-4 h-4" />
                   Plan Revendedor
                 </div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium text-gray-900 mb-3">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium text-zinc-100 mb-3">
                   Información Personal
                 </h1>
-                <p className="text-base sm:text-lg text-gray-500">
+                <p className="text-base sm:text-lg text-zinc-400">
                   Completa tus datos para finalizar la compra
                 </p>
               </motion.div>
@@ -198,22 +198,22 @@ const CheckoutRevendedorPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5"
+                className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-sm p-6 space-y-5"
               >
                 {/* Nombre */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Nombre completo
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-focus-within:bg-purple-100 transition-colors">
-                      <User className="w-5 h-5 text-purple-500" />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-focus-within:bg-orange-500/20 transition-colors">
+                      <User className="w-5 h-5 text-orange-500" />
                     </div>
                     <input
                       ref={nombreInputRef}
                       type="text"
                       defaultValue=""
-                      className="w-full pl-16 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all hover:border-gray-300"
+                      className="w-full pl-16 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-xl text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all hover:border-zinc-500"
                       placeholder="Juan Pérez"
                     />
                   </div>
@@ -221,30 +221,30 @@ const CheckoutRevendedorPage: React.FC = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Email
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-focus-within:bg-purple-100 transition-colors">
-                      <Mail className="w-5 h-5 text-purple-500" />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-focus-within:bg-orange-500/20 transition-colors">
+                      <Mail className="w-5 h-5 text-orange-500" />
                     </div>
                     <input
                       ref={emailInputRef}
                       type="email"
                       defaultValue=""
-                      className="w-full pl-16 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all hover:border-gray-300"
+                      className="w-full pl-16 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-xl text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all hover:border-zinc-500"
                       placeholder="tu@email.com"
                     />
                   </div>
-                  <p className="text-gray-500 text-xs mt-2 flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-purple-500" />
+                  <p className="text-zinc-400 text-xs mt-2 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-orange-500" />
                     Recibirás tus credenciales de revendedor en este email
                   </p>
                 </div>
 
                 {/* Cupón */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-zinc-300 mb-3">
                     Código de descuento (opcional)
                   </label>
                   <CuponInput
@@ -286,18 +286,18 @@ const CheckoutRevendedorPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-gradient-to-br from-purple-50 via-white to-indigo-50 rounded-2xl border border-purple-100 p-6 lg:p-8 space-y-6"
+                className="bg-gradient-to-br from-zinc-800 via-zinc-800 to-zinc-800 rounded-2xl border border-zinc-700 p-6 lg:p-8 space-y-6"
               >
                 {/* Plan Info */}
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mb-3">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-medium mb-3">
                     <Check className="w-3 h-3" />
                     Plan seleccionado
                   </span>
-                  <h2 className="text-2xl sm:text-3xl font-serif font-medium text-gray-900 mb-1">
+                  <h2 className="text-2xl sm:text-3xl font-serif font-medium text-zinc-100 mb-1">
                     {plan.nombre}
                   </h2>
-                  <p className="text-gray-500 flex items-center gap-1.5">
+                  <p className="text-zinc-400 flex items-center gap-1.5">
                     <Users className="w-4 h-4" />
                     {plan.account_type === "credit"
                       ? `${plan.max_users} créditos`
@@ -306,13 +306,13 @@ const CheckoutRevendedorPage: React.FC = () => {
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-purple-100" />
+                <div className="border-t border-zinc-700" />
 
                 {/* Price Breakdown */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-zinc-400">Subtotal</span>
+                    <span className="text-zinc-100 font-medium">
                       ${plan.precio.toLocaleString("es-AR")}
                     </span>
                   </div>
@@ -327,30 +327,30 @@ const CheckoutRevendedorPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="border-t border-purple-100 pt-4 flex justify-between items-center">
-                    <span className="text-gray-900 font-medium">Total</span>
-                    <span className="text-3xl font-bold text-purple-600">
+                  <div className="border-t border-zinc-700 pt-4 flex justify-between items-center">
+                    <span className="text-zinc-100 font-medium">Total</span>
+                    <span className="text-3xl font-bold text-orange-500">
                       ${precioFinal.toLocaleString("es-AR")}
                     </span>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-purple-100" />
+                <div className="border-t border-zinc-700" />
 
                 {/* Plan Details */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-purple-600" />
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-orange-500" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900 text-sm">
+                      <div className="font-medium text-zinc-100 text-sm">
                         {plan.account_type === "credit"
                           ? `${plan.max_users} créditos`
                           : `${plan.max_users} usuarios`}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-zinc-400">
                         {plan.account_type === "credit"
                           ? "Créditos de acceso"
                           : "30 días de validez"}
@@ -363,10 +363,10 @@ const CheckoutRevendedorPage: React.FC = () => {
                       <Clock className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900 text-sm">
+                      <div className="font-medium text-zinc-100 text-sm">
                         Acceso inmediato
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-zinc-400">
                         Recibirás tus credenciales en el email
                       </div>
                     </div>
@@ -384,11 +384,11 @@ const CheckoutRevendedorPage: React.FC = () => {
               </motion.div>
 
               {/* Security Badge */}
-              <div className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-100 rounded-xl">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-purple-600" />
+              <div className="flex items-center gap-3 p-4 bg-zinc-800 border border-zinc-700 rounded-xl">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-orange-500" />
                 </div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-zinc-300">
                   Pago 100% seguro con <span className="font-medium">MercadoPago</span>
                 </span>
               </div>
@@ -396,7 +396,7 @@ const CheckoutRevendedorPage: React.FC = () => {
               {/* Back Button */}
               <button
                 onClick={() => navigate("/revendedores")}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+                className="w-full py-3 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-xl transition-colors border border-zinc-600"
               >
                 Volver a planes
               </button>

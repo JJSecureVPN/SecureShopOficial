@@ -10,7 +10,7 @@ import { apiService } from '../../services/api.service';
 import {
   ProfileNavSidebar,
   ProfileSection,
-  ActiveSubscriptionCard,
+  AllActiveSubscriptions,
   PurchaseHistorySection,
   SupportTicketsSection,
   OverviewSection,
@@ -106,20 +106,23 @@ export default function ProfilePage() {
     }
   }, [sectionFromUrl]);
 
-  // Obtener suscripción activa
-  const suscripcionActiva = purchaseHistory.find(
+  // Obtener TODAS las suscripciones activas
+  const suscripcionesActivas = purchaseHistory.filter(
     (compra) =>
       compra.estado === 'aprobado' &&
       compra.servex_username &&
       compra.servex_expiracion &&
       new Date(compra.servex_expiracion) > new Date()
-  ) || null;
+  );
+  
+  // Para compatibilidad: primera suscripción activa (para overview)
+  const suscripcionActiva = suscripcionesActivas[0] || null;
 
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      <div className="min-h-screen bg-refine-dark flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
@@ -151,27 +154,18 @@ export default function ProfilePage() {
         );
       
       case 'subscription':
-        return suscripcionActiva ? (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mi Suscripción</h1>
-              <p className="text-gray-500 mt-1">Detalles de tu plan activo</p>
-            </div>
-            <ActiveSubscriptionCard suscripcion={suscripcionActiva} />
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No tienes una suscripción activa</p>
-          </div>
+        return (
+          <AllActiveSubscriptions
+            suscripcionesActivas={suscripcionesActivas}
+            estadosCuenta={estadosCuenta}
+            onConsultarEstado={consultarEstadoCuenta}
+            onRefrescarEstado={refrescarEstadoCuenta}
+          />
         );
       
       case 'referidos':
         return (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Programa de Referidos</h1>
-              <p className="text-gray-500 mt-1">Invita amigos y gana recompensas</p>
-            </div>
             <ReferidosSection userId={user.id} userEmail={user.email || ''} />
           </div>
         );
@@ -179,10 +173,6 @@ export default function ProfilePage() {
       case 'tickets':
         return (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Soporte</h1>
-              <p className="text-gray-500 mt-1">Gestiona tus tickets y consultas</p>
-            </div>
             <SupportTicketsSection userId={user.id} />
           </div>
         );
@@ -190,15 +180,12 @@ export default function ProfilePage() {
       case 'history':
         return (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Historial de Compras</h1>
-              <p className="text-gray-500 mt-1">Todas tus transacciones</p>
-            </div>
             <PurchaseHistorySection
               purchaseHistory={purchaseHistory}
-              estadosCuenta={estadosCuenta}
-              onConsultarEstado={consultarEstadoCuenta}
-              onRefrescarEstado={refrescarEstadoCuenta}
+              estadosCuenta={{}}
+              onConsultarEstado={() => {}}
+              onRefrescarEstado={() => {}}
+              readOnly={true}
             />
           </div>
         );
@@ -218,17 +205,17 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30">
+    <div className="min-h-screen bg-refine-dark">
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+      <div className="lg:hidden sticky top-0 z-40 bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-700">
         <div className="px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -ml-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="p-2 -ml-2 rounded-xl hover:bg-zinc-800 transition-colors"
           >
-            <Menu className="w-6 h-6 text-gray-700" />
+            <Menu className="w-6 h-6 text-zinc-300" />
           </button>
-          <h1 className="font-bold text-gray-900">Mi Cuenta</h1>
+          <h1 className="font-bold text-white">Mi Cuenta</h1>
           <div className="w-10" />
         </div>
       </div>
@@ -249,15 +236,15 @@ export default function ProfilePage() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[300px] bg-white shadow-2xl"
+              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[300px] bg-zinc-900 shadow-2xl"
             >
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-gray-900">Menú</span>
+              <div className="p-4 border-b border-zinc-700 flex items-center justify-between">
+                <span className="font-bold text-white">Menú</span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-xl hover:bg-zinc-800 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  <X className="w-5 h-5 text-zinc-300" />
                 </button>
               </div>
               <div className="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
@@ -268,7 +255,7 @@ export default function ProfilePage() {
                   onSectionChange={handleSectionChange}
                   emailVerificado={emailVerificado}
                   onSignOut={handleSignOut}
-                  hasSuscripcionActiva={!!suscripcionActiva}
+                  suscripcionesActivas={suscripcionesActivas.length}
                 />
               </div>
             </motion.div>
@@ -289,7 +276,7 @@ export default function ProfilePage() {
                 onSectionChange={handleSectionChange}
                 emailVerificado={emailVerificado}
                 onSignOut={handleSignOut}
-                hasSuscripcionActiva={!!suscripcionActiva}
+                suscripcionesActivas={suscripcionesActivas.length}
               />
             </div>
           </div>

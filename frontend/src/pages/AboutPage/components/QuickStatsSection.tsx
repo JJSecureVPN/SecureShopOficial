@@ -7,11 +7,6 @@ const STATS = [
   { label: "Soporte", value: "24/7", icon: Headphones, color: "sky" },
 ];
 
-const colorClasses: Record<string, { bg: string; icon: string; text: string }> = {
-  purple: { bg: "bg-purple-50", icon: "text-purple-500", text: "text-purple-600" },
-  emerald: { bg: "bg-emerald-50", icon: "text-emerald-500", text: "text-emerald-600" },
-  sky: { bg: "bg-sky-50", icon: "text-sky-500", text: "text-sky-600" },
-};
 
 export function QuickStatsSection() {
   return (
@@ -25,11 +20,17 @@ export function QuickStatsSection() {
           transition={{ duration: 0.5 }}
         >
           {STATS.map((stat, index) => {
-            const colors = colorClasses[stat.color];
+            // map light palette to subtle dark variants
+            const darkMap: Record<string, { bg: string; icon: string; text: string }> = {
+              purple: { bg: "bg-indigo-900/10", icon: "text-indigo-400", text: "text-indigo-300" },
+              emerald: { bg: "bg-emerald-900/10", icon: "text-emerald-400", text: "text-emerald-300" },
+              sky: { bg: "bg-sky-900/10", icon: "text-sky-400", text: "text-sky-300" },
+            };
+            const colors = darkMap[stat.color];
             return (
               <motion.div 
                 key={stat.label} 
-                className={`rounded-2xl ${colors.bg} border border-gray-100 p-6 sm:p-8 text-center`}
+                className={`rounded-2xl ${colors.bg} border border-zinc-700 p-6 sm:p-8 text-center`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -38,7 +39,7 @@ export function QuickStatsSection() {
                 <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${colors.bg} mb-4`}>
                   <stat.icon className={`w-6 h-6 ${colors.icon}`} />
                 </div>
-                <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">{stat.label}</p>
+                <p className="text-xs uppercase tracking-widest text-zinc-400 mb-2">{stat.label}</p>
                 <p className={`text-3xl sm:text-4xl lg:text-5xl font-serif font-medium ${colors.text}`}>{stat.value}</p>
               </motion.div>
             );

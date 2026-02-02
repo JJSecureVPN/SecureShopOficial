@@ -17,30 +17,30 @@ export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeS
       className="space-y-4 sm:space-y-6"
     >
       {/* Tab Container */}
-      <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl p-2 sm:p-3 shadow-sm">
+      <div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-2 sm:p-3 shadow-sm">
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <button
             onClick={onSelectCompra}
             className={`group flex flex-col items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 sm:py-4 rounded-xl transition-all ${
               mode === "compra"
-                ? "bg-gradient-to-br from-purple-50 to-white border border-purple-200 shadow-md"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-gradient-to-br from-zinc-800 to-zinc-800/50 shadow-md"
+                : "text-zinc-400 hover:bg-zinc-800/50"
             }`}
           >
             <div
-              className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all ${
+                className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all ${
                 mode === "compra"
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-gray-100 text-gray-500 group-hover:text-gray-700"
+                  ? "bg-indigo-500/10 text-indigo-400"
+                  : "bg-zinc-800 text-zinc-500 group-hover:text-zinc-300"
               }`}
             >
               <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div className="text-center">
-              <p className={`text-sm font-semibold ${mode === "compra" ? "text-purple-700" : "text-gray-700"}`}>
+              <p className={`text-sm font-semibold ${mode === "compra" ? "text-indigo-400" : "text-zinc-300"}`}>
                 Comprar Plan
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">Adquiere nuevos planes</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Adquiere nuevos planes</p>
             </div>
           </button>
 
@@ -48,24 +48,24 @@ export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeS
             onClick={onSelectRenovacion}
             className={`group flex flex-col items-center gap-2 sm:gap-3 px-4 sm:px-5 py-3 sm:py-4 rounded-xl transition-all ${
               mode === "renovacion"
-                ? "bg-gradient-to-br from-purple-50 to-white border border-purple-200 shadow-md"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-gradient-to-br from-zinc-800 to-zinc-800/50 shadow-md"
+                : "text-zinc-400 hover:bg-zinc-800/50"
             }`}
           >
             <div
-              className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all ${
+                className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl transition-all ${
                 mode === "renovacion"
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-gray-100 text-gray-500 group-hover:text-gray-700"
+                  ? "bg-indigo-500/10 text-indigo-400"
+                  : "bg-zinc-800 text-zinc-500 group-hover:text-zinc-300"
               }`}
             >
               <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div className="text-center">
-              <p className={`text-sm font-semibold ${mode === "renovacion" ? "text-purple-700" : "text-gray-700"}`}>
+              <p className={`text-sm font-semibold ${mode === "renovacion" ? "text-indigo-400" : "text-zinc-300"}`}>
                 Renovar Plan
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">Renueva tu plan existente</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Renueva tu plan existente</p>
             </div>
           </button>
         </div>
@@ -74,8 +74,8 @@ export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeS
       {/* Info Banner */}
       <div className={`rounded-xl px-4 sm:px-5 py-3 sm:py-4 text-sm text-center border ${
         mode === "compra" 
-          ? "bg-purple-50 border-purple-200 text-purple-700" 
-          : "bg-purple-50 border-purple-200 text-purple-700"
+          ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
+          : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
       }`}>
         {mode === "compra" ? (
           <span>

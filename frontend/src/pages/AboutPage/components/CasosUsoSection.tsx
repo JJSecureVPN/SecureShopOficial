@@ -38,7 +38,7 @@ export function CasosUsoSection() {
   };
 
   return (
-    <section id="casos-uso" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 scroll-mt-24 bg-gray-50/50">
+    <section id="casos-uso" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 scroll-mt-24">
       <div className="max-w-7xl mx-auto space-y-8 sm:space-y-12">
         <SectionTitle
           icon={<Smartphone className="h-5 w-5" />}
@@ -53,7 +53,7 @@ export function CasosUsoSection() {
             return (
               <motion.article 
                 key={use.title} 
-                className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8 flex gap-4"
+                className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8 flex gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -63,8 +63,8 @@ export function CasosUsoSection() {
                   <use.icon className={`w-6 h-6 ${colors.icon}`} />
                 </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-serif font-medium text-gray-900 mb-1">{use.title}</h3>
-                  <p className="text-gray-500 text-sm sm:text-base">{use.desc}</p>
+                  <h3 className="text-lg sm:text-xl font-serif font-medium text-zinc-100 mb-1">{use.title}</h3>
+                  <p className="text-zinc-400 text-sm sm:text-base">{use.desc}</p>
                 </div>
               </motion.article>
             );

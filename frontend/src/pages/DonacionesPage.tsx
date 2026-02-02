@@ -140,6 +140,37 @@ const DonacionesPage = ({
     };
   }, []);
 
+  
+
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
+  }, []);
+
   const handlePaymentButtonClick = async () => {
     try {
       await getPreferenceIdForPayment();
@@ -152,7 +183,7 @@ const DonacionesPage = ({
   };
 
   return (
-    <div className="bg-white text-gray-900">
+    <div className="bg-zinc-900 text-zinc-100">
       {/* Mobile Bottom Sheet Navigation */}
       <BottomSheet
         isOpen={isMobileMenuOpen}
@@ -186,15 +217,15 @@ const DonacionesPage = ({
 
       {/* Main Content */}
       <main>
-        {/* Header Section with Full Gradient */}
-        <div className="w-full bg-gradient-to-b from-purple-200/50 via-purple-50/30 to-white">
+        {/* Hero Header (sticky under global header) */}
+        <div className="w-full bg-zinc-900 sticky top-16 z-40 shadow-sm border-b border-zinc-800">
           <div className="w-full px-5 sm:px-6 lg:px-8 xl:px-10 py-12 sm:py-16 lg:py-20 xl:py-24">
             <div className="mb-8 sm:mb-10 lg:mb-12 xl:mb-16 grid gap-6 sm:gap-8 lg:gap-10 xl:gap-12 items-center lg:grid-cols-[1.1fr,0.9fr]">
               <div className="text-center lg:text-left">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal mb-3 sm:mb-4 lg:mb-5 xl:mb-6 text-gray-900">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal mb-3 sm:mb-4 lg:mb-5 xl:mb-6 text-zinc-100">
                   Apoyá a JJSecure VPN
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700 max-w-4xl mx-auto lg:mx-0">
+                <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400 max-w-4xl mx-auto lg:mx-0">
                   Tu donación nos ayuda a seguir manteniendo servidores estables, mejorar la infraestructura y crear nuevas funciones para toda la comunidad.
                 </p>
               </div>
@@ -211,23 +242,23 @@ const DonacionesPage = ({
         </div>
 
         {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 xl:px-10 py-12 sm:py-16 lg:py-20 xl:py-24 pb-24 md:pb-12">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 xl:px-10 pt-16 pb-24 md:pb-12">
 
           {/* Status Message */}
           {estadoMensaje && (
             <div
               className={`mb-6 sm:mb-8 lg:mb-10 xl:mb-12 flex items-start gap-3 rounded-lg px-3 sm:px-4 lg:px-5 xl:px-6 py-3 sm:py-4 lg:py-5 xl:py-6 border backdrop-blur-sm ${
                 estadoMensaje.tipo === "error"
-                  ? "bg-rose-50 border-rose-300 text-rose-700"
-                  : "bg-blue-50 border-blue-300 text-blue-700"
+                  ? "bg-rose-900/20 border-rose-800 text-rose-300"
+                  : "bg-blue-900/20 border-blue-800 text-blue-300"
               }`}
             >
               {estadoMensaje.tipo === "error" ? (
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0" />
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0 text-rose-300" />
               ) : (
-                <Info className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0" />
+                <Info className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0 text-blue-300" />
               )}
-              <span className="text-xs sm:text-sm lg:text-base xl:text-lg">{estadoMensaje.texto}</span>
+              <span className="text-xs sm:text-sm lg:text-base xl:text-lg text-zinc-200">{estadoMensaje.texto}</span>
             </div>
           )}
 
@@ -236,8 +267,8 @@ const DonacionesPage = ({
             {/* Left Column: Form */}
             <div className="lg:col-span-2 space-y-5 sm:space-y-6 lg:space-y-8 xl:space-y-10">
               {/* Donation Form */}
-              <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 p-5 sm:p-6 lg:p-8 xl:p-10">
-                <h2 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-gray-900 uppercase tracking-wider mb-5 sm:mb-6 lg:mb-7 xl:mb-8">
+              <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-zinc-800 border border-zinc-700 p-5 sm:p-6 lg:p-8 xl:p-10">
+                <h2 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-zinc-100 uppercase tracking-wider mb-5 sm:mb-6 lg:mb-7 xl:mb-8">
                   Información de la Donación
                 </h2>
 
@@ -251,10 +282,10 @@ const DonacionesPage = ({
                   {/* Monto Section */}
                   <div>
                     <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
-                      <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-gray-900">
+                      <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100">
                         Monto de la donación
                       </label>
-                      <span className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-600">Mínimo $500</span>
+                      <span className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400">Mínimo $500</span>
                     </div>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm font-medium">
@@ -267,7 +298,7 @@ const DonacionesPage = ({
                         step={100}
                         value={monto}
                         onChange={(e) => setMonto(Number(e.target.value))}
-                        className="w-full bg-white border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-lg pl-8 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold transition-colors outline-none text-gray-900"
+                        className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg pl-8 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold transition-colors outline-none text-zinc-100"
                       />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3 sm:mt-4 lg:mt-5 xl:mt-6">
@@ -278,8 +309,8 @@ const DonacionesPage = ({
                           onClick={() => handleMontoRapido(valor)}
                           className={`px-3 sm:px-4 lg:px-5 xl:px-6 py-2 sm:py-3 lg:py-4 xl:py-5 rounded-lg border text-[10px] sm:text-xs lg:text-sm xl:text-base font-medium transition-all ${
                             monto === valor
-                              ? "border-rose-400 bg-rose-50 text-rose-700"
-                              : "border-gray-300 bg-gray-50 hover:border-rose-400 text-gray-700"
+                              ? "border-rose-500 bg-rose-800 text-rose-200"
+                              : "border-zinc-700 bg-zinc-800 hover:border-rose-500 text-zinc-200"
                           }`}
                         >
                           ${valor.toLocaleString("es-AR")}
@@ -290,7 +321,7 @@ const DonacionesPage = ({
 
                   {/* Nombre */}
                   <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-gray-900 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
+                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
                       Nombre (opcional)
                     </label>
                     <input
@@ -298,13 +329,13 @@ const DonacionesPage = ({
                       value={donanteNombre}
                       onChange={(e) => setDonanteNombre(e.target.value)}
                       placeholder="Ej: María López"
-                      className="w-full bg-white border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-gray-900 placeholder-gray-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-zinc-100 placeholder-zinc-500"
                     />
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-gray-900 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
+                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
                       Email (para confirmación)
                     </label>
                     <input
@@ -313,13 +344,13 @@ const DonacionesPage = ({
                       onChange={(e) => setDonanteEmail(e.target.value)}
                       placeholder="Ej: nombre@correo.com"
                       required
-                      className="w-full bg-white border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-gray-900 placeholder-gray-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-zinc-100 placeholder-zinc-500"
                     />
                   </div>
 
                   {/* Mensaje */}
                   <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-gray-900 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
+                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
                       Mensaje (opcional)
                     </label>
                     <textarea
@@ -327,21 +358,21 @@ const DonacionesPage = ({
                       onChange={(e) => setMensaje(e.target.value)}
                       placeholder="Contanos por qué decidiste apoyar el proyecto"
                       rows={4}
-                      className="w-full bg-white border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none resize-none text-gray-900 placeholder-gray-500"
+                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none resize-none text-zinc-100 placeholder-zinc-500"
                     />
                   </div>
 
                   {/* Error Message */}
                   {error && (
-                    <div className="flex items-start gap-3 rounded-lg bg-rose-50 border border-rose-300 p-3 sm:p-4 lg:p-5 xl:p-6">
-                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-rose-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-rose-700">{error}</p>
+                    <div className="flex items-start gap-3 rounded-lg bg-rose-900/20 border border-rose-800 p-3 sm:p-4 lg:p-5 xl:p-6">
+                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-rose-300 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-rose-300">{error}</p>
                     </div>
                   )}
 
                   {/* Loading Indicator */}
                   {loading && (
-                    <div className="flex items-center justify-center gap-2 text-xs sm:text-sm lg:text-base xl:text-lg text-gray-600 py-1 sm:py-2 lg:py-3 xl:py-4">
+                    <div className="flex items-center justify-center gap-2 text-xs sm:text-sm lg:text-base xl:text-lg text-zinc-300 py-1 sm:py-2 lg:py-3 xl:py-4">
                       <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 animate-spin" />
                       Generando link de pago...
                     </div>
@@ -349,13 +380,13 @@ const DonacionesPage = ({
 
                   {/* Payment Success - Show Link */}
                   {ultimoResultado && (
-                    <div className="bg-emerald-50 border border-emerald-300 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 xl:p-8 space-y-3 sm:space-y-4 lg:space-y-5 xl:space-y-6">
+                    <div className="bg-emerald-900/20 border border-emerald-800 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 xl:p-8 space-y-3 sm:space-y-4 lg:space-y-5 xl:space-y-6">
                       <div className="flex justify-center mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
                         <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 border border-emerald-300">
                           <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20 text-emerald-600" />
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-emerald-700 text-xs sm:text-sm lg:text-base xl:text-lg font-medium">
+                      <div className="flex items-center gap-2 text-emerald-300 text-xs sm:text-sm lg:text-base xl:text-lg font-medium">
                         <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6" />
                         Tu donación está lista para realizarse
                       </div>

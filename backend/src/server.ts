@@ -11,7 +11,6 @@ import { TiendaService } from "./services/tienda.service";
 import { TiendaRevendedoresService } from "./services/tienda-revendedores.service";
 import { RenovacionService } from "./services/renovacion.service";
 import { WebSocketService } from "./services/websocket.service";
-import { PromoTimerService } from "./services/promo-timer.service";
 import { PagosPendientesService } from "./services/pagos-pendientes.service";
 import { crearRutasTienda } from "./routes/tienda.routes";
 import { crearRutasRevendedores } from "./routes/tienda-revendedores.routes";
@@ -20,12 +19,12 @@ import { crearRutasDonaciones } from "./routes/donaciones.routes";
 import { crearRutasStats } from "./routes/stats.routes";
 import { crearRutasClientes } from "./routes/clientes.routes";
 import configRoutes from "./routes/config.routes";
-import cuponesRoutes from "./routes/cupones.routes";
+import cuponesSupabaseRoutes from "./routes/cupones-supabase.routes";
 import referidosRoutes from "./routes/referidos.routes";
 import noticiasRouter from "./routes/noticias.routes";
+import crearRutasHelpCenter from "./routes/help-center.routes";
 import supportRoutes from "./routes/support.routes";
 // import promoRoutes from "./routes/promo.routes"; // DESACTIVADO por conflicto
-import { cuponesService } from "./services/cupones.service";
 import { ServexPollingService } from "./services/servex-polling.service";
 import { RealtimeService } from "./services/realtime.service";
 import { crearRutasRealtime } from "./routes/realtime.routes";
@@ -33,8 +32,11 @@ import { crearRutasSponsors } from "./routes/sponsors.routes";
 import { crearRutasActiveSessions } from "./routes/active-sessions.routes";
 import { DonacionesService } from "./services/donaciones.service";
 import { SponsorsService } from "./services/sponsors.service";
-import { PlanesService } from "./services/planes.service";
-import { crearRutasPlanes, crearRutasPlanesRevendedores } from "./routes/planes.routes";
+import {
+  crearRutasPlanesVPN,
+  crearRutasPlanesRevendedores,
+  crearRutasPromociones,
+} from "./routes/planes-supabase.routes";
 import { SupabaseService } from "./services/supabase.service";
 import {
   corsMiddleware,
@@ -55,13 +57,11 @@ class Server {
   private renovacionService!: RenovacionService;
   private donacionesService!: DonacionesService;
   private sponsorsService!: SponsorsService;
-  private planesService!: PlanesService;
   private wsService!: WebSocketService;
   private servexService!: ServexService;
   private servexPollingService!: ServexPollingService;
   private realtimeService!: RealtimeService;
   private pagosPendientesService!: PagosPendientesService;
-  private promoTimerService: PromoTimerService | null = null;
   private lastServexSnapshotLog = 0;
 
   constructor() {
@@ -90,18 +90,8 @@ class Server {
   this.sponsorsService = new SponsorsService(this.db);
   console.log("[Server] ✅ Servicio de sponsors inicializado");
 
-  this.planesService = new PlanesService(this.db);
-  console.log("[Server] ✅ Servicio de planes inicializado");
-
-    // Inicializar cupones desde configuración
-    cuponesService.cargarCuponesDesdeConfig().then((resultado) => {
-      console.log(`[Server] ✅ Cupones cargados: ${resultado.cargados}, existentes: ${resultado.existentes}`);
-      if (resultado.errores.length > 0) {
-        console.warn("[Server] ⚠️  Errores al cargar cupones:", resultado.errores);
-      }
-    }).catch((error) => {
-      console.error("[Server] Error cargando cupones desde configuración:", error);
-    });
+    // Cupones ahora se gestionan desde Supabase - no se cargan desde JSON
+    console.log("[Server] ℹ️  Cupones: sistema migrado a Supabase");
 
     // Inicializar servicio de Servex
     const servex = new ServexService(config.servex);
@@ -188,11 +178,6 @@ class Server {
     );
     this.pagosPendientesService.start();
     console.log("[Server] ✅ Servicio de pagos pendientes inicializado (respaldo automático)");
-
-    // Inicializar planes por defecto
-    this.tiendaService.inicializarPlanes().catch((error) => {
-      console.error("[Server] Error inicializando planes:", error);
-    });
   }
 
   private setupMiddleware(): void {
@@ -388,8 +373,8 @@ class Server {
     // Rutas de la API - Soporte (webhooks)
     this.app.use("/api/support", supportRoutes);
 
-    // Rutas de la API - Cupones
-    this.app.use("/api/cupones", cuponesRoutes);
+    // Rutas de la API - Cupones (Supabase)
+    this.app.use("/api/cupones", cuponesSupabaseRoutes);
 
     // Rutas de la API - Referidos y Saldo
     this.app.use("/api/referidos", referidosRoutes);
@@ -397,37 +382,24 @@ class Server {
     // Rutas de la API - Noticias
     this.app.use("/api/noticias", noticiasRouter);
 
+    // Rutas de Centro de Ayuda / Tutoriales
+    this.app.use("/api/help-center", crearRutasHelpCenter(this.supabaseService));
+
     this.app.use(
       "/api/sponsors",
       crearRutasSponsors(this.sponsorsService),
     );
 
-    // Rutas de la API - Planes
-    this.app.use(
-      "/api/planes",
-      crearRutasPlanes(this.planesService),
-    );
-
-    this.app.use(
-      "/api/planes-revendedores",
-      crearRutasPlanesRevendedores(this.planesService),
-    );
+    // Rutas de la API - Planes (Supabase)
+    console.log("[Server] ✅ Usando planes desde Supabase");
+    this.app.use("/api/planes", crearRutasPlanesVPN());
+    this.app.use("/api/planes-revendedores", crearRutasPlanesRevendedores());
+    this.app.use("/api/promociones", crearRutasPromociones());
 
     // Rutas de la API - Visitantes - removidas (funcionalidad de conteo eliminada)
 
     // Rutas de la API - Promo (para revendedores) - DESACTIVADO por conflicto
     // this.app.use("/api/config", promoRoutes);
-
-    // Inicializar PromoTimerService para verificar promos expiradas cada 5 minutos
-    const configPath = require("path").join(
-      process.cwd(),
-      "public",
-      "config",
-      "planes.config.json"
-    );
-    this.promoTimerService = new PromoTimerService(configPath);
-    this.promoTimerService.iniciar();
-    console.log("[Server] ✅ PromoTimerService inicializado");
 
     // 404 handler
     this.app.use("*", (req, res) => {
@@ -525,10 +497,6 @@ class Server {
 
     try {
       this.wsService?.desconectar?.();
-    } catch {}
-
-    try {
-      this.promoTimerService?.detener?.();
     } catch {}
 
     // Dejar de aceptar nuevas conexiones y esperar las actuales

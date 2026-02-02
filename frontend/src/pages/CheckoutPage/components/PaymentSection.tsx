@@ -25,7 +25,7 @@ export const PaymentSection = ({
         <button
           onClick={onPaymentButtonClick}
           disabled={processingPayment}
-          className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 disabled:from-gray-300 disabled:to-gray-400 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-3"
+          className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 disabled:from-zinc-600 disabled:to-zinc-700 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3"
         >
           {processingPayment ? (
             <>
@@ -39,7 +39,7 @@ export const PaymentSection = ({
             </>
           )}
         </button>
-        <div className="flex items-center gap-2 justify-center text-sm text-emerald-600 bg-emerald-50 rounded-lg py-2 px-3">
+        <div className="flex items-center gap-2 justify-center text-sm text-emerald-400 bg-emerald-500/10 rounded-lg py-2 px-3 border border-emerald-500/20">
           <Sparkles className="w-4 h-4" />
           <span>Tu saldo cubre el total. No necesitas otro método de pago.</span>
         </div>
@@ -61,7 +61,7 @@ export const PaymentSection = ({
       <button
         onClick={onPaymentButtonClick}
         disabled={processingPayment}
-        className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-purple-200/50 hidden flex items-center justify-center gap-2"
+        className="w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-zinc-600 disabled:to-zinc-700 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-orange-500/20 hidden flex items-center justify-center gap-2"
         id="fallback-payment-button"
       >
         {processingPayment ? (

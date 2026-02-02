@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { fontFamily } from "../styles/typography";
+import FlipCountdownTimer from "./FlipCountdownTimer";
 
 type PromoTheme = {
   accent: string;
@@ -54,265 +54,6 @@ interface PromoHeaderProps {
   onButtonClick?: () => void;
 }
 
-// Componente para cada dígito con efecto flip
-function FlipDigit({ digit, prevDigit, theme }: { digit: string; prevDigit: string; theme: PromoTheme }) {
-  const [isFlipping, setIsFlipping] = useState(false);
-  const [displayPrev, setDisplayPrev] = useState(prevDigit);
-
-  useEffect(() => {
-    if (digit !== prevDigit) {
-      setDisplayPrev(prevDigit);
-      setIsFlipping(true);
-      const timer = setTimeout(() => setIsFlipping(false), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [digit, prevDigit]);
-
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: 'clamp(14px, 3.5vw, 20px)',
-        height: 'clamp(18px, 4.5vw, 26px)',
-        perspective: '400px',
-        margin: '0 0.5px',
-      }}
-    >
-      {/* Mitad inferior - muestra el número nuevo desde el inicio */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: '50%',
-          borderRadius: '0 0 3px 3px',
-          background: 'linear-gradient(180deg, #150a24 0%, #0d0518 100%)',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: fontFamily.mono,
-            fontSize: 'clamp(10px, 2.5vw, 14px)',
-            fontWeight: '700',
-            color: theme.accent,
-            textShadow: `0 0 6px ${hexToRgba(theme.accent, 0.3)}`,
-            transform: 'translateY(-50%)',
-          }}
-        >
-          {digit}
-        </span>
-      </div>
-
-      {/* Mitad superior - muestra el número anterior durante el flip, luego el nuevo */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: 0,
-          height: '50%',
-          borderRadius: '3px 3px 0 0',
-          background: 'linear-gradient(180deg, #1a0d2e 0%, #150a24 100%)',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-          zIndex: 2,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: fontFamily.mono,
-            fontSize: 'clamp(10px, 2.5vw, 14px)',
-            fontWeight: '700',
-            color: theme.accent,
-            textShadow: `0 0 6px ${hexToRgba(theme.accent, 0.3)}`,
-            transform: 'translateY(50%)',
-          }}
-        >
-          {isFlipping ? displayPrev : digit}
-        </span>
-      </div>
-
-      {/* Línea divisoria horizontal */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: '50%',
-          height: '1px',
-          background: 'rgba(0,0,0,0.5)',
-          zIndex: 5,
-          transform: 'translateY(-0.5px)',
-        }}
-      />
-
-      {/* Mitad superior que "cae" - muestra el número anterior */}
-      {isFlipping && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '50%',
-            borderRadius: '3px 3px 0 0',
-            background: 'linear-gradient(180deg, #1a0d2e 0%, #150a24 100%)',
-            overflow: 'hidden',
-            transformOrigin: 'bottom center',
-            animation: 'flipDown 0.6s cubic-bezier(0.455, 0.030, 0.515, 0.955) forwards',
-            zIndex: 3,
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: fontFamily.mono,
-              fontSize: 'clamp(10px, 2.5vw, 14px)',
-              fontWeight: '700',
-              color: theme.accent,
-              textShadow: `0 0 6px ${hexToRgba(theme.accent, 0.3)}`,
-              transform: 'translateY(50%)',
-            }}
-          >
-            {displayPrev}
-          </span>
-        </div>
-      )}
-
-      {/* Mitad inferior que "sube" - muestra el número nuevo */}
-      {isFlipping && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '50%',
-            borderRadius: '0 0 3px 3px',
-            background: 'linear-gradient(180deg, #150a24 0%, #0d0518 100%)',
-            overflow: 'hidden',
-            transformOrigin: 'top center',
-            animation: 'flipUp 0.6s cubic-bezier(0.455, 0.030, 0.515, 0.955) forwards',
-            zIndex: 4,
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: fontFamily.mono,
-              fontSize: 'clamp(10px, 2.5vw, 14px)',
-              fontWeight: '700',
-              color: theme.accent,
-              textShadow: `0 0 6px ${hexToRgba(theme.accent, 0.3)}`,
-              transform: 'translateY(-50%)',
-            }}
-          >
-            {digit}
-          </span>
-        </div>
-      )}
-
-      {/* Brillo superior */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          borderRadius: '3px 3px 0 0',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 6,
-        }}
-      />
-    </div>
-  );
-}
-
-// Componente para un grupo de dos dígitos (ej: horas, minutos, segundos)
-function FlipUnit({ value, label, theme }: { value: number; label: string; theme: PromoTheme }) {
-  const prevValueRef = useRef(value);
-  const digits = String(value).padStart(2, '0').split('');
-  const prevDigits = String(prevValueRef.current).padStart(2, '0').split('');
-
-  useEffect(() => {
-    // Actualizar el ref después de que el render se complete
-    // para que el próximo render tenga el valor anterior correcto
-    prevValueRef.current = value;
-  }, [value]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-      <div style={{ display: 'flex', gap: '1px' }}>
-        <FlipDigit digit={digits[0]} prevDigit={prevDigits[0]} theme={theme} />
-        <FlipDigit digit={digits[1]} prevDigit={prevDigits[1]} theme={theme} />
-      </div>
-      <span
-        style={{
-          fontSize: 'clamp(6px, 1.2vw, 7px)',
-          fontWeight: '500',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: 'rgba(255,255,255,0.4)',
-          marginTop: '1px',
-        }}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
-
-// Separador entre unidades
-function TimeSeparator({ theme }: { theme: PromoTheme }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '2px',
-        padding: '0 clamp(2px, 0.5vw, 4px)',
-        alignSelf: 'flex-start',
-        marginTop: 'clamp(4px, 1vw, 7px)',
-      }}
-    >
-      <div
-        style={{
-          width: 'clamp(2px, 0.6vw, 3px)',
-          height: 'clamp(2px, 0.6vw, 3px)',
-          borderRadius: '50%',
-          backgroundColor: theme.accent,
-          boxShadow: `0 0 4px ${hexToRgba(theme.accent, 0.5)}`,
-        }}
-      />
-      <div
-        style={{
-          width: 'clamp(2px, 0.6vw, 3px)',
-          height: 'clamp(2px, 0.6vw, 3px)',
-          borderRadius: '50%',
-          backgroundColor: theme.accent,
-          boxShadow: `0 0 4px ${hexToRgba(theme.accent, 0.5)}`,
-        }}
-      />
-    </div>
-  );
-}
-
 export function PromoHeader({ 
   tipo = "planes",
   showButton = true, 
@@ -329,12 +70,6 @@ export function PromoHeader({
   const [promoPlanes, setPromoPlanes] = useState<PromoConfig | null>(null);
   const [promoRevendedores, setPromoRevendedores] = useState<PromoConfig | null>(null);
   const [promoMostradaTipo, setPromoMostradaTipo] = useState<"planes" | "revendedores" | null>(null);
-
-  // Calcular horas, minutos y segundos
-  const segundosTotales = tiempo_restante_segundos || 0;
-  const horas = Math.floor(segundosTotales / 3600);
-  const minutos = Math.floor((segundosTotales % 3600) / 60);
-  const segundos = segundosTotales % 60;
 
   // Función para calcular tiempo restante
   const calcularTiempoRestante = (config: PromoConfig) => {
@@ -432,29 +167,8 @@ export function PromoHeader({
     ? THEME_AMBAS
     : (promoMostradaTipo === "revendedores" ? THEME_REVENDEDORES : THEME_PLANES);
 
-  // Estilos de animación para el flip
-  const flipStyles = `
-    @keyframes flipDown {
-      0% {
-        transform: rotateX(0deg);
-      }
-      100% {
-        transform: rotateX(-90deg);
-      }
-    }
-    @keyframes flipUp {
-      0% {
-        transform: rotateX(90deg);
-      }
-      100% {
-        transform: rotateX(0deg);
-      }
-    }
-  `;
-
   return (
     <>
-      <style>{flipStyles}</style>
       <div
         style={{
           background: 'linear-gradient(180deg, #110723 0%, #0a0312 100%)',
@@ -528,18 +242,7 @@ export function PromoHeader({
           </div>
 
           {/* Flip Clock */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-            }}
-          >
-            <FlipUnit value={horas} label="hrs" theme={theme} />
-            <TimeSeparator theme={theme} />
-            <FlipUnit value={minutos} label="min" theme={theme} />
-            <TimeSeparator theme={theme} />
-            <FlipUnit value={segundos} label="seg" theme={theme} />
-          </div>
+          <FlipCountdownTimer time={tiempo_restante_segundos} play={true} />
         </div>
 
         {/* Botón CTA - oculto en /planes */}

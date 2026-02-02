@@ -169,7 +169,7 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-orange-400" />
         <span className="ml-2 text-neutral-400">Cargando planes...</span>
       </div>
     );

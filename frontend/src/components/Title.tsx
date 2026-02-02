@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { protonColors } from '../styles/colors';
+import { semanticColors } from '../styles/colors';
 import { fontFamily, lineHeight as lh } from '../styles/typography';
 
 type TitleSize = 'h1' | 'h2' | 'h3';
@@ -40,7 +40,7 @@ export function Title({ children, as = 'h1', className = '', center = false }: T
         lineHeight: styles.lineHeight,
         fontWeight: 400,
         letterSpacing: '-0.02em',
-        color: protonColors.purple[800],
+        color: semanticColors.text.inverse,
       }}
     >
       {children}

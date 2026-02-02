@@ -38,6 +38,7 @@ interface CrearCuponPayload {
   valor: number;
   limite_uso?: number;
   fecha_expiracion?: string;
+  oculto?: boolean;
   planes_aplicables?: number[];
 }
 
@@ -855,6 +856,14 @@ class ReferidosApiService {
    */
   async updateSettings(settings: Partial<ReferralSettings>): Promise<{ success: boolean }> {
     const response = await this.client.put('/referidos/admin/settings', settings);
+    return response.data;
+  }
+
+  /**
+   * Obtiene todos los usuarios con saldo (admin)
+   */
+  async getUsuariosConSaldo(limit = 100): Promise<any[]> {
+    const response = await this.client.get('/referidos/admin/usuarios-saldo', { params: { limit } });
     return response.data;
   }
 

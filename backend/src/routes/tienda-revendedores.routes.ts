@@ -27,61 +27,8 @@ export function crearRutasRevendedores(
     return null;
   };
 
-  /**
-   * GET /api/planes-revendedores
-   * Obtiene todos los planes de revendedores activos con descuentos del 15% aplicados
-   */
-  router.get("/planes-revendedores", async (req: Request, res: Response) => {
-    console.log("[PLANES-REVENDEDORES ROUTE] 🎯 Route handler BEING EXECUTED!");
-    try {
-      console.log("[PLANES-REVENDEDORES ROUTE] Getting revendedor plans...");
-      const context = (req.query.context as string)?.toLowerCase();
-      const explicitFlag = req.query.forNewCustomers as string | undefined;
-      const forceForNewCustomers =
-        typeof explicitFlag === "string"
-          ? explicitFlag === "true"
-          : undefined;
-
-      const forRenewalsContext =
-        context === "renovacion" ||
-        context === "renovaciones" ||
-        context === "renewal";
-
-      const planes = tiendaRevendedores.obtenerPlanesRevendedores({
-        forNewCustomers:
-          forceForNewCustomers !== undefined
-            ? forceForNewCustomers
-            : !forRenewalsContext,
-        forRenewal: forRenewalsContext,
-      });
-      console.log(
-        "[PLANES-REVENDEDORES ROUTE] Got",
-        planes.length,
-        "revendedor plans"
-      );
-
-      const response: ApiResponse = {
-        success: true,
-        data: planes,
-      };
-
-      // Evitar que el navegador o proxies cacheen la respuesta de planes de revendedores
-      res.set(
-        "Cache-Control",
-        "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-      );
-      res.set("Pragma", "no-cache");
-      res.set("Expires", "0");
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[PLANES-REVENDEDORES ROUTE] Error:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error obteniendo planes de revendedores",
-      } as ApiResponse);
-    }
-  });
+  // NOTA: Ruta /api/planes-revendedores movida a planes-supabase.routes.ts
+  // Ahora usa Supabase como fuente de datos principal
 
   /**
    * POST /api/comprar-revendedor

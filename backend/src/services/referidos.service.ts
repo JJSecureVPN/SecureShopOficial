@@ -152,27 +152,69 @@ export class ReferidosService {
   }
 
   /**
-   * Acreditar o debitar saldo usando la función SQL
+   * Acreditar o debitar saldo directamente en la base de datos
    */
   async acreditarSaldo(input: AcreditarSaldoInput): Promise<number | null> {
     if (!this.client) return null;
 
     try {
-      const { data, error } = await this.client.rpc('acreditar_saldo', {
-        p_user_id: input.user_id,
-        p_monto: input.monto,
-        p_tipo: input.tipo,
-        p_descripcion: input.descripcion || null,
-        p_referencia_id: input.referencia_id || null,
-      });
+      // Obtener saldo actual
+      const { data: userData, error: userError } = await this.client
+        .from('profiles')
+        .select('saldo, total_earned')
+        .eq('id', input.user_id)
+        .single();
 
-      if (error) {
-        console.error('[Referidos] Error acreditando saldo:', error);
+      if (userError || !userData) {
+        console.error('[Referidos] Usuario no encontrado:', userError);
         return null;
       }
 
+      const saldoAnterior = userData.saldo || 0;
+      const nuevoSaldo = saldoAnterior + input.monto;
+
+      // No permitir saldo negativo
+      if (nuevoSaldo < 0) {
+        console.error('[Referidos] Saldo insuficiente');
+        return null;
+      }
+
+      // Actualizar saldo y total_earned si es positivo
+      const updateData: any = { saldo: nuevoSaldo };
+      if (input.monto > 0) {
+        updateData.total_earned = (userData.total_earned || 0) + input.monto;
+      }
+
+      const { error: updateError } = await this.client
+        .from('profiles')
+        .update(updateData)
+        .eq('id', input.user_id);
+
+      if (updateError) {
+        console.error('[Referidos] Error actualizando saldo:', updateError);
+        return null;
+      }
+
+      // Registrar transacción
+      const { error: transError } = await this.client
+        .from('saldo_transacciones')
+        .insert({
+          user_id: input.user_id,
+          tipo: input.tipo,
+          monto: input.monto,
+          saldo_anterior: saldoAnterior,
+          saldo_nuevo: nuevoSaldo,
+          descripcion: input.descripcion,
+          referencia_id: input.referencia_id
+        });
+
+      if (transError) {
+        console.error('[Referidos] Error registrando transacción:', transError);
+        // No retornamos null aquí porque la actualización del saldo ya fue exitosa
+      }
+
       console.log(`[Referidos] Saldo ${input.monto >= 0 ? 'acreditado' : 'debitado'}: $${Math.abs(input.monto)} - Usuario: ${input.user_id}`);
-      return data;
+      return nuevoSaldo;
     } catch (error) {
       console.error('[Referidos] Error acreditando saldo:', error);
       return null;
@@ -395,6 +437,40 @@ export class ReferidosService {
     } catch (error) {
       console.error('[Referidos] Error obteniendo estadísticas:', error);
       return null;
+    }
+  }
+
+  /**
+   * Obtener todos los usuarios con saldo (admin)
+   */
+  async getUsuariosConSaldo(limit = 100): Promise<Array<{
+    id: string;
+    email: string;
+    nombre: string;
+    saldo: number;
+    total_earned: number;
+    referral_code: string;
+    created_at: string;
+  }>> {
+    if (!this.client) return [];
+
+    try {
+      const { data, error } = await this.client
+        .from('profiles')
+        .select('id, email, nombre, saldo, total_earned, referral_code, created_at')
+        .gt('saldo', 0)
+        .order('saldo', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('[Referidos] Error obteniendo usuarios con saldo:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[Referidos] Error obteniendo usuarios con saldo:', error);
+      return [];
     }
   }
 

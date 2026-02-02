@@ -15,7 +15,7 @@ interface AboutPageProps {
 
 export default function AboutPage({ }: AboutPageProps) {
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
       {/* Main Content */}
       <main className="pb-8 md:pb-12 xl:pb-16">
         <HeroSection />

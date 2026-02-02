@@ -121,7 +121,7 @@ const CuponInput: React.FC<CuponInputProps> = ({
           
           <div className={`relative overflow-hidden bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 transition-opacity duration-500 rounded-xl ${showSuccess ? 'opacity-100' : 'opacity-0'}`} />
           
-          <div className="relative bg-white/80 border border-gray-200 rounded-2xl p-4 shadow-sm shadow-gray-100 transition-all duration-300 hover:border-emerald-300">
+          <div className="relative bg-zinc-800/80 border border-zinc-600 rounded-2xl p-4 shadow-sm shadow-zinc-900/50 transition-all duration-300 hover:border-emerald-500/50">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="flex-shrink-0">
@@ -134,14 +134,14 @@ const CuponInput: React.FC<CuponInputProps> = ({
                 </div>
                 
                 <div className="space-y-1 flex-1 min-w-0">
-                  <p className="text-emerald-600 text-xs font-semibold uppercase tracking-widest opacity-90">
+                  <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest opacity-90">
                     Cupón activo
                   </p>
-                  <p className="text-gray-900 text-sm font-medium truncate">
+                  <p className="text-zinc-100 text-sm font-medium truncate">
                     {cuponValidado.codigo}
                   </p>
-                  <p className="text-emerald-600/70 text-xs font-light">
-                    Ahorro: <span className="font-semibold text-emerald-600">${descuentoActual.toLocaleString('es-AR')}</span>
+                  <p className="text-emerald-400/70 text-xs font-light">
+                    Ahorro: <span className="font-semibold text-emerald-400">${descuentoActual.toLocaleString('es-AR')}</span>
                     {cuponValidado.tipo === 'porcentaje' && ` • ${cuponValidado.valor}% off`}
                     {cuponValidado.tipo === 'monto_fijo' && ` • $${cuponValidado.valor} off`}
                   </p>
@@ -150,7 +150,7 @@ const CuponInput: React.FC<CuponInputProps> = ({
 
               <button
                 onClick={handleRemoverCupon}
-                className="flex-shrink-0 p-2 text-emerald-500/60 hover:text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all duration-200 opacity-80 hover:opacity-100"
+                className="flex-shrink-0 p-2 text-emerald-400/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all duration-200 opacity-80 hover:opacity-100"
                 title="Remover cupón"
               >
                 <X className="w-4 h-4" />
@@ -168,10 +168,10 @@ const CuponInput: React.FC<CuponInputProps> = ({
   // Formulario para ingresar cupón
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-900">
+      <label className="block text-sm font-medium text-zinc-100">
         <div className="flex items-center gap-2 mb-3">
-          <div className="p-1.5 rounded-xl bg-indigo-100 border border-indigo-200">
-            <Tag className="w-4 h-4 text-indigo-600" />
+          <div className="p-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
+            <Tag className="w-4 h-4 text-orange-500" />
           </div>
           <span className="font-medium">Código de descuento</span>
         </div>
@@ -179,7 +179,7 @@ const CuponInput: React.FC<CuponInputProps> = ({
 
       <div className="flex gap-2">
         <div className="flex-1 relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-100/30 to-indigo-100/30 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition-all duration-300" />
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500/10 to-orange-500/10 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition-all duration-300" />
           
           <input
             type="text"
@@ -188,14 +188,14 @@ const CuponInput: React.FC<CuponInputProps> = ({
             onKeyPress={handleKeyPress}
             placeholder="CODIGO2024"
             disabled={isValidating}
-            className="relative w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative w-full px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
           />
           
           {/* Indicador de estado sutil */}
           {isValidating && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <div className={`w-5 h-5 flex items-center justify-center transition-all duration-300 ${
-                validationStep === 'applying' ? 'text-emerald-600' : 'text-indigo-600'
+                validationStep === 'applying' ? 'text-emerald-400' : 'text-orange-400'
               }`}>
                 {validationStep === 'searching' && (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -209,11 +209,11 @@ const CuponInput: React.FC<CuponInputProps> = ({
 
           {/* Barra de progreso elegante */}
           {isValidating && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-lg overflow-hidden bg-gradient-to-r from-gray-200/50 to-gray-100/30">
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-lg overflow-hidden bg-gradient-to-r from-zinc-700/50 to-zinc-600/30">
               <div 
                 className={`h-full rounded-full transition-all ${
                   validationStep === 'searching' 
-                    ? 'w-2/3 bg-gradient-to-r from-indigo-500 via-indigo-400 to-indigo-500 opacity-80 animate-pulse' 
+                    ? 'w-2/3 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 opacity-80 animate-pulse' 
                     : 'w-full bg-gradient-to-r from-emerald-500 to-cyan-400 opacity-100'
                 }`}
               />
@@ -224,7 +224,7 @@ const CuponInput: React.FC<CuponInputProps> = ({
         <button
           onClick={handleValidarCupon}
           disabled={isValidating || !codigo.trim()}
-          className="group relative px-5 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center gap-2 transition-all duration-300 overflow-hidden shadow-md shadow-indigo-100"
+          className="group relative px-5 py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg flex items-center gap-2 transition-all duration-300 overflow-hidden shadow-md shadow-orange-500/20"
         >
           {/* Efecto de brillo */}
           <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-500 group-disabled:opacity-0" />

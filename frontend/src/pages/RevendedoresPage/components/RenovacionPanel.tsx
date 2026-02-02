@@ -110,26 +110,26 @@ export function RenovacionPanel({
           <div className={`space-y-4 md:space-y-5 xl:space-y-6 ${pasoRenovacion === "configurar" && revendedor ? "lg:flex-1 lg:min-w-0" : ""}`}>
           {/* Error State */}
           {error && (
-            <div className="bg-rose-50 border border-rose-300 rounded-2xl p-3 sm:p-4 lg:p-5 xl:p-6 flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-rose-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs sm:text-sm text-rose-700">{error}</p>
+            <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-3 sm:p-4 lg:p-5 xl:p-6 flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-sm text-red-300">{error}</p>
             </div>
           )}
 
           {/* Step 1: Search */}
           {pasoRenovacion === "buscar" && (
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-4 sm:p-5 lg:p-6 border border-purple-100">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4 sm:mb-5">
+            <div className="rounded-2xl bg-zinc-900/50 p-4 sm:p-5 lg:p-6 border border-zinc-700">
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4 sm:mb-5">
                 Buscar tu cuenta
               </h3>
 
               <div className="space-y-3 sm:space-y-4 lg:space-y-5">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-white mb-2">
                     Nombre de usuario
                   </label>
                   <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-400" />
                     <input
                       type="text"
                       value={busqueda}
@@ -140,7 +140,7 @@ export function RenovacionPanel({
                         }
                       }}
                       placeholder="Tu nombre de usuario"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-white border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 rounded-lg text-gray-900 placeholder-gray-400 transition-colors outline-none"
+                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-zinc-800 border border-zinc-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-lg text-white placeholder-zinc-500 transition-colors outline-none"
                       disabled={buscando}
                     />
                   </div>
@@ -174,12 +174,12 @@ export function RenovacionPanel({
           {pasoRenovacion === "configurar" && revendedor && (
             <>
               {/* Account Info Card */}
-              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 sm:p-5 lg:p-6 xl:p-7">
+              <div className="bg-green-900/20 border-2 border-green-500/30 rounded-2xl p-4 sm:p-5 lg:p-6 xl:p-7">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-green-400 flex-shrink-0 mt-0.5" />
                   <div className="space-y-1 text-xs sm:text-sm">
-                    <p className="font-semibold text-gray-900">✓ Cuenta encontrada</p>
-                    <p className="text-gray-600">
+                    <p className="font-semibold text-white">✓ Cuenta encontrada</p>
+                    <p className="text-zinc-400">
                       {revendedor.datos.servex_username} • {tipoActual === "credit" ? "Créditos" : "Validez"}
                     </p>
                     {fechaExpiracion && (
@@ -192,8 +192,8 @@ export function RenovacionPanel({
               </div>
 
               {/* Renewal Type Selection */}
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 lg:p-8 xl:p-10 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
+              <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 xl:p-10 border border-zinc-700">
+                <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
                   Sistema de renovación
                 </h3>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 xl:gap-5">
@@ -202,123 +202,163 @@ export function RenovacionPanel({
                     disabled={tipoActual !== "validity"}
                     className={`group p-3 sm:p-4 lg:p-5 xl:p-6 rounded-lg border-2 transition-all ${
                       tipoActual !== "validity"
-                        ? "border-gray-200/40 bg-gray-50/40 cursor-not-allowed opacity-50"
+                        ? "border-zinc-700/40 bg-zinc-800/40 cursor-not-allowed opacity-50"
                         : tipoSeleccionado === "validity"
-                        ? "border-purple-500 bg-purple-50"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
+                        ? "border-orange-500 bg-orange-500/20"
+                        : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
                     }`}
                   >
                     <Calendar
                       className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mb-2 ${
-                        tipoSeleccionado === "validity" ? "text-purple-700" : "text-gray-500 group-hover:text-purple-700"
+                        tipoSeleccionado === "validity" ? "text-orange-400" : "text-zinc-400 group-hover:text-orange-400"
                       }`}
                     />
-                    <p className="text-xs sm:text-sm font-semibold text-gray-900">Validez</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-600 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">Días de acceso</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white">Validez</p>
+                    <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">Días de acceso</p>
                   </button>
                   <button
                     onClick={() => tipoActual === "credit" && onTipoChange("credit")}
                     disabled={tipoActual !== "credit"}
                     className={`group p-3 sm:p-4 lg:p-5 xl:p-6 rounded-lg border-2 transition-all ${
                       tipoActual !== "credit"
-                        ? "border-gray-200/40 bg-gray-50/40 cursor-not-allowed opacity-50"
+                        ? "border-zinc-700/40 bg-zinc-800/40 cursor-not-allowed opacity-50"
                         : tipoSeleccionado === "credit"
-                        ? "border-purple-500 bg-purple-50"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
+                        ? "border-orange-500 bg-orange-500/20"
+                        : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
                     }`}
                   >
                     <CreditCard
                       className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mb-2 ${
-                        tipoSeleccionado === "credit" ? "text-purple-700" : "text-gray-500 group-hover:text-purple-700"
+                        tipoSeleccionado === "credit" ? "text-orange-400" : "text-zinc-400 group-hover:text-orange-400"
                       }`}
                     />
-                    <p className="text-xs sm:text-sm font-semibold text-gray-900">Créditos</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-600 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">Más créditos</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white">Créditos</p>
+                    <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">Más créditos</p>
                   </button>
                 </div>
               </div>
 
-              {/* Plans Selection */}
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 lg:p-8 xl:p-10 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
-                  {tipoSeleccionado === "credit"
-                    ? "Selecciona cantidad de créditos"
-                    : "Selecciona cantidad de usuarios"}
-                </h3>
-                {planesDisponibles.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-5">
-                    {planesDisponibles.map((plan) => {
-                      const diasPlan =
-                        tipoSeleccionado === "credit" ? DIAS_POR_CREDITOS[plan.max_users] ?? 30 : 30;
-                      const esSeleccionado = cantidadSeleccionada === plan.max_users;
+              {/* Plans Selection - Solo para Credit */}
+              {tipoSeleccionado === "credit" ? (
+                <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 xl:p-10 border border-zinc-700">
+                  <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
+                    Selecciona cantidad de créditos
+                  </h3>
+                  {planesDisponibles.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-5">
+                      {planesDisponibles.map((plan) => {
+                        const diasPlan = DIAS_POR_CREDITOS[plan.max_users] ?? 30;
+                        const esSeleccionado = cantidadSeleccionada === plan.max_users;
 
-                      return (
-                        <button
-                          key={plan.id}
-                          onClick={() => onCantidadChange(plan.max_users)}
-                          className={`p-3 sm:p-4 lg:p-5 xl:p-6 rounded-lg border-2 transition-all text-left ${
-                            esSeleccionado
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300"
-                          }`}
-                        >
-                          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-gray-900">{plan.max_users}</p>
-                          <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-600 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">
-                            {tipoSeleccionado === "credit" ? "créditos" : "usuarios"}
-                          </p>
-                          {tipoSeleccionado === "credit" && (
-                            <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-600 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">
+                        return (
+                          <button
+                            key={plan.id}
+                            onClick={() => onCantidadChange(plan.max_users)}
+                            className={`p-3 sm:p-4 lg:p-5 xl:p-6 rounded-lg border-2 transition-all text-left ${
+                              esSeleccionado
+                                ? "border-orange-500 bg-orange-500/20"
+                                : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700 hover:border-zinc-600"
+                            }`}
+                          >
+                            <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white">{plan.max_users}</p>
+                            <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">
+                              créditos
+                            </p>
+                            <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400 mt-0.5 sm:mt-1 lg:mt-1.5 xl:mt-2">
                               ≈ {diasPlan} días
                             </p>
-                          )}
-                          <div className="mt-2 sm:mt-3 lg:mt-4 xl:mt-5 pt-2 sm:pt-3 lg:pt-4 xl:pt-5 border-t border-gray-200/50">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">
-                              ${plan.precio.toLocaleString("es-AR")}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
+                            <div className="mt-2 sm:mt-3 lg:mt-4 xl:mt-5 pt-2 sm:pt-3 lg:pt-4 xl:pt-5 border-t border-zinc-700/50">
+                              <p className="text-xs sm:text-sm font-semibold text-white">
+                                ${plan.precio.toLocaleString("es-AR")}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 sm:p-4 lg:p-5 xl:p-6 text-center text-xs sm:text-sm text-zinc-400">
+                      No hay planes disponibles
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* VALIDITY - Sin selección de planes, solo el actual */
+                <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 xl:p-10 border border-zinc-700">
+                  <div className="space-y-4 sm:space-y-5">
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-semibold text-orange-400 uppercase tracking-wider mb-2 sm:mb-3">
+                        ℹ️ Cuenta de Validez Mensual
+                      </h3>
+                      <div className="bg-zinc-800/70 rounded-lg p-3 sm:p-4 border border-zinc-700/50">
+                        <ul className="text-xs sm:text-sm text-zinc-300 space-y-2 sm:space-y-2.5">
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-orange-400" />
+                            <span>Solo renovación: Se mantiene tu plan actual</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-orange-400" />
+                            <span>Ciclo mensual: 30 días fijos de validez</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-orange-400" />
+                            <span>Precio justo: Prorrateo según días restantes</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <a
+                      href="https://wa.me/5493812531123?text=Hola%20SecureShop%2C%20Quisiera%20agregar%20m%C3%A1s%20usuarios%20a%20mi%20cuenta%20de%20validez."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs sm:text-sm rounded-lg transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.01-5.009 5.017-5.009 8.221 0 1.331.266 2.622.77 3.82L2.070 19.91l4.104-1.278c1.14.587 2.417.9 3.757.9h.004c5.071 0 9.186-4.122 9.186-9.181 0-2.44-.959-4.779-2.7-6.512-1.742-1.733-4.063-2.688-6.517-2.688" />
+                      </svg>
+                      Contactar soporte por WhatsApp
+                    </a>
                   </div>
-                ) : (
-                  <div className="bg-gray-50/50 border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-5 xl:p-6 text-center text-xs sm:text-sm text-gray-600">
-                    No hay planes disponibles
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Contact Information */}
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 lg:p-8 xl:p-10 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
+              <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 xl:p-10 border border-zinc-700">
+                <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
                   Información de contacto
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-gray-400" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-400" />
                     <input
                       type="text"
                       value={nombre}
                       onChange={(event) => onNombreChange(event.target.value)}
                       placeholder="Nombre del responsable"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-white border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 rounded-lg text-gray-900 placeholder-gray-400 transition-colors outline-none"
+                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-zinc-800 border border-zinc-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-lg text-white placeholder-zinc-500 transition-colors outline-none"
                     />
                   </div>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-gray-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-zinc-400" />
                     <input
                       type="email"
                       value={email}
                       onChange={(event) => onEmailChange(event.target.value)}
                       placeholder="tu@email.com"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-white border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 rounded-lg text-gray-900 placeholder-gray-400 transition-colors outline-none"
+                      className="w-full pl-11 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 bg-zinc-800 border border-zinc-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 rounded-lg text-white placeholder-zinc-500 transition-colors outline-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Coupon Code */}
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 lg:p-8 xl:p-10 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
+              <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 xl:p-10 border border-zinc-700">
+                <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
                   Código de descuento
                 </h3>
                 <CuponInput
@@ -371,8 +411,8 @@ export function RenovacionPanel({
         {pasoRenovacion === "configurar" && revendedor && (
           <div className="hidden lg:block lg:w-96 lg:flex-shrink-0 lg:sticky lg:top-24 lg:self-start mt-6 lg:mt-0">
             {/* Renewal Summary */}
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 lg:p-8 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5 sm:mb-6">
+            <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 lg:p-8 border border-zinc-700">
+                <h3 className="text-xs sm:text-sm font-semibold text-white uppercase tracking-wider mb-5 sm:mb-6">
                   Resumen de renovación
                 </h3>
 
@@ -380,50 +420,50 @@ export function RenovacionPanel({
                   {/* Plan Details */}
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">
+                      <span className="text-xs sm:text-sm text-zinc-400">
                         {tipoSeleccionado === "credit" ? "Créditos" : "Usuarios"}
                       </span>
-                      <span className="font-semibold text-gray-900">{cantidadSeleccionada}</span>
+                      <span className="font-semibold text-white">{cantidadSeleccionada}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Duración</span>
-                      <span className="font-semibold text-gray-900">{diasRenovacion} días</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Duración</span>
+                      <span className="font-semibold text-white">{diasRenovacion} días</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Precio por unidad</span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="text-xs sm:text-sm text-zinc-400">Precio por unidad</span>
+                      <span className="font-semibold text-white">
                         ${Math.round(precioRenovacion / Math.max(cantidadSeleccionada || 1, 1))}
                       </span>
                     </div>
                   </div>
 
-                  <div className="h-px bg-gray-200" />
+                  <div className="h-px bg-zinc-700" />
 
                   {/* Pricing */}
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Subtotal</span>
-                      <span className="text-gray-900">${precioRenovacion.toLocaleString("es-AR")}</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Subtotal</span>
+                      <span className="text-white">${precioRenovacion.toLocaleString("es-AR")}</span>
                     </div>
 
                     {hayDescuento && (
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-emerald-600">
+                        <span className="text-xs sm:text-sm text-green-400">
                           Descuento {cuponActual?.codigo ? `(${cuponActual.codigo})` : ""}
                         </span>
-                        <span className="text-emerald-600 font-medium">
+                        <span className="text-green-400 font-medium">
                           -${descuentoAplicado.toLocaleString("es-AR")}
                         </span>
                       </div>
                     )}
 
-                    <div className="h-px bg-gray-200" />
+                    <div className="h-px bg-zinc-700" />
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm sm:text-base text-gray-700 font-medium">Monto final</span>
-                      <span className="text-2xl sm:text-3xl font-bold text-purple-700">
+                      <span className="text-sm sm:text-base text-zinc-300 font-medium">Monto final</span>
+                      <span className="text-2xl sm:text-3xl font-bold text-orange-400">
                         ${precioFinal.toLocaleString("es-AR")}
                       </span>
                     </div>
@@ -461,9 +501,9 @@ export function RenovacionPanel({
                 </div>
 
                 {/* Security Info */}
-                <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-gray-200">
-                  <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
-                    🔒 <span className="text-gray-700 font-medium">Seguro y privado.</span> Procesado con MercadoPago encriptado.
+                <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-zinc-700">
+                  <p className="text-[10px] sm:text-xs text-zinc-400 leading-relaxed">
+                    🔒 <span className="text-zinc-300 font-medium">Seguro y privado.</span> Procesado con MercadoPago encriptado.
                   </p>
                 </div>
               </div>
@@ -474,8 +514,8 @@ export function RenovacionPanel({
         {pasoRenovacion === "configurar" && revendedor && (
           <div className="lg:hidden mt-4 md:mt-5">
             {/* Renewal Summary */}
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50/80 via-purple-50/80 to-white p-5 sm:p-6 border border-purple-100">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5 sm:mb-6">
+            <div className="rounded-2xl bg-zinc-900/50 p-5 sm:p-6 border border-zinc-700">
+                <h3 className="text-xs sm:text-sm font-semibold text-white uppercase tracking-wider mb-5 sm:mb-6">
                   Resumen de renovación
                 </h3>
 
@@ -483,50 +523,50 @@ export function RenovacionPanel({
                   {/* Plan Details */}
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">
+                      <span className="text-xs sm:text-sm text-zinc-400">
                         {tipoSeleccionado === "credit" ? "Créditos" : "Usuarios"}
                       </span>
-                      <span className="font-semibold text-gray-900">{cantidadSeleccionada}</span>
+                      <span className="font-semibold text-white">{cantidadSeleccionada}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Duración</span>
-                      <span className="font-semibold text-gray-900">{diasRenovacion} días</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Duración</span>
+                      <span className="font-semibold text-white">{diasRenovacion} días</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Precio por unidad</span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="text-xs sm:text-sm text-zinc-400">Precio por unidad</span>
+                      <span className="font-semibold text-white">
                         ${Math.round(precioRenovacion / Math.max(cantidadSeleccionada || 1, 1))}
                       </span>
                     </div>
                   </div>
 
-                  <div className="h-px bg-gray-200" />
+                  <div className="h-px bg-zinc-700" />
 
                   {/* Pricing */}
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Subtotal</span>
-                      <span className="text-gray-900">${precioRenovacion.toLocaleString("es-AR")}</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Subtotal</span>
+                      <span className="text-white">${precioRenovacion.toLocaleString("es-AR")}</span>
                     </div>
 
                     {hayDescuento && (
                       <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-emerald-600">
+                        <span className="text-xs sm:text-sm text-green-400">
                           Descuento {cuponActual?.codigo ? `(${cuponActual.codigo})` : ""}
                         </span>
-                        <span className="text-emerald-600 font-medium">
+                        <span className="text-green-400 font-medium">
                           -${descuentoAplicado.toLocaleString("es-AR")}
                         </span>
                       </div>
                     )}
 
-                    <div className="h-px bg-gray-200" />
+                    <div className="h-px bg-zinc-700" />
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm sm:text-base text-gray-700 font-medium">Monto final</span>
-                      <span className="text-2xl sm:text-3xl font-bold text-purple-700">
+                      <span className="text-sm sm:text-base text-zinc-300 font-medium">Monto final</span>
+                      <span className="text-2xl sm:text-3xl font-bold text-orange-400">
                         ${precioFinal.toLocaleString("es-AR")}
                       </span>
                     </div>
@@ -534,9 +574,9 @@ export function RenovacionPanel({
                 </div>
 
                 {/* Security Info */}
-                <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-gray-200">
-                  <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
-                    🔒 <span className="text-gray-700 font-medium">Seguro y privado.</span> Procesado con MercadoPago encriptado.
+                <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-zinc-700">
+                  <p className="text-[10px] sm:text-xs text-zinc-400 leading-relaxed">
+                    🔒 <span className="text-zinc-300 font-medium">Seguro y privado.</span> Procesado con MercadoPago encriptado.
                   </p>
                 </div>
               </div>

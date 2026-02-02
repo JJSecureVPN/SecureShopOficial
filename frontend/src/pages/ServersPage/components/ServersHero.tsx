@@ -1,71 +1,53 @@
-import { motion } from "framer-motion";
-import { Activity, Globe2, Shield, Zap } from "lucide-react";
-import Lottie from "lottie-react";
-import serversAnimation from "../../../assets/lottie/servers-hero.json";
+import { Activity, Globe2 } from "lucide-react";
 
 export function ServersHero() {
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-b from-purple-200/50 via-purple-50/30 to-white pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section className="relative w-full bg-zinc-900">
+      <div className="mt-0 sm:mt-8 lg:mt-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid gap-8 lg:gap-12 items-center lg:grid-cols-2">
-            {/* Content */}
-            <motion.div 
-              className="space-y-6 order-2 lg:order-1 text-center lg:text-left"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+          <div className="px-2 sm:px-0 flex w-full relative min-h-[360px] lg:min-h-[520px] py-4">
+            <div className="sm:pl-10 flex flex-col justify-center gap-6 z-[1] lg:justify-start lg:py-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-emerald-700 text-sm font-medium">Red operativa</span>
+              <div className="self-start">
+                <div className="relative rounded-[40px] h-8 flex gap-2 items-center justify-center pt-2 pr-4 pb-2 pl-2 border border-zinc-800 bg-zinc-950">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="font-normal text-xs tracking-[-0.006em] text-white">Red operativa</span>
+                </div>
               </div>
 
-              {/* Title */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium text-gray-900 leading-tight tracking-tight">
-                Estado de la red
-                <span className="block text-purple-600">en tiempo real</span>
-              </h1>
-
-              {/* Description */}
-              <p className="text-gray-500 text-base sm:text-lg lg:text-xl max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                Monitorea el rendimiento, disponibilidad y recursos de todos nuestros servidores con actualizaciones instantáneas.
-              </p>
+              {/* Title and Description */}
+              <div className="flex flex-col gap-6">
+                <h1 className="text-[32px] leading-[40px] tracking-[-0.5%] sm:text-[56px] sm:leading-[72px] sm:max-w-[588px] sm:tracking-[-0.06rem] font-semibold text-gray-0">
+                  Estado de la red en tiempo real
+                </h1>
+                <p className="font-normal text-base text-gray-300 xs:max-w-[388px]">
+                  Rendimiento y disponibilidad en vivo con una vista limpia y enfocada.
+                </p>
+              </div>
 
               {/* Feature pills */}
-              <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
+              <div className="flex items-center justify-start gap-4 lg:mt-7">
                 {[
                   { icon: Activity, label: "Tiempo real" },
-                  { icon: Shield, label: "99.9% uptime" },
                   { icon: Globe2, label: "Multi-región" },
-                  { icon: Zap, label: "Baja latencia" },
                 ].map((feature) => (
                   <div 
                     key={feature.label}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-100 shadow-sm text-sm text-gray-600"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-sm text-zinc-300"
                   >
-                    <feature.icon className="w-4 h-4 text-purple-500" />
+                    <feature.icon className="w-4 h-4 text-orange-400" />
                     <span className="font-medium">{feature.label}</span>
                   </div>
                 ))}
               </div>
-            </motion.div>
-
-            {/* Animation */}
-            <motion.div 
-              className="order-1 lg:order-2 flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
-                <Lottie animationData={serversAnimation as unknown as object} autoplay loop />
-              </div>
-            </motion.div>
+            </div>
+            
+            <div className="hidden lg:block absolute top-0 right-0 backdrop-blur-sm">
+              <video autoPlay loop muted playsInline width="690" src="/refine-core-hero.mp4"></video>
+            </div>
           </div>
         </div>
       </div>

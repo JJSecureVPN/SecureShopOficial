@@ -32,6 +32,8 @@ export class DatabaseService {
 
     this.db = new Database(dbPath);
     this.db.pragma("journal_mode = WAL");
+    // Desactivar FOREIGN KEYS ya que los planes ahora están en Supabase, no en SQLite local
+    this.db.pragma("foreign_keys = OFF");
     this.inicializarTablas();
   }
 
@@ -232,6 +234,55 @@ export class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_renovaciones_estado ON renovaciones(estado);
       CREATE INDEX IF NOT EXISTS idx_renovaciones_mp_payment ON renovaciones(mp_payment_id);
     `);
+
+    // Tabla para planes de revendedores
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS planes_revendedores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        descripcion TEXT,
+        precio REAL NOT NULL,
+        max_users INTEGER NOT NULL,
+        account_type TEXT NOT NULL CHECK(account_type IN ('validity', 'credit')),
+        dias INTEGER,
+        activo INTEGER DEFAULT 1,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Tabla para pagos de revendedores
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS pagos_revendedores (
+        id TEXT PRIMARY KEY,
+        plan_revendedor_id INTEGER NOT NULL,
+        monto REAL NOT NULL,
+        estado TEXT NOT NULL CHECK(estado IN ('pendiente', 'aprobado', 'rechazado', 'cancelado')),
+        metodo_pago TEXT NOT NULL,
+        cliente_email TEXT NOT NULL,
+        cliente_nombre TEXT NOT NULL,
+        mp_payment_id TEXT,
+        mp_preference_id TEXT,
+        servex_revendedor_id INTEGER,
+        servex_username TEXT,
+        servex_password TEXT,
+        servex_max_users INTEGER,
+        servex_account_type TEXT,
+        servex_expiracion TEXT,
+        cupon_id INTEGER,
+        descuento_aplicado REAL DEFAULT 0,
+        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        servex_duracion_dias INTEGER DEFAULT 0
+      )
+    `);
+
+    // Índices para tablas de revendedores
+    this.db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_pagos_revendedores_email ON pagos_revendedores(cliente_email);
+      CREATE INDEX IF NOT EXISTS idx_pagos_revendedores_estado ON pagos_revendedores(estado);
+      CREATE INDEX IF NOT EXISTS idx_pagos_revendedores_mp_payment ON pagos_revendedores(mp_payment_id);
+      CREATE INDEX IF NOT EXISTS idx_planes_revendedores_activo ON planes_revendedores(activo);
+    `);
   }
 
   // ============================================
@@ -380,6 +431,42 @@ export class DatabaseService {
       connectionLimit,
       pagoId
     );
+  }
+
+  /**
+   * Actualiza los datos de una cuenta Servex existente por username
+   * Usado cuando se recrea un cliente eliminado
+   */
+  actualizarCuentaServexPorUsername(
+    username: string,
+    nuevoCuentaId: number,
+    nuevaExpiracion: string,
+    connectionLimit: number
+  ): void {
+    const stmt = this.db.prepare(`
+      UPDATE pagos
+      SET servex_cuenta_id = ?,
+          servex_expiracion = ?,
+          servex_connection_limit = ?,
+          fecha_actualizacion = datetime('now')
+      WHERE servex_username = ?
+      AND estado = 'aprobado'
+    `);
+    stmt.run(nuevoCuentaId, nuevaExpiracion, connectionLimit, username);
+  }
+
+  /**
+   * Actualiza el servex_id de una renovación
+   * Usado cuando se recrea un cliente eliminado
+   */
+  actualizarServexIdRenovacion(renovacionId: number, nuevoServexId: number): void {
+    const stmt = this.db.prepare(`
+      UPDATE renovaciones
+      SET servex_id = ?,
+          fecha_actualizacion = datetime('now')
+      WHERE id = ?
+    `);
+    stmt.run(nuevoServexId, renovacionId);
   }
 
   // ============================================

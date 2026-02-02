@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { BarChart3, RefreshCw, Zap } from "lucide-react";
-import HeroReventa from "./components/HeroReventa";
 import { PlanRevendedor } from "../../types";
 import { apiService, ValidacionCupon } from "../../services/api.service";
 import { ModeSelector } from "./components/ModeSelector";
@@ -29,6 +28,13 @@ export interface RevendedoresPageProps {
 export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen }: RevendedoresPageProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  const initialGroupId = location.pathname.endsWith("/revendedores/creditos")
+    ? "creditos"
+    : location.pathname.endsWith("/revendedores/validez")
+    ? "validez"
+    : undefined;
 
   const [planes, setPlanes] = useState<PlanRevendedor[]>([]);
   const [planesRenovacion, setPlanesRenovacion] = useState<PlanRevendedor[]>([]);
@@ -91,8 +97,59 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       tipoRenovacionSeleccionado === "credit"
         ? planesCreditRenovacion
         : planesValidityRenovacion;
+    
+    // Primero intentar encontrar un plan exacto
     const planCoincidente = planesFuente.find((plan) => plan.max_users === cantidadSeleccionada);
-    return planCoincidente ?? null;
+    if (planCoincidente) {
+      return planCoincidente;
+    }
+
+    // Si no hay plan exacto, calcular precio proporcional (igual que el backend)
+    if (planesFuente.length === 0) {
+      return null;
+    }
+
+    const planesOrdenados = [...planesFuente].sort((a, b) => a.max_users - b.max_users);
+    
+    // Buscar plan inferior y superior
+    const planInferior = planesOrdenados.reverse().find((p) => p.max_users < cantidadSeleccionada);
+    const planSuperior = planesOrdenados.find((p) => p.max_users > cantidadSeleccionada);
+
+    if (planInferior && planSuperior) {
+      // Interpolar entre ambos planes
+      const rangoUsuarios = planSuperior.max_users - planInferior.max_users;
+      const rangoPrecio = planSuperior.precio - planInferior.precio;
+      const usuariosExtra = cantidadSeleccionada - planInferior.max_users;
+      const precioExtra = (usuariosExtra / rangoUsuarios) * rangoPrecio;
+      
+      return {
+        ...planInferior,
+        max_users: cantidadSeleccionada,
+        precio: Math.round(planInferior.precio + precioExtra),
+        calculado: true
+      };
+    } else if (planInferior) {
+      // Solo hay plan inferior, calcular proporcional
+      const precioPorUsuario = planInferior.precio / planInferior.max_users;
+      return {
+        ...planInferior,
+        max_users: cantidadSeleccionada,
+        precio: Math.round(precioPorUsuario * cantidadSeleccionada),
+        calculado: true
+      };
+    } else if (planesOrdenados.length > 0) {
+      // Usar el plan más pequeño como base
+      const planMinimo = planesOrdenados[planesOrdenados.length - 1];
+      const precioPorUsuario = planMinimo.precio / planMinimo.max_users;
+      return {
+        ...planMinimo,
+        max_users: cantidadSeleccionada,
+        precio: Math.round(precioPorUsuario * cantidadSeleccionada),
+        calculado: true
+      };
+    }
+
+    return null;
   }, [
     planesCreditRenovacion,
     planesValidityRenovacion,
@@ -153,17 +210,10 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       setTipoRenovacionSeleccionado(info.datos.servex_account_type);
       setCuponRenovacion(null);
       setDescuentoRenovacion(0);
-
-      const planesFuente =
-        info.datos.servex_account_type === "credit"
-          ? planesCreditRenovacion
-          : planesValidityRenovacion;
-      if (planesFuente.length > 0) {
-        const planCoincidente = planesFuente.find((plan) => plan.max_users === info.datos.max_users);
-        setCantidadSeleccionada((planCoincidente ?? planesFuente[0]).max_users);
-      } else {
-        setCantidadSeleccionada(info.datos.max_users);
-      }
+      
+      // Para renovaciones, SIEMPRE usar los usuarios actuales del revendedor
+      // El backend calculará el precio proporcionalmente si no hay plan exacto
+      setCantidadSeleccionada(info.datos.max_users);
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
       setEmailRenovacion(info.datos.cliente_email || "");
@@ -213,28 +263,16 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       return;
     }
 
-    const planesFuente =
-      tipoRenovacionSeleccionado === "credit"
-        ? planesCreditRenovacion
-        : planesValidityRenovacion;
-    if (planesFuente.length === 0) {
-      return;
-    }
-
-    const existeSeleccion = planesFuente.some((plan) => plan.max_users === cantidadSeleccionada);
-    if (!existeSeleccion) {
-      const planCoincidente = planesFuente.find(
-        (plan) => plan.max_users === revendedorRenovacion.datos.max_users
-      );
-      const seleccion = planCoincidente ?? planesFuente[0];
-      setCantidadSeleccionada(seleccion.max_users);
+    // Para renovaciones, SIEMPRE mantener los usuarios actuales del revendedor
+    // No buscar planes coincidentes, el backend calculará el precio
+    const usuariosActuales = revendedorRenovacion.datos.max_users;
+    
+    if (cantidadSeleccionada !== usuariosActuales) {
+      setCantidadSeleccionada(usuariosActuales);
     }
   }, [
-    planesCreditRenovacion,
-    planesValidityRenovacion,
-    tipoRenovacionSeleccionado,
     revendedorRenovacion,
-    cantidadSeleccionada,
+    tipoRenovacionSeleccionado,
   ]);
 
   useEffect(() => {
@@ -312,16 +350,9 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       setCuponRenovacion(null);
       setDescuentoRenovacion(0);
 
-      const planesFuente =
-        info.datos.servex_account_type === "credit"
-          ? planesCreditRenovacion
-          : planesValidityRenovacion;
-      if (planesFuente.length > 0) {
-        const planCoincidente = planesFuente.find((plan) => plan.max_users === info.datos.max_users);
-        setCantidadSeleccionada((planCoincidente ?? planesFuente[0]).max_users);
-      } else {
-        setCantidadSeleccionada(info.datos.max_users);
-      }
+      // Para renovaciones, SIEMPRE usar los usuarios actuales del revendedor
+      // El backend calculará el precio proporcionalmente si no hay plan exacto
+      setCantidadSeleccionada(info.datos.max_users);
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
       setEmailRenovacion(info.datos.cliente_email || "");
@@ -563,11 +594,46 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
+  }, []);
+
   const handleMobileGroup = (section: MobileSection) => {
     if (modoSeleccion !== "compra") {
       setModoSeleccion("compra");
     }
+    const wasExpanded = expandedMenuSections.includes(section.id);
     section.onToggle?.();
+
+    // Si acabamos de abrir el grupo, navegar a la URL correspondiente para compartir
+    if (!wasExpanded && (section.id === "creditos" || section.id === "validez")) {
+      navigate(`/revendedores/${section.id}`);
+    }
   };
 
   const handleMobilePlan = (section: MobileSection) => {
@@ -614,12 +680,12 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
   };
 
   return (
-    <div className="bg-white text-gray-900">
+    <div className="bg-refine-dark text-zinc-100">
       <main className="flex flex-col">
-        <HeroReventa />
 
-        <section id="planes-section" className="bg-white py-8 md:py-12 xl:py-16">
-          <div className="mx-auto max-w-7xl px-4 md:px-8 xl:px-16 space-y-6 md:space-y-8 xl:space-y-12">
+        <section id="planes-section" className="relative pt-20 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 bg-refine-dark">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full">
 
             <ModeSelector
               mode={modoSeleccion}
@@ -666,8 +732,10 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
               <PlanGroupsSection
                 groups={groupedPlans}
                 onConfirmarCompra={handleConfirmarCompra}
+                initialGroupId={initialGroupId}
               />
             )}
+            </div>
           </div>
         </section>
 

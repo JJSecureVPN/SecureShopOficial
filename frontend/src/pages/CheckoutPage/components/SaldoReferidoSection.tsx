@@ -96,13 +96,13 @@ export function SaldoReferidoSection({
     <div className="space-y-4">
       {/* Sección de Saldo - Solo si el usuario tiene email y saldo */}
       {userEmail && saldo > 0 && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+        <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-green-600" />
-              <span className="font-medium text-green-800">Tu saldo disponible</span>
+              <Wallet className="w-5 h-5 text-emerald-400" />
+              <span className="font-medium text-emerald-200">Tu saldo disponible</span>
             </div>
-            <span className="text-lg font-bold text-green-700">
+            <span className="text-lg font-bold text-emerald-300">
               {formatCurrency(saldo)}
             </span>
           </div>
@@ -117,16 +117,16 @@ export function SaldoReferidoSection({
               />
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                 usarSaldo 
-                  ? 'bg-green-600 border-green-600' 
-                  : 'bg-white border-gray-300 group-hover:border-green-400'
+                  ? 'bg-emerald-500 border-emerald-500' 
+                  : 'bg-zinc-800 border-zinc-600 group-hover:border-emerald-400'
               }`}>
                 {usarSaldo && <Check className="w-3 h-3 text-white" />}
               </div>
             </div>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-zinc-300">
               Usar saldo para pagar
               {usarSaldo && saldoAUsar > 0 && (
-                <span className="ml-1 font-medium text-green-700">
+                <span className="ml-1 font-medium text-emerald-300">
                   (-{formatCurrency(saldoAUsar)})
                 </span>
               )}
@@ -134,7 +134,7 @@ export function SaldoReferidoSection({
           </label>
 
           {usarSaldo && saldoAUsar >= precioConDescuentoReferido && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-green-700 bg-green-100 rounded-lg px-3 py-2">
+            <div className="mt-3 flex items-center gap-2 text-sm text-emerald-300 bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/20">
               <Sparkles className="w-4 h-4" />
               <span>¡Tu saldo cubre el total! No necesitas pagar.</span>
             </div>
@@ -144,40 +144,40 @@ export function SaldoReferidoSection({
 
       {/* Sección de Código de Referido */}
       {programaActivo && (
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4">
+        <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border border-orange-500/20 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Gift className="w-5 h-5 text-purple-600" />
-            <span className="font-medium text-purple-800">Código de referido</span>
+            <Gift className="w-5 h-5 text-orange-400" />
+            <span className="font-medium text-orange-200">Código de referido</span>
           </div>
 
           {referralCode && referralValidation?.valido ? (
             // Código válido aplicado
-            <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-purple-200">
+            <div className="flex items-center justify-between bg-zinc-800 rounded-lg px-3 py-2 border border-zinc-600">
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <span className="font-mono font-medium text-purple-800">{referralCode}</span>
-                <span className="text-sm text-green-600">
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span className="font-mono font-medium text-orange-200">{referralCode}</span>
+                <span className="text-sm text-emerald-400">
                   -{descuentoReferido}% aplicado
                 </span>
               </div>
               <button
                 onClick={clearReferralCode}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-zinc-700 rounded transition-colors"
                 title="Quitar código"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-zinc-400" />
               </button>
             </div>
           ) : referralValidation && !referralValidation.valido ? (
             // Código inválido
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-red-300 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">
                 <X className="w-4 h-4" />
                 <span>{referralValidation.mensaje}</span>
               </div>
               <button
                 onClick={() => setMostrarInputCodigo(true)}
-                className="text-sm text-purple-600 hover:text-purple-700"
+                className="text-sm text-orange-400 hover:text-orange-300"
               >
                 Probar otro código
               </button>
@@ -190,13 +190,13 @@ export function SaldoReferidoSection({
                 value={codigoManual}
                 onChange={(e) => setCodigoManual(e.target.value.toUpperCase())}
                 placeholder="Ingresa el código"
-                className="flex-1 px-3 py-2 border border-purple-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono uppercase"
+                className="flex-1 px-3 py-2 border border-zinc-600 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono uppercase bg-zinc-800 text-zinc-100 placeholder-zinc-400"
                 maxLength={10}
               />
               <button
                 onClick={handleValidarCodigo}
                 disabled={!codigoManual.trim() || isValidating}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isValidating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -209,7 +209,7 @@ export function SaldoReferidoSection({
                   setMostrarInputCodigo(false);
                   setCodigoManual('');
                 }}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-zinc-400 hover:bg-zinc-700 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -218,7 +218,7 @@ export function SaldoReferidoSection({
             // Botón para mostrar input
             <button
               onClick={() => setMostrarInputCodigo(true)}
-              className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
+              className="text-sm text-orange-400 hover:text-orange-300 flex items-center gap-1"
             >
               <Gift className="w-4 h-4" />
               ¿Tienes un código de referido?
@@ -226,7 +226,7 @@ export function SaldoReferidoSection({
           )}
 
           {descuentoPorReferido > 0 && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-purple-700 bg-purple-100 rounded-lg px-3 py-2">
+            <div className="mt-3 flex items-center gap-2 text-sm text-orange-300 bg-orange-500/10 rounded-lg px-3 py-2 border border-orange-500/20">
               <Info className="w-4 h-4" />
               <span>
                 Ahorras <strong>{formatCurrency(descuentoPorReferido)}</strong> con este código
@@ -238,26 +238,26 @@ export function SaldoReferidoSection({
 
       {/* Resumen de descuentos si hay alguno aplicado */}
       {(descuentoPorReferido > 0 || saldoAUsar > 0) && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
-          <div className="text-sm font-medium text-gray-700 mb-2">Resumen de descuentos</div>
+        <div className="bg-zinc-800 border border-zinc-600 rounded-xl p-4 space-y-2">
+          <div className="text-sm font-medium text-zinc-200 mb-2">Resumen de descuentos</div>
           
           {descuentoPorReferido > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Descuento por referido ({descuentoReferido}%)</span>
-              <span className="text-green-600">-{formatCurrency(descuentoPorReferido)}</span>
+              <span className="text-zinc-400">Descuento por referido ({descuentoReferido}%)</span>
+              <span className="text-emerald-400">-{formatCurrency(descuentoPorReferido)}</span>
             </div>
           )}
           
           {saldoAUsar > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Saldo utilizado</span>
-              <span className="text-green-600">-{formatCurrency(saldoAUsar)}</span>
+              <span className="text-zinc-400">Saldo utilizado</span>
+              <span className="text-emerald-400">-{formatCurrency(saldoAUsar)}</span>
             </div>
           )}
           
-          <div className="border-t pt-2 mt-2 flex justify-between font-medium">
-            <span>Total a pagar</span>
-            <span className="text-lg">
+          <div className="border-t border-zinc-600 pt-2 mt-2 flex justify-between font-medium">
+            <span className="text-zinc-200">Total a pagar</span>
+            <span className="text-lg text-orange-400">
               {formatCurrency(Math.max(0, precioConDescuentoReferido - saldoAUsar))}
             </span>
           </div>

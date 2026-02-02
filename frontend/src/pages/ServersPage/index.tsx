@@ -27,7 +27,7 @@ const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
       {/* Mobile Bottom Sheet Navigation */}
       <BottomSheet
         isOpen={isMobileMenuOpen}
@@ -50,8 +50,8 @@ const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                 activeSection === section.id
-                  ? "bg-purple-50 text-purple-700 border border-purple-200"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                  : "text-zinc-400 hover:bg-zinc-800"
               }`}
             >
               {section.icon}
@@ -66,18 +66,23 @@ const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps
         {/* Hero Section */}
         <ServersHero />
         
-        {/* Global Summary - Stats Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <ServerGlobalSummary />
-        </motion.div>
+        {/* Content Container - starts where video ends */}
+        <div className="bg-zinc-900">
+          <div className="max-w-7xl mx-auto">
+            {/* Global Summary - Stats Cards */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <ServerGlobalSummary />
+            </motion.div>
 
-        {/* Server Stats Section */}
-        <div id="section-server-stats">
-          <ServerStats />
+            {/* Server Stats Section */}
+            <div id="section-server-stats">
+              <ServerStats />
+            </div>
+          </div>
         </div>
 
         {/* Latest Users Section */}

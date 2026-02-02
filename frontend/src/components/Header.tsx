@@ -5,8 +5,8 @@ import NoticiasPopover from "./NoticiasPopover";
 import CuponesPopover from "./CuponesPopover";
 import UserMenu from "./UserMenu";
 import AuthModal from "./AuthModal";
-import { useState, useEffect } from "react";
-import { protonColors } from "../styles/colors";
+import { HeaderDropdown } from "./HeaderDropdown";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 const Header = () => {
@@ -14,6 +14,9 @@ const Header = () => {
   const { user } = useAuth();
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+  const scrollYRef = useRef<number>(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Escuchar evento global para abrir modal de autenticación (usado por el chat)
@@ -23,17 +26,40 @@ const Header = () => {
     return () => document.removeEventListener('open-auth-modal', handleOpenAuthModal);
   }, []);
   
-  // Bloquear scroll cuando el menú está abierto
+  // Bloquear scroll preservando la posición (evita salto en móviles)
   useEffect(() => {
     if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      scrollYRef.current = window.scrollY || window.pageYOffset || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
     } else {
-      document.body.style.overflow = 'unset';
+      // Restaurar estilos y devolver la posición guardada
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      window.scrollTo(0, scrollYRef.current || 0);
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
     };
   }, [mobileMenuOpen]);
+
+  // Medir la altura del header para posicionar el menú/overlay correctamente
+  useLayoutEffect(() => {
+    const measure = () => {
+      const h = headerRef.current?.getBoundingClientRect().height || 64;
+      setHeaderHeight(Math.round(h));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
   
   const isActive = (path: string) => location.pathname === path;
 
@@ -50,18 +76,16 @@ const Header = () => {
         <div 
           className="lg:hidden fixed inset-x-0 bottom-0 bg-black/50 backdrop-blur-sm z-[8888]"
           onClick={() => setMobileMenuOpen(false)}
-          style={{ top: '48px' }}
+          style={{ top: `${headerHeight}px` }}
         />
       )}
 
-      {/* Header - Siempre claro y sticky */}
+      {/* Header - Refine.dev style */}
       <header 
-        className="sticky top-0 left-0 right-0 w-full z-[9999] overflow-visible"
-        style={{ 
-          backgroundColor: '#f4eaff'
-        }}
+        ref={headerRef}
+        className="sticky top-0 left-0 right-0 w-full z-[10001] bg-refine-dark border-b border-refine"
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-12 flex items-center justify-between overflow-visible">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           {/* Left side: Logo */}
           <div className="flex items-center gap-6">
             <Link
@@ -73,21 +97,20 @@ const Header = () => {
               <img
                 src="/INTERNET ILIMITADO.avif"
                 alt="JJSecure VPN"
-                className="h-7 w-auto"
+                className="h-8 w-auto"
               />
             </Link>
 
             {/* Navigation - Desktop */}
-            <nav className="hidden lg:flex items-center gap-0">
+            <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   reloadDocument
-                  className="px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:opacity-80"
-                  style={{ 
-                    color: isActive(link.path) ? protonColors.purple[500] : protonColors.purple[800]
-                  }}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive(link.path) ? 'text-indigo-600' : 'text-refine-secondary hover:text-refine'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -98,112 +121,104 @@ const Header = () => {
                 <button
                   onClick={() => setFeaturesOpen(!featuresOpen)}
                   onBlur={() => setTimeout(() => setFeaturesOpen(false), 150)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:opacity-80"
-                  style={{ color: protonColors.purple[800] }}
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-refine-secondary hover:text-refine transition-colors"
                 >
                   Características
                   <ChevronDown className={`h-4 w-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {featuresOpen && (
-                  <div 
-                    className="absolute top-full left-0 mt-2 w-64 rounded-xl py-2 shadow-lg bg-white ring-1 ring-black/5"
-                  >
-                    {/* Secciones principales */}
-                    <Link
-                      to="/"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Home className="h-4 w-4" />
-                      Inicio
-                    </Link>
-                    <Link
-                      to="/sobre-nosotros"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Users className="h-4 w-4" />
-                      Sobre Nosotros
-                    </Link>
-                    <Link
-                      to="/planes"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      Planes VPN
-                    </Link>
-                    <Link
-                      to="/revendedores"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Store className="h-4 w-4" />
-                      Revendedores
-                    </Link>
-                    <Link
-                      to="/donaciones"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Heart className="h-4 w-4" />
-                      Donaciones
-                    </Link>
-                    <Link
-                      to="/sponsors"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Star className="h-4 w-4" />
-                      Sponsors
-                    </Link>
-                    <Link
-                      to="/estado"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <Activity className="h-4 w-4" />
-                      Estado del Sistema
-                    </Link>
-                    
-                    {/* Separador */}
-                    <div className="my-2 border-t border-gray-100" />
-                    
-                    <Link
-                      to="/ayuda"
-                      reloadDocument
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:opacity-80"
-                      style={{ color: protonColors.purple[800], backgroundColor: 'transparent' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = protonColors.purple[50]}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      Centro de Ayuda
-                    </Link>
-                  </div>
-                )}
+                <HeaderDropdown isOpen={featuresOpen}>
+                  <ol className="grid grid-cols-2 gap-1 px-2">
+                    <li>
+                      <Link
+                        to="/"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Home className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Inicio</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/planes"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <CreditCard className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Planes VPN</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/sobre-nosotros"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Users className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Sobre Nosotros</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/revendedores"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Store className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Revendedores</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/donaciones"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Heart className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Donaciones</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/estado"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Activity className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Estado</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/sponsors"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <Star className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Sponsors</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/ayuda"
+                        reloadDocument
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all duration-200 rounded-lg group"
+                        onClick={() => setFeaturesOpen(false)}
+                      >
+                        <HelpCircle className="h-4 w-4 text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                        <span>Ayuda</span>
+                      </Link>
+                    </li>
+                  </ol>
+                </HeaderDropdown>
               </div>
             </nav>
           </div>
@@ -230,11 +245,7 @@ const Header = () => {
               <Link
                 to="/planes"
                 reloadDocument
-                className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all hover:opacity-90"
-                style={{ 
-                  backgroundColor: protonColors.purple[500],
-                  color: 'white'
-                }}
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-refine-accent text-zinc-900 hover:bg-orange-500 transition-colors"
               >
                 Obtener VPN
               </Link>
@@ -243,8 +254,7 @@ const Header = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg transition-opacity hover:opacity-70"
-              style={{ color: protonColors.purple[800] }}
+              className="lg:hidden p-2 rounded-lg text-refine-secondary hover:text-refine transition-colors"
               aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -252,12 +262,16 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu - Estilo ProtonVPN con fondo blanco */}
+        {/* Mobile Menu - Refine.dev style */}
         {mobileMenuOpen && (
           <div 
-            className="lg:hidden w-full border-t border-gray-100 bg-white relative z-[9999]"
+            className="lg:hidden border-t border-refine bg-refine-dark-alt z-[10000]"
             style={{ 
-              maxHeight: '80vh',
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              top: `${headerHeight}px`,
+              maxHeight: `calc(100vh - ${headerHeight}px)`,
               overflowY: 'auto',
             }}
           >
@@ -271,19 +285,20 @@ const Header = () => {
                 { path: '/donaciones', label: 'Donaciones', icon: Heart },
                 { path: '/sponsors', label: 'Sponsors', icon: Star },
                 { path: '/estado', label: 'Estado del Sistema', icon: Activity },
+                { path: '/ayuda', label: 'Ayuda', icon: HelpCircle },
               ].map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   reloadDocument
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-colors"
-                  style={{ 
-                    color: isActive(item.path) ? protonColors.purple[500] : protonColors.purple[800],
-                    backgroundColor: isActive(item.path) ? protonColors.purple[50] : 'transparent'
-                  }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-colors ${
+                      isActive(item.path) 
+                        ? 'text-indigo-600 bg-refine-dark-tertiary' 
+                        : 'text-refine-secondary hover:text-refine hover:bg-refine-dark-tertiary'
+                    }`}
                 >
-                  <item.icon className="h-5 w-5" />
+                    <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-indigo-500' : 'text-zinc-400'}`} />
                   {item.label}
                 </Link>
               ))}
@@ -294,11 +309,11 @@ const Header = () => {
                   to="/perfil"
                   reloadDocument
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-colors"
-                  style={{ 
-                    color: isActive('/perfil') ? protonColors.purple[500] : protonColors.purple[800],
-                    backgroundColor: isActive('/perfil') ? protonColors.purple[50] : 'transparent'
-                  }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-colors ${
+                    isActive('/perfil')
+                      ? 'text-indigo-600 bg-refine-dark-tertiary'
+                      : 'text-refine-secondary hover:text-refine hover:bg-refine-dark-tertiary'
+                  }`}
                 >
                   {/* Avatar - Mostrar imagen de Google si está disponible */}
                   {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
@@ -309,8 +324,7 @@ const Header = () => {
                     />
                   ) : (
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                      style={{ backgroundColor: protonColors.purple[500] }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-indigo-600 text-white"
                     >
                       {(user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
                     </div>
@@ -328,8 +342,7 @@ const Header = () => {
                     setMobileMenuOpen(false);
                     setShowAuthModal(true);
                   }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base transition-colors w-full text-left"
-                  style={{ color: protonColors.purple[800] }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base text-refine-secondary hover:text-refine hover:bg-refine-dark-tertiary transition-colors w-full text-left"
                 >
                   <LogIn className="h-5 w-5" />
                   Iniciar sesión
@@ -337,7 +350,7 @@ const Header = () => {
               )}
 
               {/* Separador */}
-              <div className="my-3 border-t border-gray-200" />
+              <div className="my-3 border-t border-refine" />
 
               {/* CTA - escondido en /planes */}
               {location.pathname !== '/planes' && (
@@ -346,8 +359,7 @@ const Header = () => {
                     to="/planes"
                     reloadDocument
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full text-base font-semibold transition-all text-white hover:opacity-90"
-                    style={{ backgroundColor: protonColors.purple[500] }}
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-lg text-base font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
                   >
                     Obtener VPN
                   </Link>

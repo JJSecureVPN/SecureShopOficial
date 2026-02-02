@@ -6,8 +6,38 @@ import { supabaseService } from '../services/supabase.service';
 /**
  * Middleware de CORS
  */
+const allowedCorsOrigins = (config.cors.origin || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
 export const corsMiddleware = cors({
-  origin: config.cors.origin,
+  origin: (origin, callback) => {
+    // Requests sin header Origin (ej: curl, healthchecks, server-to-server)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    // WebView/Capacitor/file:// SIEMPRE envían Origin: null - permitir siempre para apps móviles
+    if (origin === 'null') {
+      callback(null, true);
+      return;
+    }
+
+    if (allowedCorsOrigins.includes('*')) {
+      callback(null, true);
+      return;
+    }
+
+    if (allowedCorsOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    // No aplicar CORS (sin error)
+    callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

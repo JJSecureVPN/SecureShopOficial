@@ -114,18 +114,18 @@ const CheckoutForm = forwardRef<CheckoutFormRef, CheckoutFormProps>(
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-zinc-300 mb-2">
             Nombre completo
           </label>
           <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-focus-within:bg-purple-100 transition-colors">
-              <User className="w-5 h-5 text-purple-500" />
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-focus-within:bg-orange-500/20 transition-colors">
+              <User className="w-5 h-5 text-orange-500" />
             </div>
             <input
               ref={nombreInputRef}
               type="text"
               disabled={loading}
-              className="w-full pl-16 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all hover:border-gray-300"
+              className="w-full pl-16 pr-4 py-4 bg-zinc-800 border border-zinc-600 rounded-xl text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all hover:border-zinc-500"
               placeholder="Juan Pérez"
             />
           </div>
@@ -145,33 +145,33 @@ const CheckoutForm = forwardRef<CheckoutFormRef, CheckoutFormProps>(
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-zinc-300 mb-2">
             Email
           </label>
           <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center group-focus-within:bg-purple-100 transition-colors">
-              <Mail className="w-5 h-5 text-purple-500" />
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-focus-within:bg-orange-500/20 transition-colors">
+              <Mail className="w-5 h-5 text-orange-500" />
             </div>
             <input
               ref={emailInputRef}
               type="email"
               disabled={loading}
               readOnly={!!userEmail}
-              className={`w-full pl-16 pr-12 py-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all ${
-                userEmail ? 'bg-gray-50 cursor-not-allowed' : 'bg-white hover:border-gray-300'
+              className={`w-full pl-16 pr-12 py-4 border border-zinc-600 rounded-xl text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all ${
+                userEmail ? 'bg-zinc-700 cursor-not-allowed' : 'bg-zinc-800 hover:border-zinc-500'
               }`}
               placeholder="tu@email.com"
               onChange={(e) => !userEmail && onEmailChange?.(e.target.value)}
               onBlur={(e) => !userEmail && onEmailChange?.(e.target.value)}
             />
             {userEmail && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Check className="w-4 h-4 text-emerald-600" />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Check className="w-4 h-4 text-emerald-400" />
               </div>
             )}
           </div>
           {userEmail && (
-            <p className="text-emerald-600 text-xs mt-2 flex items-center gap-1.5">
+            <p className="text-emerald-400 text-xs mt-2 flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5" />
               Email de tu cuenta verificado
             </p>
@@ -184,8 +184,8 @@ const CheckoutForm = forwardRef<CheckoutFormRef, CheckoutFormProps>(
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
             <span>Ingresa tu email</span>
           </p>
-          <p className="text-gray-500 text-xs mt-2 flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-purple-500" />
+          <p className="text-zinc-400 text-xs mt-2 flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-orange-500" />
             Recibirás tus credenciales VPN en este email
           </p>
         </motion.div>

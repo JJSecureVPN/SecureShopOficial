@@ -92,7 +92,7 @@ export function TestimoniosSection() {
           <button
             onClick={prevTestimonial}
             disabled={currentIndex === 0 && visibleCount >= TESTIMONIALS.length}
-            className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -103,7 +103,7 @@ export function TestimoniosSection() {
                 key={index}
                 onClick={() => setCurrentIndex(index)}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? "bg-purple-500" : "bg-gray-300"
+                  index === currentIndex ? "bg-indigo-400" : "bg-zinc-700"
                 }`}
                 aria-label={`Ir al grupo de testimonios ${index + 1}`}
               />
@@ -113,7 +113,7 @@ export function TestimoniosSection() {
           <button
             onClick={nextTestimonial}
             disabled={currentIndex >= TESTIMONIALS.length - visibleCount}
-            className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -124,7 +124,7 @@ export function TestimoniosSection() {
           {visibleTestimonials.map((testimonial, index) => (
             <motion.article 
               key={`${testimonial.name}-${currentIndex}`} 
-              className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8"
+              className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -133,15 +133,15 @@ export function TestimoniosSection() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-4 w-4 ${i < testimonial.rating ? "text-amber-400" : "text-gray-200"}`}
+                    className={`h-4 w-4 ${i < testimonial.rating ? "text-amber-400" : "text-zinc-700"}`}
                     fill={i < testimonial.rating ? "currentColor" : "none"}
                   />
                 ))}
               </div>
-              <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">"{testimonial.message}"</p>
+              <p className="text-zinc-300 text-sm sm:text-base leading-relaxed mb-4">"{testimonial.message}"</p>
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-900">{testimonial.name}</span>
-                <span className="text-gray-400">{testimonial.date}</span>
+                <span className="font-medium text-zinc-100">{testimonial.name}</span>
+                <span className="text-zinc-400">{testimonial.date}</span>
               </div>
             </motion.article>
           ))}

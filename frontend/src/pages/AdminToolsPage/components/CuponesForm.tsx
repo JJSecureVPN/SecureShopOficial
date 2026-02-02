@@ -10,7 +10,7 @@ interface CuponesFormProps {
   isCreatingCupon?: boolean;
   cuponSuccess?: string | null;
   cuponError?: string | null;
-  onInputChange: (field: keyof CuponFormState, value: string) => void;
+  onInputChange: (field: keyof CuponFormState, value: string | boolean) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
@@ -64,6 +64,13 @@ const FORM_FIELDS = [
     type: "datetime-local",
     required: false,
     description: "Cuándo expira el cupón (opcional)",
+  },
+  {
+    name: "oculto",
+    label: "Cupón oculto",
+    type: "checkbox",
+    required: false,
+    description: "Si está marcado, no se muestra en el header público",
   },
   {
     name: "planes_aplicables",
@@ -186,6 +193,42 @@ interface SelectInputProps {
   required?: boolean;
 }
 
+interface CheckboxInputProps {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  required?: boolean;
+}
+
+function CheckboxInput({
+  label,
+  description,
+  checked,
+  onChange,
+  required,
+}: CheckboxInputProps) {
+  return (
+    <label className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="rounded border border-neutral-700 bg-neutral-850 text-violet-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/20"
+        />
+        <span className="text-sm font-medium text-neutral-200">{label}</span>
+        {!required && (
+          <span className="text-xs text-neutral-500">(Opcional)</span>
+        )}
+      </div>
+      {description && (
+        <p className="text-xs text-neutral-500 ml-6">{description}</p>
+      )}
+    </label>
+  );
+}
+
 function SelectInput({
   label,
   description,
@@ -219,8 +262,8 @@ function SelectInput({
 
 interface FormFieldProps {
   field: (typeof FORM_FIELDS)[0];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | boolean;
+  onChange: (value: string | boolean) => void;
 }
 
 function FormField({ field, value, onChange }: FormFieldProps) {
@@ -229,8 +272,20 @@ function FormField({ field, value, onChange }: FormFieldProps) {
       <SelectInput
         label={field.label}
         description={field.description}
-        value={value}
+        value={value as string}
         options={field.options || []}
+        onChange={onChange}
+        required={field.required}
+      />
+    );
+  }
+
+  if (field.type === "checkbox") {
+    return (
+      <CheckboxInput
+        label={field.label}
+        description={field.description}
+        checked={value as boolean}
         onChange={onChange}
         required={field.required}
       />
@@ -241,8 +296,8 @@ function FormField({ field, value, onChange }: FormFieldProps) {
     <TextInput
       label={field.label}
       description={field.description}
-      value={value}
-      placeholder={getPlaceholder(field.name, value)}
+      value={value as string}
+      placeholder={getPlaceholder(field.name, value as string)}
       onChange={onChange}
       required={field.required}
       type={field.type}
@@ -317,7 +372,7 @@ export function CuponesForm({
                 <FormField
                   field={field}
                   value={
-                    cuponForm[field.name as keyof CuponFormState] as string
+                    cuponForm[field.name as keyof CuponFormState] as string | boolean
                   }
                   onChange={(value) =>
                     onInputChange(field.name as keyof CuponFormState, value)

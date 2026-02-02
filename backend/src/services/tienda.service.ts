@@ -4,11 +4,11 @@ import { ServexService } from "./servex.service";
 import { WebSocketService } from "./websocket.service";
 import { MercadoPagoService } from "./mercadopago.service";
 import { DemoService } from "./demo.service";
-import { configService } from "./config.service";
 import emailService from "./email.service";
-import { cuponesService } from "./cupones.service";
+import { cuponesSupabaseService } from "./cupones-supabase.service";
 import { supabaseService } from "./supabase.service";
 import { referidosService } from "./referidos.service";
+import { planesSupabaseService } from "./planes-supabase.service";
 import { Plan, Pago, CrearPagoInput, ClienteServex } from "../types";
 
 export class TiendaService {
@@ -39,73 +39,49 @@ export class TiendaService {
   }
 
   /**
-   * Inicializa planes por defecto si no existen
+   * Obtiene un plan VPN por ID desde Supabase (CON promociones aplicadas)
    */
-  async inicializarPlanes(): Promise<void> {
-    const planesExistentes = this.db.obtenerPlanes();
-    if (planesExistentes.length > 0) {
-      console.log("[Tienda] Planes ya existen en la base de datos");
-      return;
+  async obtenerPlanPorId(planId: number): Promise<Plan | null> {
+    try {
+      // Usar obtenerPlanVPNConPrecio para obtener precio con promoción aplicada
+      const plan = await planesSupabaseService.obtenerPlanVPNConPrecio(planId);
+      if (!plan) return null;
+      
+      // Mapear a formato Plan compatible con el resto del código
+      return {
+        id: plan.id,
+        nombre: plan.nombre,
+        descripcion: plan.descripcion || "",
+        precio: Number(plan.precio_efectivo), // ⚡ Usa precio con promoción
+        dias: plan.dias,
+        connection_limit: plan.dispositivos,
+        activo: plan.activo,
+      };
+    } catch (error) {
+      console.error("[Tienda] Error obteniendo plan desde Supabase:", error);
+      return null;
     }
-
-    console.log("[Tienda] Creando planes por defecto...");
-
-    const planesDefault = [
-      {
-        nombre: "Plan Básico",
-        descripcion: "Perfecto para uso personal",
-        precio: 5,
-        dias: 30,
-        connection_limit: 1,
-        activo: true,
-      },
-      {
-        nombre: "Plan Premium",
-        descripcion: "Para usuarios exigentes",
-        precio: 5,
-        dias: 30,
-        connection_limit: 2,
-        activo: true,
-      },
-      {
-        nombre: "Plan Familiar",
-        descripcion: "Para compartir con tu familia",
-        precio: 5,
-        dias: 30,
-        connection_limit: 4,
-        activo: true,
-      },
-      {
-        nombre: "Plan Anual",
-        descripcion: "Ahorra con nuestro plan anual",
-        precio: 5,
-        dias: 365,
-        connection_limit: 2,
-        activo: true,
-      },
-    ];
-
-    for (const plan of planesDefault) {
-      this.db.crearPlan(plan);
-    }
-
-    console.log("[Tienda] ✅ Planes creados exitosamente");
-
-    // Verificar consistencia con configuración
-    configService.verificarConsistenciaConDB(this.db);
   }
 
   /**
-   * Obtiene todos los planes activos (con overrides de configuración)
+   * Obtiene todos los planes activos desde Supabase
    */
-  obtenerPlanes(options?: { forNewCustomers?: boolean; forRenewal?: boolean }): Plan[] {
-    const planesBase = this.db.obtenerPlanes();
-    const overrideOptions = options ?? { forNewCustomers: true };
-    // Aplicar overrides de configuración si existen
-    return configService.aceptarOverridesAListaPlanes(
-      planesBase,
-      overrideOptions
-    );
+  async obtenerPlanesAsync(): Promise<Plan[]> {
+    try {
+      const planes = await planesSupabaseService.obtenerPlanesVPNConPrecios();
+      return planes.map(plan => ({
+        id: plan.id,
+        nombre: plan.nombre,
+        descripcion: plan.descripcion || "",
+        precio: plan.precio_efectivo, // Usa precio con promoción si aplica
+        dias: plan.dias,
+        connection_limit: plan.dispositivos,
+        activo: plan.activo,
+      }));
+    } catch (error) {
+      console.error("[Tienda] Error obteniendo planes desde Supabase:", error);
+      return [];
+    }
   }
 
   /**
@@ -128,8 +104,8 @@ export class TiendaService {
   }> {
     console.log("[Tienda] procesarCompra input:", JSON.stringify(input));
     
-    // 1. Validar que el plan existe
-    let plan = this.db.obtenerPlanPorId(input.planId);
+    // 1. Validar que el plan existe (desde Supabase)
+    let plan = await this.obtenerPlanPorId(input.planId);
     if (!plan) {
       throw new Error("Plan no encontrado");
     }
@@ -138,8 +114,7 @@ export class TiendaService {
       throw new Error("Plan no disponible");
     }
 
-    // 2. Aplicar overrides de configuración
-    plan = configService.aceptarOverridesAlPlan(plan, { forNewCustomers: true });
+    // 2. El precio ya viene con promociones aplicadas desde Supabase
     let precioFinal = plan.precio;
     let descuentoAplicado = 0;
     let cuponAplicado = null;
@@ -149,7 +124,7 @@ export class TiendaService {
     if (input.codigoCupon) {
       console.log(`[Tienda] Validando cupón: ${input.codigoCupon}`);
 
-      const validacion = await cuponesService.validarCupon(input.codigoCupon, input.planId, input.clienteEmail);
+      const validacion = await cuponesSupabaseService.validarCupon(input.codigoCupon, input.planId, input.clienteEmail);
 
       if (!validacion.valido) {
         throw new Error(`Cupón inválido: ${validacion.mensaje_error}`);
@@ -160,7 +135,7 @@ export class TiendaService {
       }
 
       // Calcular descuento
-      descuentoAplicado = cuponesService.calcularDescuento(validacion.cupon, precioFinal);
+      descuentoAplicado = cuponesSupabaseService.calcularDescuento(validacion.cupon, precioFinal);
       precioFinal = Math.max(0, precioFinal - descuentoAplicado); // No permitir precios negativos
       cuponAplicado = validacion.cupon;
 
@@ -266,12 +241,7 @@ export class TiendaService {
           };
         }
 
-        await referidosService.procesarReferidoPorEmail(
-          input.codigoReferido,
-          input.clienteEmail,
-          plan.precio, // Monto original para calcular comisión
-          pagoId
-        );
+        // El referido se procesará después de la sincronización con Supabase
       }
 
       // Crear la cuenta VPN y obtener credenciales
@@ -290,6 +260,35 @@ export class TiendaService {
         );
         this.db.actualizarEstadoPago(pagoId, "rechazado");
         throw new Error(`Error creando cuenta VPN: ${error.message}`);
+      }
+
+      // Sincronizar con Supabase y procesar referido
+      try {
+        const purchaseHistoryId = await supabaseService.syncApprovedPurchase({
+          email: pago.cliente_email,
+          planNombre: plan.nombre,
+          monto: pago.monto,
+          tipo: 'plan',
+          servexUsername: cuentaVPN.username,
+          servexPassword: cuentaVPN.password,
+          servexExpiracion: undefined, // No tenemos la fecha exacta aquí
+          servexConnectionLimit: plan.connection_limit,
+          mpPaymentId: undefined,
+        });
+
+        // Procesar referido ahora que tenemos el purchaseHistoryId
+        if (input.codigoReferido && purchaseHistoryId) {
+          await referidosService.procesarReferidoPorEmail(
+            input.codigoReferido,
+            input.clienteEmail,
+            plan.precio, // Monto original para calcular comisión
+            purchaseHistoryId
+          );
+          console.log(`[Tienda] ✅ Referido procesado con código: ${input.codigoReferido}, usando purchase_id: ${purchaseHistoryId}`);
+        }
+      } catch (supabaseError: any) {
+        console.error("[Tienda] ⚠️ Error sincronizando con Supabase:", supabaseError.message);
+        // No lanzamos error, la venta ya está procesada
       }
 
       return {
@@ -465,23 +464,6 @@ export class TiendaService {
       console.error("[Tienda] ⚠️ Error notificando al admin:", emailError.message);
     }
 
-    // 7. Sincronizar con Supabase
-    try {
-      await supabaseService.syncApprovedPurchase({
-        email: pago.cliente_email,
-        planNombre: plan.nombre,
-        monto: pago.monto,
-        tipo: 'plan',
-        servexUsername: clienteCreado.username,
-        servexPassword: clienteCreado.password,
-        servexExpiracion: clienteCreado.expiration_date,
-        servexConnectionLimit: clienteCreado.connection_limit,
-        mpPaymentId: undefined,
-      });
-    } catch (supabaseError: any) {
-      console.error("[Tienda] ⚠️ Error sincronizando con Supabase:", supabaseError.message);
-    }
-
     // Retornar las credenciales para mostrar en el frontend
     return {
       username: clienteCreado.username,
@@ -528,7 +510,7 @@ export class TiendaService {
       return;
     }
 
-    const plan = this.db.obtenerPlanPorId(pago.plan_id);
+    const plan = await this.obtenerPlanPorId(pago.plan_id);
     if (!plan) {
       throw new Error("Plan no encontrado");
     }
@@ -598,10 +580,10 @@ export class TiendaService {
       let cuponInfo = null;
       if (pago.cupon_id) {
         try {
-          await cuponesService.aplicarCupon(pago.cupon_id);
-          const cupon = await cuponesService.obtenerCuponPorId(pago.cupon_id);
+          await cuponesSupabaseService.aplicarCuponSimple(pago.cupon_id);
+          const cupon = await cuponesSupabaseService.obtenerCuponPorId(pago.cupon_id);
           if (cupon) {
-            const descuentoAplicado = cuponesService.calcularDescuento(cupon, plan.precio);
+            const descuentoAplicado = cuponesSupabaseService.calcularDescuento(cupon, plan.precio);
             cuponInfo = {
               codigo: cupon.codigo,
               tipo: cupon.tipo as 'porcentaje' | 'fijo',
@@ -657,7 +639,7 @@ export class TiendaService {
 
       // Sincronizar con Supabase (historial de usuario)
       try {
-        await supabaseService.syncApprovedPurchase({
+        const purchaseHistoryId = await supabaseService.syncApprovedPurchase({
           email: pago.cliente_email,
           planNombre: plan.nombre,
           monto: pago.monto,
@@ -668,6 +650,15 @@ export class TiendaService {
           servexConnectionLimit: clienteCreado.connection_limit,
           mpPaymentId: mpPaymentId,
         });
+
+        // Actualizar metadata con el ID de purchase_history para referidos
+        if (purchaseHistoryId) {
+          const currentMetadata = this.db.obtenerMetadataPago(pagoId) || {};
+          this.db.actualizarMetadataPago(pagoId, {
+            ...currentMetadata,
+            purchaseHistoryId,
+          });
+        }
       } catch (supabaseError: any) {
         console.error("[Tienda] ⚠️ Error sincronizando con Supabase:", supabaseError.message);
         // No lanzamos error, la venta ya está procesada
@@ -689,13 +680,14 @@ export class TiendaService {
 
           // Procesar referido (acreditar comisión al referidor)
           if (metadata.codigoReferido) {
+            const purchaseIdToUse = metadata.purchaseHistoryId || pagoId;
             await referidosService.procesarReferidoPorEmail(
               metadata.codigoReferido,
               pago.cliente_email,
               metadata.montoOriginal || plan.precio,
-              pagoId
+              purchaseIdToUse
             );
-            console.log(`[Tienda] ✅ Referido procesado con código: ${metadata.codigoReferido}`);
+            console.log(`[Tienda] ✅ Referido procesado con código: ${metadata.codigoReferido}, usando purchase_id: ${purchaseIdToUse}`);
           }
         }
       } catch (referidoError: any) {

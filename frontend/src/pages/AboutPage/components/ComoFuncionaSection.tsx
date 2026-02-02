@@ -28,9 +28,9 @@ export function ComoFuncionaSection() {
   ];
 
   const colorClasses: Record<string, { bg: string; icon: string; badge: string }> = {
-    purple: { bg: "bg-purple-50", icon: "text-purple-500", badge: "bg-purple-100 text-purple-600" },
-    sky: { bg: "bg-sky-50", icon: "text-sky-500", badge: "bg-sky-100 text-sky-600" },
-    emerald: { bg: "bg-emerald-50", icon: "text-emerald-500", badge: "bg-emerald-100 text-emerald-600" },
+    purple: { bg: "bg-indigo-900/10", icon: "text-indigo-400", badge: "bg-indigo-900/20 text-indigo-300" },
+    sky: { bg: "bg-sky-900/10", icon: "text-sky-400", badge: "bg-sky-900/20 text-sky-300" },
+    emerald: { bg: "bg-emerald-900/10", icon: "text-emerald-400", badge: "bg-emerald-900/20 text-emerald-300" },
   };
 
   return (
@@ -49,7 +49,7 @@ export function ComoFuncionaSection() {
             return (
               <motion.article 
                 key={item.title} 
-                className={`rounded-2xl ${colors.bg} border border-gray-100 p-6 sm:p-8 relative`}
+                className={`rounded-2xl bg-zinc-800 border border-zinc-700 p-6 sm:p-8 relative`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -58,25 +58,24 @@ export function ComoFuncionaSection() {
                 <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${colors.badge} mb-4`}>
                   {item.step}
                 </span>
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-sm mb-4`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-700 shadow-sm mb-4`}>
                   <item.icon className={`w-6 h-6 ${colors.icon}`} />
                 </div>
-                <h3 className="text-lg sm:text-xl font-serif font-medium text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm sm:text-base">{item.desc}</p>
+                <h3 className="text-lg sm:text-xl font-serif font-medium text-zinc-100 mb-2">{item.title}</h3>
+                <p className="text-zinc-400 text-sm sm:text-base">{item.desc}</p>
               </motion.article>
             );
           })}
         </div>
-
         <motion.div 
-          className="rounded-2xl bg-emerald-50 border border-emerald-100 p-6 sm:p-8 flex items-start gap-4"
+          className="rounded-2xl bg-emerald-900/10 border border-emerald-800 p-6 sm:p-8 flex items-start gap-4"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <ArrowRight className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-          <p className="text-emerald-700 text-sm sm:text-base lg:text-lg">
+          <ArrowRight className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <p className="text-emerald-300 text-sm sm:text-base lg:text-lg">
             JJSecure mantiene activa tu conexión incluso cuando no tenés saldo. Nuestros servidores rotan solos y los
             updates se comunican por el muro de estado y el canal de Telegram en tiempo real.
           </p>

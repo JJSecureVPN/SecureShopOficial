@@ -130,6 +130,7 @@ export interface Cupon {
   usos_actuales?: number;
   fecha_expiracion?: string | null;
   activo: boolean;
+  oculto?: boolean;
   planes_aplicables?: number[];
   creado_en?: string;
   actualizado_en?: string;

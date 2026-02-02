@@ -29,71 +29,8 @@ export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSoc
     return typeof value === "string" && value.trim() ? value.trim() : "cliente";
   };
 
-  /**
-   * GET /api/planes
-   * Obtiene la lista de planes disponibles
-   */
-  router.get("/planes", async (req: Request, res: Response) => {
-    try {
-      const contextRaw = Array.isArray(req.query.context)
-        ? req.query.context[0]
-        : req.query.context;
-      const explicitFlag = Array.isArray(req.query.forNewCustomers)
-        ? req.query.forNewCustomers[0]
-        : req.query.forNewCustomers;
-
-      const context = typeof contextRaw === "string" ? contextRaw.toLowerCase() : "";
-      const isRenewalContext =
-        context === "renovacion" ||
-        context === "renovaciones" ||
-        context === "renewal";
-
-      let forNewCustomers: boolean | undefined = undefined;
-      if (typeof explicitFlag === "string") {
-        if (explicitFlag.toLowerCase() === "true") {
-          forNewCustomers = true;
-        } else if (explicitFlag.toLowerCase() === "false") {
-          forNewCustomers = false;
-        }
-      }
-
-      const planes = tiendaService.obtenerPlanes({
-        forNewCustomers:
-          forNewCustomers !== undefined ? forNewCustomers : !isRenewalContext,
-        forRenewal: isRenewalContext,
-      });
-
-      const response: ApiResponse = {
-        success: true,
-        data: planes,
-      };
-
-      // Evitar que el navegador o proxies cacheen la respuesta de planes
-      res.set(
-        "Cache-Control",
-        "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-      );
-      res.set("Pragma", "no-cache");
-      res.set("Expires", "0");
-
-      // Quitar ETag para evitar respuestas 304 cuando el cliente envía If-None-Match
-      // así forzamos envío del JSON actualizado con los precios reales
-      try {
-        res.removeHeader("ETag");
-      } catch (_) {
-        // ignore in environments where removeHeader may not exist
-        res.set("ETag", "");
-      }
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[Rutas] Error obteniendo planes:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error obteniendo planes",
-      } as ApiResponse);
-    }
-  });
+  // NOTA: Ruta /api/planes movida a planes-supabase.routes.ts
+  // Ahora usa Supabase como fuente de datos principal
 
   /**
    * POST /api/comprar

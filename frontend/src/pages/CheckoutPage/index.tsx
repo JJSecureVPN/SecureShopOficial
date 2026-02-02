@@ -319,14 +319,14 @@ const CheckoutPage: React.FC = () => {
 
   if (!plan) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-600">{CHECKOUT_MESSAGES.LOADING}</div>
+      <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
+        <div className="text-zinc-400">{CHECKOUT_MESSAGES.LOADING}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24">
+    <div className="min-h-screen bg-zinc-900 pt-20 md:pt-24">
       <main>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
@@ -368,10 +368,10 @@ const CheckoutPage: React.FC = () => {
               />
 
               {/* Security Badge */}
-              <div className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-100 rounded-xl">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+              <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-purple-600"
+                    className="w-5 h-5 text-orange-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -382,13 +382,13 @@ const CheckoutPage: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-sm text-gray-600">{CHECKOUT_MESSAGES.SECURITY_BADGE}</span>
+                <span className="text-sm text-zinc-300">{CHECKOUT_MESSAGES.SECURITY_BADGE}</span>
               </div>
 
               {/* Back Button */}
               <button
                 onClick={() => navigate("/planes")}
-                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+                className="w-full py-3 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium rounded-xl transition-colors border border-zinc-700"
               >
                 {CHECKOUT_MESSAGES.BACK_BUTTON_TEXT}
               </button>

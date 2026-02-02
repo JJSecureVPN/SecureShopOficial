@@ -10,7 +10,6 @@ import {
   BadgeCheck,
   Mail,
 } from 'lucide-react';
-import { protonColors } from '../../../styles/colors';
 import { Button } from '../../../components/Button';
 import { Profile } from '../../../lib/supabase';
 import { formatDate, formatCurrency } from '../utils';
@@ -53,9 +52,9 @@ export function ProfileSidebar({
     >
       <div className="space-y-4">
         {/* Card de Perfil */}
-        <div className="bg-white/95 backdrop-blur-sm border border-purple-100 rounded-2xl p-6 shadow-sm">
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-6 shadow-sm">
           {/* Badge */}
-          <p className="text-[10px] uppercase tracking-[0.2em] text-purple-500 font-semibold mb-4 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-orange-400 font-semibold mb-4 text-center">
             Mi cuenta
           </p>
           
@@ -64,12 +63,11 @@ export function ProfileSidebar({
             <img
               src={user.user_metadata?.avatar_url || user.user_metadata?.picture}
               alt="Avatar"
-              className="w-20 h-20 lg:w-24 lg:h-24 rounded-full mx-auto mb-4 object-cover border-4 border-purple-100"
+              className="w-20 h-20 lg:w-24 lg:h-24 rounded-full mx-auto mb-4 object-cover border-4 border-orange-500/30"
             />
           ) : (
             <div 
-              className="w-20 h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-3xl lg:text-4xl font-bold text-white mx-auto mb-4"
-              style={{ backgroundColor: protonColors.purple[500] }}
+              className="w-20 h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-3xl lg:text-4xl font-bold text-white mx-auto mb-4 bg-gradient-to-br from-orange-500 to-orange-700"
             >
               {(profile?.nombre || user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase()}
             </div>
@@ -98,16 +96,14 @@ export function ProfileSidebar({
                 value={editedNombre}
                 onChange={(e) => onEditedNombreChange(e.target.value)}
                 placeholder="Tu nombre"
-                className="w-full px-4 py-2.5 bg-white border border-purple-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-sm"
-                style={{ color: protonColors.purple[800] }}
+                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-sm text-white"
               />
               <input
                 type="tel"
                 value={editedTelefono}
                 onChange={(e) => onEditedTelefonoChange(e.target.value)}
                 placeholder="Teléfono (opcional)"
-                className="w-full px-4 py-2.5 bg-white border border-purple-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center text-sm"
-                style={{ color: protonColors.purple[800] }}
+                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-sm text-white"
               />
               <div className="flex gap-2 justify-center">
                 <Button
@@ -131,20 +127,20 @@ export function ProfileSidebar({
             </div>
           ) : (
             <div className="text-center">
-              <h2 className="text-xl font-bold" style={{ color: protonColors.purple[800] }}>
+              <h2 className="text-xl font-bold text-white">
                 {profile?.nombre || 'Usuario'}
               </h2>
-              <p className="text-sm mt-1" style={{ color: protonColors.gray[500] }}>
+              <p className="text-sm mt-1 text-zinc-400">
                 {user.email}
               </p>
-              <p className="text-xs mt-2" style={{ color: protonColors.gray[400] }}>
+              <p className="text-xs mt-2 text-zinc-500">
                 Miembro desde {formatDate(user.created_at)}
               </p>
 
               {/* Botón Editar */}
               <button
                 onClick={onStartEdit}
-                className="mt-4 text-sm text-purple-500 hover:text-purple-700 flex items-center gap-1.5 mx-auto"
+                className="mt-4 text-sm text-orange-400 hover:text-orange-300 flex items-center gap-1.5 mx-auto transition-colors"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 Editar perfil
@@ -155,7 +151,7 @@ export function ProfileSidebar({
 
         {/* Card de Saldo */}
         {(profile?.saldo ?? 0) > 0 && (
-          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg">
+          <div className="bg-gradient-to-br from-orange-600 to-orange-800 rounded-2xl p-5 text-white shadow-lg">
             <div className="flex items-center gap-3 mb-2">
               <Wallet className="w-5 h-5 opacity-80" />
               <span className="text-sm opacity-80">Saldo disponible</span>

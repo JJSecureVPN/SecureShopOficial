@@ -55,30 +55,30 @@ export function TecnologiaSection() {
             return (
               <motion.article 
                 key={tech.title} 
-                className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8"
+                className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${colors.bg} mb-4`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-700 mb-4`}>
                   <tech.icon className={`w-6 h-6 ${colors.icon}`} />
                 </div>
-                <h3 className="text-lg sm:text-xl font-serif font-medium text-gray-900 mb-2">{tech.title}</h3>
-                <p className="text-gray-500 text-sm sm:text-base">{tech.desc}</p>
+                <h3 className="text-lg sm:text-xl font-serif font-medium text-zinc-100 mb-2">{tech.title}</h3>
+                <p className="text-zinc-400 text-sm sm:text-base">{tech.desc}</p>
               </motion.article>
             );
           })}
         </div>
 
         <motion.div 
-          className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8"
+          className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h3 className="text-lg sm:text-xl font-serif font-medium text-gray-900 mb-6">¿Por qué es diferente?</h3>
+          <h3 className="text-lg sm:text-xl font-serif font-medium text-zinc-100 mb-6">¿Por qué es diferente?</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((item, index) => (
               <motion.div 
@@ -89,10 +89,10 @@ export function TecnologiaSection() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-900/10 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
                 </div>
-                <span className="text-gray-600 text-sm sm:text-base">{item}</span>
+                <span className="text-zinc-300 text-sm sm:text-base">{item}</span>
               </motion.div>
             ))}
           </div>

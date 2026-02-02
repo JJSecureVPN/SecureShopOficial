@@ -37,7 +37,7 @@ export interface Plan {
   dias: number;
   connection_limit: number;
   activo: boolean;
-  fecha_creacion: Date;
+  fecha_creacion?: Date;
 }
 
 export interface CrearPlanInput {
@@ -62,7 +62,7 @@ export interface PlanRevendedor {
   account_type: 'validity' | 'credit'; // Tipo de cuenta
   dias?: number; // Solo para cuentas de validez
   activo: boolean;
-  fecha_creacion: Date;
+  fecha_creacion?: Date;
 }
 
 export interface CrearPlanRevendedorInput {
@@ -498,6 +498,7 @@ export interface Cupon {
   usos_actuales?: number;
   fecha_expiracion?: Date;
   activo?: boolean;
+  oculto?: boolean;
   planes_aplicables?: number[];
   creado_en?: Date;
   actualizado_en?: Date;
@@ -512,6 +513,7 @@ export interface CuponRow {
   usos_actuales: number;
   fecha_expiracion: string | null;
   activo: number;
+  oculto: number;
   planes_aplicables: string | null;
   creado_en: string;
   actualizado_en: string;
@@ -523,6 +525,7 @@ export interface CrearCuponInput {
   valor: number;
   limite_uso?: number;
   fecha_expiracion?: Date;
+  oculto?: boolean;
   planes_aplicables?: number[];
   activo?: boolean;
 }

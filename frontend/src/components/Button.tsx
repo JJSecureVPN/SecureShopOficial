@@ -5,17 +5,17 @@ import { cn } from "../utils/cn";
 const buttonVariants = {
   // Botón primario - fondo sólido
   primary: [
-    "bg-indigo-600 text-white",
-    "hover:bg-indigo-700",
-    "focus-visible:ring-indigo-800",
+    "bg-orange-600 text-white",
+    "hover:bg-orange-700",
+    "focus-visible:ring-orange-800",
   ].join(" "),
   
   // Botón secundario - outline con shadow inset (estilo ProtonVPN)
   secondary: [
-    "bg-transparent text-indigo-600",
-    "shadow-indigo-600 shadow-[inset_0_0_0_2px]",
-    "hover:bg-indigo-600 hover:text-white hover:shadow-transparent",
-    "focus-visible:ring-indigo-800",
+    "bg-transparent text-orange-600",
+    "shadow-orange-600 shadow-[inset_0_0_0_2px]",
+    "hover:bg-orange-600 hover:text-white hover:shadow-transparent",
+    "focus-visible:ring-orange-800",
   ].join(" "),
   
   // Botón de éxito (verde)
@@ -27,9 +27,9 @@ const buttonVariants = {
   
   // Botón ghost - sin fondo ni borde
   ghost: [
-    "bg-transparent text-indigo-600",
-    "hover:bg-indigo-50",
-    "focus-visible:ring-indigo-800",
+    "bg-transparent text-orange-600",
+    "hover:bg-orange-950/30",
+    "focus-visible:ring-orange-800",
   ].join(" "),
   
   // Botón de peligro

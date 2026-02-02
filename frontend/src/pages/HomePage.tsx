@@ -3,7 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { apiService } from "../services/api.service";
 import HeroSection from "../sections/HeroSection";
 import AppDownloadSection from "../sections/AppDownloadSection";
-import InfrastructureFeaturesSection from "../sections/InfrastructureFeaturesSection";
+// InfrastructureFeaturesSection removed
+import InteractiveShowcaseSection from "../sections/InteractiveShowcaseSection";
+import SplitText from "../components/animata/text/split-text";
 
 interface HomePageProps {
   // Props vacío - HomePage no necesita parámetros
@@ -38,7 +40,7 @@ const HomePage = ({}: HomePageProps) => {
   };
 
   return (
-    <div className="bg-white text-gray-900">
+    <div>
       {/* Main Content */}
       <main>
         {/* Hero Section */}
@@ -46,13 +48,27 @@ const HomePage = ({}: HomePageProps) => {
           <HeroSection />
         </div>
 
+        {/* Interactive Showcase Section */}
+        <InteractiveShowcaseSection />
+
+        {/* Integrations Carousel removed */}
+
         {/* App Download Section */}
         <div id="section-app">
           <AppDownloadSection />
         </div>
 
-        {/* Infrastructure highlights section */}
-        <InfrastructureFeaturesSection />
+        {/* Infrastructure highlights section removed */}
+
+        {/* Split Text Animation Section */}
+        <section className="py-20 bg-gradient-to-b from-background to-background/50">
+          <div className="container mx-auto px-4 flex flex-col items-center justify-center">
+            <SplitText 
+              text="SECURE VPN" 
+              className="text-primary"
+            />
+          </div>
+        </section>
       </main>
     </div>
   );

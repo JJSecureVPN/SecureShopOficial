@@ -46,7 +46,7 @@ module.exports = {
         DATABASE_PATH:
           process.env.DATABASE_PATH ||
           "/home/secureshop/secureshop-vpn/backend/database/secureshop.db",
-        CORS_ORIGIN: process.env.CORS_ORIGIN || "https://shop.jhservices.com.ar",
+        CORS_ORIGIN: process.env.CORS_ORIGIN || "https://shop.jhservices.com.ar,null",
         PORT: process.env.PORT || "4001",
         RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || "900000",
         RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || "100",

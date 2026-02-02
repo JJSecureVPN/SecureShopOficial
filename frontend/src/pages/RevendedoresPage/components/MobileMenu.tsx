@@ -37,8 +37,8 @@ export function MobileMenu({
                 onClick={() => onSelectGroup(section)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   activeSection === section.id
-                    ? "bg-purple-900/20 text-purple-300"
-                    : "text-neutral-400 hover:bg-neutral-800"
+                    ? "bg-orange-500/20 text-orange-300"
+                    : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >
                 {section.icon}
@@ -61,8 +61,8 @@ export function MobileMenu({
                 onClick={() => onSelectPlan(section)}
                 className={`w-full flex items-center gap-3 px-4 py-3 ml-6 rounded-xl text-sm font-medium transition-colors ${
                   activeSection === section.id
-                    ? "bg-purple-900/20 text-purple-300"
-                    : "text-neutral-400 hover:bg-neutral-800"
+                    ? "bg-orange-500/20 text-orange-300"
+                    : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >
                 {section.icon}
@@ -79,8 +79,8 @@ export function MobileMenu({
               onClick={() => onSelectSection(section)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                 activeSection === section.id
-                  ? "bg-purple-900/20 text-purple-300"
-                  : "text-neutral-400 hover:bg-neutral-800"
+                  ? "bg-orange-500/20 text-orange-300"
+                  : "text-zinc-400 hover:bg-zinc-800"
               }`}
             >
               {section.icon}

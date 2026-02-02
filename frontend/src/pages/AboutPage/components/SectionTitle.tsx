@@ -8,7 +8,7 @@ interface SectionTitleProps {
   iconColor?: string;
 }
 
-export function SectionTitle({ icon, title, subtitle, iconColor = "text-purple-500" }: SectionTitleProps) {
+export function SectionTitle({ icon, title, subtitle, iconColor = "text-indigo-400" }: SectionTitleProps) {
   return (
     <motion.div 
       className="space-y-4"
@@ -18,14 +18,14 @@ export function SectionTitle({ icon, title, subtitle, iconColor = "text-purple-5
       transition={{ duration: 0.5 }}
     >
       <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-100 ${iconColor}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 border border-zinc-700 ${iconColor}`}>
           {icon}
         </div>
         {subtitle && (
-          <span className="text-sm text-gray-500">{subtitle}</span>
+          <span className="text-sm text-zinc-400">{subtitle}</span>
         )}
       </div>
-      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-medium text-gray-900">{title}</h2>
+      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-medium text-zinc-100">{title}</h2>
     </motion.div>
   );
 }

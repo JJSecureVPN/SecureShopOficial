@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, AlertTriangle, Info, CheckCircle, XCircle } from "lucide-react";
 import { useNoticias } from "../hooks/useNoticias";
-import DropdownPopover from "./DropdownPopover";
+import { HeaderDropdown } from "./HeaderDropdown";
 
 export default function NoticiasPopover() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,60 +61,53 @@ export default function NoticiasPopover() {
         onClick={() => setIsOpen(!isOpen)}
         className={`relative p-2 rounded-xl transition-colors duration-150 ${
           hasActiveNoticia
-            ? "text-red-600 hover:text-red-700 hover:bg-red-100"
-            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            ? "text-red-500 hover:text-red-600 hover:bg-red-950/30"
+            : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800"
         }`}
         aria-label="Ver noticias"
       >
         <Bell size={20} />
         {hasActiveNoticia && (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-zinc-900 animate-pulse" />
         )}
       </button>
 
       {/* News Popover */}
-      {isOpen && (
-        <DropdownPopover
-          isOpen={true}
-          onClose={() => setIsOpen(false)}
-          title="Noticia Importante"
-          icon={<span className="text-gray-700">{getIcon()}</span>}
-          arrowPosition="left-1/2 -translate-x-1/2 hidden md:block"
-          position="fixed md:absolute top-14 md:top-full left-1/2 -translate-x-1/2 md:mt-2"
-          width="w-72"
-        >
-          {noticiasConfig?.aviso ? (
-            <div className="space-y-3">
-              <div
-                className={`p-3 rounded-lg text-sm ${
-                  noticiasConfig.aviso.bgColor || "bg-gray-100"
-                } ${noticiasConfig.aviso.textColor || "text-gray-800"}`}
-              >
-                <div className="flex items-start gap-2">
-                  <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
-                  <div className="flex-1">
-                    <p className="text-xs leading-relaxed">
-                      {noticiasConfig.aviso.texto}
+      <HeaderDropdown
+        isOpen={isOpen}
+        width="w-72"
+        align="center"
+        title="Noticia Importante"
+        icon={getIcon()}
+        onClose={() => setIsOpen(false)}
+      >
+        {noticiasConfig?.aviso ? (
+          <div className="space-y-3 px-4 pt-3">
+            <div className="p-3 rounded-lg bg-zinc-700/50 text-zinc-200">
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+                <div className="flex-1">
+                  <p className="text-xs leading-relaxed">
+                    {noticiasConfig.aviso.texto}
+                  </p>
+                  {noticiasConfig.aviso.subtitulo && (
+                    <p className="text-xs opacity-75 mt-1">
+                      {noticiasConfig.aviso.subtitulo}
                     </p>
-                    {noticiasConfig.aviso.subtitulo && (
-                      <p className="text-xs opacity-75 mt-1">
-                        {noticiasConfig.aviso.subtitulo}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-4">
-              <Info className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-xs text-gray-500">
-                No hay noticias disponibles.
-              </p>
-            </div>
-          )}
-        </DropdownPopover>
-      )}
+          </div>
+        ) : (
+          <div className="text-center py-6 px-4">
+            <Info className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
+            <p className="text-xs text-zinc-400">
+              No hay noticias disponibles.
+            </p>
+          </div>
+        )}
+      </HeaderDropdown>
     </div>
   );
 }

@@ -6,6 +6,7 @@ export interface CuponFormState {
   valor: string;
   limite_uso: string;
   fecha_expiracion: string;
+  oculto: boolean;
   planes_aplicables: string[];
 }
 

@@ -2,9 +2,9 @@ import { v4 as uuidv4 } from "uuid";
 import { DatabaseService } from "./database.service";
 import { ServexService } from "./servex.service";
 import { MercadoPagoService } from "./mercadopago.service";
-import { configService } from "./config.service";
 import emailService from "./email.service";
-import { cuponesService } from "./cupones.service";
+import { cuponesSupabaseService } from "./cupones-supabase.service";
+import { planesSupabaseService } from "./planes-supabase.service";
 import {
   PlanRevendedor,
   PagoRevendedor,
@@ -67,48 +67,57 @@ export class TiendaRevendedoresService {
   }
 
   /**
-   * Obtiene todos los planes de revendedores activos con overrides aplicados
+   * Obtiene un plan de revendedor por ID desde Supabase
    */
-  obtenerPlanesRevendedores(options?: { forNewCustomers?: boolean; forRenewal?: boolean }): PlanRevendedor[] {
-    const planesBase = this.db.obtenerPlanesRevendedores();
-    console.log(
-      "[TiendaRevendedores] 📊 Planes base obtenidos:",
-      planesBase.length,
-      "planes"
-    );
-    
-    // Debug: ver plan 1
-    const plan1Base = planesBase.find((p: any) => p.id === 1);
-    if (plan1Base) {
-      console.log("[TiendaRevendedores] 🔍 Plan 1 base:", JSON.stringify(plan1Base));
-    }
-    
-    // Aplicar overrides de configuración si existen
-    const overrideOptions = options ?? { forNewCustomers: true };
+  async obtenerPlanPorId(planId: number): Promise<PlanRevendedor | null> {
+    try {
+      const plan = await planesSupabaseService.obtenerPlanRevendedorConPrecio(planId);
+      if (!plan) return null;
 
-    const planesConOverrides = (
-      configService.aceptarOverridesAListaPlanesRevendedor(
-        planesBase,
-        overrideOptions
-      ) as PlanRevendedor[]
-    ).map((plan) => {
-          const duracionInferida = this.inferirDuracionPlan(plan);
-          if (!plan.dias && duracionInferida) {
-            console.log(
-              `[TiendaRevendedores] ℹ️ Duración inferida para plan ${plan.id}: ${duracionInferida} días`
-            );
-            return { ...plan, dias: duracionInferida } as PlanRevendedor;
-          }
-          return plan;
-        });
-    
-    // Debug: ver plan 1 después de overrides
-    const plan1Overrides = planesConOverrides.find((p: any) => p.id === 1);
-    if (plan1Overrides) {
-      console.log("[TiendaRevendedores] 🔍 Plan 1 después de overrides:", JSON.stringify(plan1Overrides));
+      return {
+        id: plan.id,
+        nombre: plan.nombre,
+        descripcion: plan.descripcion || "",
+        precio: Number(plan.precio_efectivo),
+        max_users: plan.max_users,
+        account_type: plan.account_type,
+        dias: plan.dias || undefined,
+        activo: plan.activo,
+      };
+    } catch (error) {
+      console.error("[TiendaRevendedores] Error obteniendo plan desde Supabase:", error);
+      return null;
     }
-    
-    return planesConOverrides;
+  }
+
+  /**
+   * Obtiene todos los planes de revendedores activos desde Supabase
+   */
+  async obtenerPlanesRevendedoresAsync(): Promise<PlanRevendedor[]> {
+    try {
+      const planes = await planesSupabaseService.obtenerPlanesRevendedorConPrecios();
+      return planes.map(plan => {
+        const mapped: PlanRevendedor = {
+          id: plan.id,
+          nombre: plan.nombre,
+          descripcion: plan.descripcion || "",
+          precio: plan.precio_efectivo,
+          max_users: plan.max_users,
+          account_type: plan.account_type,
+          dias: plan.dias || undefined,
+          activo: plan.activo,
+        };
+        // Inferir duración si no existe
+        const duracion = this.inferirDuracionPlan(mapped);
+        if (!mapped.dias && duracion) {
+          mapped.dias = duracion;
+        }
+        return mapped;
+      });
+    } catch (error) {
+      console.error("[TiendaRevendedores] Error obteniendo planes desde Supabase:", error);
+      return [];
+    }
   }
 
   /**
@@ -118,8 +127,8 @@ export class TiendaRevendedoresService {
     pago: PagoRevendedor;
     linkPago: string;
   }> {
-    // 1. Validar que el plan existe
-    let plan = this.db.obtenerPlanRevendedorPorId(input.planRevendedorId);
+    // 1. Validar que el plan existe (desde Supabase)
+    let plan = await this.obtenerPlanPorId(input.planRevendedorId);
     if (!plan) {
       throw new Error("Plan de revendedor no encontrado");
     }
@@ -128,10 +137,10 @@ export class TiendaRevendedoresService {
       throw new Error("Plan no disponible");
     }
 
-    // 2. Aplicar overrides de configuración
-    plan = configService.aceptarOverridesAlPlanRevendedor(plan, {
-      forNewCustomers: true,
-    }) as PlanRevendedor;
+    // 2. El precio ya viene con promociones desde Supabase
+    let precioFinal = plan.precio;
+    let descuentoAplicado = 0;
+    let cuponId: number | undefined;
 
     const duracionInferida = this.inferirDuracionPlan(plan);
     if (!plan.dias && duracionInferida) {
@@ -145,13 +154,9 @@ export class TiendaRevendedoresService {
     );
 
     // 3. Validar cupón si se proporcionó uno
-    let precioFinal = plan!.precio;
-    let descuentoAplicado = 0;
-    let cuponId: number | undefined;
-
     if (input.codigoCupon) {
       console.log(`[TiendaRevendedores] Validando cupón: ${input.codigoCupon}`);
-      const validacion = await cuponesService.validarCupon(input.codigoCupon, input.planRevendedorId, input.clienteEmail);
+      const validacion = await cuponesSupabaseService.validarCupon(input.codigoCupon, input.planRevendedorId, input.clienteEmail);
 
       if (!validacion.valido) {
         throw new Error(validacion.mensaje_error || "Cupón inválido");
@@ -164,7 +169,7 @@ export class TiendaRevendedoresService {
       }
 
       // Calcular el descuento basado en el precio del plan
-      descuentoAplicado = cuponesService.calcularDescuento(validacion.cupon, plan!.precio);
+      descuentoAplicado = cuponesSupabaseService.calcularDescuento(validacion.cupon, plan!.precio);
       precioFinal = Math.max(0, plan!.precio - descuentoAplicado);
       cuponId = validacion.cupon.id;
 
@@ -321,7 +326,7 @@ export class TiendaRevendedoresService {
       return;
     }
 
-    const plan = this.db.obtenerPlanRevendedorPorId(pago.plan_revendedor_id);
+    const plan = await this.obtenerPlanPorId(pago.plan_revendedor_id);
     if (!plan) {
       throw new Error("Plan no encontrado");
     }
@@ -441,7 +446,7 @@ export class TiendaRevendedoresService {
       // Aplicar cupón si se usó uno
       if (pago.cupon_id) {
         try {
-          await cuponesService.aplicarCupon(pago.cupon_id);
+          await cuponesSupabaseService.aplicarCuponSimple(pago.cupon_id);
           console.log(`[TiendaRevendedores] ✅ Cupón ${pago.cupon_id} aplicado (uso incrementado)`);
         } catch (cuponError: any) {
           console.error(`[TiendaRevendedores] ⚠️ Error aplicando cupón ${pago.cupon_id}:`, cuponError.message);

@@ -27,7 +27,7 @@ interface HeadingProps extends BaseTextProps {
 
 /**
  * Título Hero - Para encabezados principales de página
- * Usa Fraunces (alternativa a Arizona) con estilo serif
+ * Usa Inter (igual que Refine.dev) con font-bold
  */
 export const HeroTitle: React.FC<HeadingProps> = ({ 
   children, 
@@ -36,7 +36,7 @@ export const HeroTitle: React.FC<HeadingProps> = ({
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.heroTitle} text-purple-800 ${className}`}
+    className={`font-sans font-bold text-white ${className}`}
     {...props}
   >
     {children}
@@ -53,7 +53,7 @@ export const SectionTitle: React.FC<HeadingProps> = ({
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.sectionTitle} text-purple-800 ${className}`}
+    className={`font-sans font-semibold text-white ${className}`}
     {...props}
   >
     {children}
@@ -70,7 +70,7 @@ export const SubsectionTitle: React.FC<HeadingProps> = ({
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.subsectionTitle} text-purple-800 ${className}`}
+    className={`font-sans font-semibold text-white ${className}`}
     {...props}
   >
     {children}
@@ -87,7 +87,7 @@ export const CardTitle: React.FC<HeadingProps> = ({
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.cardTitle} text-purple-800 ${className}`}
+    className={`font-sans font-medium text-white ${className}`}
     {...props}
   >
     {children}
@@ -108,7 +108,7 @@ export const BodyText: React.FC<BaseTextProps & { as?: 'p' | 'span' | 'div' }> =
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.body} text-gray-600 ${className}`}
+    className={`${textClasses.body} text-zinc-400 ${className}`}
     {...props}
   >
     {children}
@@ -125,7 +125,7 @@ export const LeadText: React.FC<BaseTextProps & { as?: 'p' | 'span' | 'div' }> =
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.bodyLarge} text-gray-600 ${className}`}
+    className={`${textClasses.bodyLarge} text-zinc-300 ${className}`}
     {...props}
   >
     {children}
@@ -142,7 +142,7 @@ export const SmallText: React.FC<BaseTextProps & { as?: 'p' | 'span' | 'div' }> 
   ...props 
 }) => (
   <Component 
-    className={`${textClasses.bodySmall} text-gray-500 ${className}`}
+    className={`${textClasses.bodySmall} text-zinc-500 ${className}`}
     {...props}
   >
     {children}

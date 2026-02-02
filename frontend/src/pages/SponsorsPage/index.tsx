@@ -44,6 +44,35 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
     fetchSponsors();
   }, []);
 
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
+  }, []);
+
   const sections = useMemo(
     () => [
       { id: "featured", label: "Destacados", icon: <Star className="h-4 w-4" /> },
@@ -103,11 +132,11 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
       );
     }
 
-    // Regular card with gradient for individuals
+    // Regular card (dark)
     return (
-      <article className="rounded-lg bg-gradient-to-br from-purple-100/60 via-blue-50/60 to-indigo-100/60 p-6 shadow-sm hover:shadow-md transition-shadow">
+      <article className="rounded-lg bg-zinc-800 border border-zinc-700 p-6 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-white/60 backdrop-blur-sm text-sm font-semibold text-gray-700 border border-purple-200/40">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-700 backdrop-blur-sm text-sm font-semibold text-zinc-200 border border-zinc-700">
             {sponsor.avatarUrl ? (
               <img
                 src={sponsor.avatarUrl}
@@ -120,26 +149,26 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="truncate text-sm font-semibold text-gray-900">{sponsor.name}</h3>
-                <span className="rounded-full bg-white/50 backdrop-blur-sm px-2 py-0.5 text-[10px] uppercase tracking-wide text-gray-700 border border-purple-200/50">
+                <h3 className="truncate text-sm font-semibold text-zinc-100">{sponsor.name}</h3>
+                <span className="rounded-full bg-white/10 backdrop-blur-sm px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-300 border border-zinc-700">
                   {sponsor.category === "empresa" ? "Empresa" : "Persona"}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-gray-700">{sponsor.role}</p>
+              <p className="mt-1 text-xs text-zinc-400">{sponsor.role}</p>
             </div>
             {sponsor.link && (
               <a
                 href={sponsor.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 transition-colors hover:text-gray-900 flex-shrink-0"
+                className="text-zinc-300 transition-colors hover:text-zinc-100 flex-shrink-0"
               >
                 <ArrowUpRight className="h-4 w-4" />
               </a>
             )}
           </div>
 
-          <p className="mt-4 line-clamp-3 text-sm text-gray-800">{sponsor.message}</p>
+          <p className="mt-4 line-clamp-3 text-sm text-zinc-300">{sponsor.message}</p>
         </article>
       );
     };
@@ -149,7 +178,7 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
       return (
         <div className="grid gap-6 sm:gap-8 lg:gap-10 xl:gap-12 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-40 sm:h-48 lg:h-56 xl:h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
+            <div key={i} className="h-40 sm:h-48 lg:h-56 xl:h-64 animate-pulse rounded-lg border border-zinc-700 bg-zinc-800" />
           ))}
         </div>
       );
@@ -157,7 +186,7 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
 
     if (items.length === 0) {
       return (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-sm text-gray-600">
+        <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-800 py-12 text-center text-sm text-zinc-400">
           {empty}
         </div>
       );
@@ -177,12 +206,12 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
       <Title as="h2">
         {title}
       </Title>
-      {description && <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600">{description}</p>}
+      {description && <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400">{description}</p>}
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-zinc-900 text-zinc-100">
       <main className="flex min-h-screen flex-col">
         <HeroSection />
 
@@ -236,9 +265,9 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
               <div className="max-w-7xl mx-auto">
                 <div className="mb-12 text-center">
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-600">Diseñado para sponsors</p>
-                  <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal text-gray-900">Beneficios</h2>
-                  <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700">
+                  <p className="text-xs uppercase tracking-[0.3em] text-zinc-400">Diseñado para sponsors</p>
+                  <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal text-zinc-100">Beneficios</h2>
+                  <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400">
                     Estructura simple, misma filosofía builder-friendly de Supabase
                   </p>
                 </div>
@@ -264,10 +293,10 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
                   ].map((benefit) => (
                     <article
                       key={benefit.title}
-                      className="rounded-lg border border-gray-200 bg-white p-6 sm:p-8 lg:p-10 xl:p-12 shadow-sm"
+                      className="rounded-lg border border-zinc-700 bg-zinc-800 p-6 sm:p-8 lg:p-10 xl:p-12 shadow-sm"
                     >
-                      <h3 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-serif font-medium text-gray-900">{benefit.title}</h3>
-                      <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700">{benefit.description}</p>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-serif font-medium text-zinc-100">{benefit.title}</h3>
+                      <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400">{benefit.description}</p>
                     </article>
                   ))}
                 </div>
@@ -279,16 +308,16 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
           <section id="section-participar" className="py-12 sm:py-16 lg:py-20 xl:py-24">
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
               <div className="max-w-7xl mx-auto">
-                <div className="rounded-lg border border-gray-200 bg-white p-8 sm:p-10 lg:p-12 xl:p-16 shadow-sm">
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-600">Onboarding</p>
-                  <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal text-gray-900">Sumarte es simple</h2>
-                  <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-gray-700">Tres pasos inspirados en la experiencia de Supabase</p>
+                <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-8 sm:p-10 lg:p-12 xl:p-16 shadow-sm">
+                  <p className="text-xs uppercase tracking-[0.3em] text-zinc-400">Onboarding</p>
+                  <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal text-zinc-100">Sumarte es simple</h2>
+                  <p className="mt-2 text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400">Tres pasos inspirados en la experiencia de Supabase</p>
 
                   <div className="mt-10 grid gap-6 sm:gap-8 lg:gap-10 xl:gap-12 sm:grid-cols-3">
                     {["Conecta con el equipo", "Define tu aportación", "Publicamos tu presencia"].map((step, i) => (
-                      <article key={step} className="rounded-lg border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 sm:p-8 lg:p-10 xl:p-12">
-                        <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-gray-600">Paso {i + 1}</p>
-                        <p className="mt-2 text-lg sm:text-xl lg:text-2xl xl:text-3xl font-medium text-gray-900">{step}</p>
+                      <article key={step} className="rounded-lg border border-zinc-700 bg-zinc-800 p-6 sm:p-8 lg:p-10 xl:p-12">
+                        <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-zinc-400">Paso {i + 1}</p>
+                        <p className="mt-2 text-lg sm:text-xl lg:text-2xl xl:text-3xl font-medium text-zinc-100">{step}</p>
                       </article>
                     ))}
                   </div>
@@ -303,7 +332,7 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
                     </Link>
                     <button
                       type="button"
-                      className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium text-gray-700 underline-offset-4 hover:text-gray-900 hover:underline"
+                      className="text-sm sm:text-base lg:text-lg xl:text-xl font-medium text-zinc-300 underline-offset-4 hover:text-zinc-100 hover:underline"
                       onClick={() => {
                         document.getElementById("section-faq")?.scrollIntoView({ behavior: "smooth" });
                       }}
@@ -320,8 +349,8 @@ export default function SponsorsPage({ isMobileMenuOpen, setIsMobileMenuOpen }: 
           <section id="section-faq" className="py-16 sm:py-20">
             <div className="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8">
               <div className="mb-10 text-center">
-                <p className="text-xs uppercase tracking-[0.3em] text-gray-600">FAQ</p>
-                <h2 className="mt-3 text-3xl font-serif font-normal text-gray-900">Preguntas frecuentes</h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-zinc-400">FAQ</p>
+                <h2 className="mt-3 text-3xl font-serif font-normal text-zinc-100">Preguntas frecuentes</h2>
               </div>
 
               <div className="space-y-3">

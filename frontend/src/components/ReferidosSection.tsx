@@ -15,9 +15,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react';
-import { protonColors } from '../styles/colors';
-import { Title } from './Title';
-import { Subtitle } from './Subtitle';
+import { SectionTitle, BodyText } from './Typography';
 import { Button } from './Button';
 import {
   referidosService,
@@ -142,9 +140,9 @@ Y aprovechá el descuento 🎁
   // Si está cargando
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-8 text-center">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto" style={{ color: protonColors.purple[500] }} />
-        <p className="mt-4 text-sm" style={{ color: protonColors.gray[500] }}>Cargando programa de referidos...</p>
+      <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-8 text-center">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-400" />
+        <p className="mt-4 text-sm text-zinc-400">Cargando programa de referidos...</p>
       </div>
     );
   }
@@ -152,12 +150,12 @@ Y aprovechá el descuento 🎁
   // Si el programa está desactivado
   if (!settings?.activo) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-8 text-center">
-        <Gift className="w-12 h-12 mx-auto mb-4" style={{ color: protonColors.gray[400] }} />
-        <Title as="h3" center>Programa de Referidos</Title>
-        <Subtitle center className="mt-2">
+      <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-8 text-center">
+        <Gift className="w-12 h-12 mx-auto mb-4 text-zinc-600" />
+        <SectionTitle as="h3" className="text-center">Programa de Referidos</SectionTitle>
+        <BodyText className="mt-2 text-center text-zinc-400">
           El programa de referidos no está disponible en este momento.
-        </Subtitle>
+        </BodyText>
       </div>
     );
   }
@@ -170,51 +168,51 @@ Y aprovechá el descuento 🎁
     >
       {/* Header */}
       <div className="text-center">
-        <Title as="h2" center>🎁 Programa de Referidos</Title>
-        <Subtitle center className="mt-2">
+        <SectionTitle as="h2" className="text-center">🎁 Programa de Referidos</SectionTitle>
+        <BodyText className="mt-2 text-center text-zinc-400">
           {settings.mensaje_promocional}
-        </Subtitle>
+        </BodyText>
       </div>
 
       {/* Cómo funciona */}
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-5">
-        <h3 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
-          <Gift className="w-5 h-5" />
+      <div className="bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-700 rounded-2xl p-5">
+        <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+          <Gift className="w-5 h-5 text-orange-400" />
           ¿Cómo funciona?
         </h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
               1
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-900">Comparte tu código</p>
-              <p className="text-xs text-purple-600">Copia tu código y envíalo a tus amigos</p>
+              <p className="text-sm font-medium text-white">Comparte tu código</p>
+              <p className="text-xs text-zinc-400">Copia tu código y envíalo a tus amigos</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
               2
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-900">Ellos compran con descuento</p>
-              <p className="text-xs text-purple-600">Ingresan el código en el checkout y obtienen {settings.porcentaje_descuento_referido}% OFF</p>
+              <p className="text-sm font-medium text-white">Ellos compran con descuento</p>
+              <p className="text-xs text-zinc-400">Ingresan el código en el checkout y obtienen {settings.porcentaje_descuento_referido}% OFF</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
               3
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-900">Tú ganas saldo</p>
-              <p className="text-xs text-purple-600">Recibes {settings.porcentaje_recompensa}% de su compra como saldo</p>
+              <p className="text-sm font-medium text-white">Tú ganas saldo</p>
+              <p className="text-xs text-zinc-400">Recibes {settings.porcentaje_recompensa}% de su compra como saldo</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Card principal - Saldo y Código */}
-      <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 md:p-8 text-white">
+      <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-2xl p-6 md:p-8 text-white">
         <div className="grid md:grid-cols-2 gap-6">
           {/* Saldo disponible */}
           <div className="text-center md:text-left">
@@ -274,42 +272,42 @@ Y aprovechá el descuento 🎁
 
       {/* Estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-xl p-4 text-center">
-          <Users className="w-6 h-6 mx-auto mb-2" style={{ color: protonColors.purple[500] }} />
-          <div className="text-2xl font-bold" style={{ color: protonColors.purple[700] }}>
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-xl p-4 text-center">
+          <Users className="w-6 h-6 mx-auto mb-2 text-orange-400" />
+          <div className="text-2xl font-bold text-white">
             {stats?.total_referrals || 0}
           </div>
-          <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+          <div className="text-xs text-zinc-400">
             Referidos
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-xl p-4 text-center">
-          <TrendingUp className="w-6 h-6 mx-auto mb-2" style={{ color: protonColors.purple[500] }} />
-          <div className="text-2xl font-bold" style={{ color: protonColors.purple[700] }}>
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-xl p-4 text-center">
+          <TrendingUp className="w-6 h-6 mx-auto mb-2 text-orange-400" />
+          <div className="text-2xl font-bold text-white">
             {formatCurrency(stats?.total_earned || 0)}
           </div>
-          <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+          <div className="text-xs text-zinc-400">
             Total ganado
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-xl p-4 text-center">
-          <DollarSign className="w-6 h-6 mx-auto mb-2" style={{ color: protonColors.purple[500] }} />
-          <div className="text-2xl font-bold" style={{ color: protonColors.purple[700] }}>
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-xl p-4 text-center">
+          <DollarSign className="w-6 h-6 mx-auto mb-2 text-orange-400" />
+          <div className="text-2xl font-bold text-white">
             {settings.porcentaje_recompensa}%
           </div>
-          <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+          <div className="text-xs text-zinc-400">
             Comisión por referido
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-xl p-4 text-center">
-          <Gift className="w-6 h-6 mx-auto mb-2" style={{ color: protonColors.purple[500] }} />
-          <div className="text-2xl font-bold" style={{ color: protonColors.purple[700] }}>
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-xl p-4 text-center">
+          <Gift className="w-6 h-6 mx-auto mb-2 text-orange-400" />
+          <div className="text-2xl font-bold text-white">
             {settings.porcentaje_descuento_referido}%
           </div>
-          <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+          <div className="text-xs text-zinc-400">
             Descuento para ellos
           </div>
         </div>
@@ -317,12 +315,12 @@ Y aprovechá el descuento 🎁
 
       {/* Lista de referidos */}
       {stats && stats.referidos.length > 0 && (
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-4 md:p-6">
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold" style={{ color: protonColors.purple[800] }}>
+            <h3 className="font-semibold text-white">
               Tus referidos
             </h3>
-            <span className="text-sm px-2 py-1 bg-purple-100 rounded-full" style={{ color: protonColors.purple[500] }}>
+            <span className="text-sm px-2 py-1 bg-zinc-800/50 rounded-full text-orange-400">
               {stats.referidos.length} total
             </span>
           </div>
@@ -331,20 +329,19 @@ Y aprovechá el descuento 🎁
             {stats.referidos.slice(0, 5).map((ref: ReferralStats['referidos'][number]) => (
               <div
                 key={ref.id}
-                className="flex items-center justify-between p-3 bg-purple-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white"
-                    style={{ backgroundColor: protonColors.purple[500] }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white bg-orange-500"
                   >
                     {(ref.referred_nombre || ref.referred_email || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-sm font-medium" style={{ color: protonColors.purple[800] }}>
+                    <div className="text-sm font-medium text-white">
                       {ref.referred_nombre || ref.referred_email?.split('@')[0] || 'Usuario'}
                     </div>
-                    <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+                    <div className="text-xs text-zinc-400">
                       {formatDate(ref.created_at)}
                     </div>
                   </div>
@@ -356,11 +353,11 @@ Y aprovechá el descuento 🎁
                     ) : (
                       <Clock className="w-4 h-4 text-yellow-500" />
                     )}
-                    <span className="font-semibold" style={{ color: protonColors.purple[700] }}>
+                    <span className="font-semibold text-white">
                       +{formatCurrency(ref.reward_amount)}
                     </span>
                   </div>
-                  <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+                  <div className="text-xs text-zinc-400">
                     Compra: {formatCurrency(ref.purchase_amount)}
                   </div>
                 </div>
@@ -370,8 +367,7 @@ Y aprovechá el descuento 🎁
 
           {stats.referidos.length > 5 && (
             <button
-              className="w-full mt-4 py-2 text-sm text-center hover:bg-purple-100 rounded-lg transition-colors"
-              style={{ color: protonColors.purple[500] }}
+              className="w-full mt-4 py-2 text-sm text-center hover:bg-zinc-800/70 rounded-lg transition-colors text-orange-400"
             >
               Ver todos ({stats.referidos.length})
             </button>
@@ -381,12 +377,12 @@ Y aprovechá el descuento 🎁
 
       {/* Sin referidos todavía */}
       {stats && stats.referidos.length === 0 && (
-        <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl p-6 text-center">
-          <Users className="w-12 h-12 mx-auto mb-4" style={{ color: protonColors.purple[300] }} />
-          <h3 className="font-semibold mb-2" style={{ color: protonColors.purple[800] }}>
+        <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-6 text-center">
+          <Users className="w-12 h-12 mx-auto mb-4 text-zinc-600" />
+          <h3 className="font-semibold mb-2 text-white">
             Aún no tienes referidos
           </h3>
-          <p className="text-sm mb-4" style={{ color: protonColors.gray[500] }}>
+          <p className="text-sm mb-4 text-zinc-400">
             Comparte tu código con amigos y familiares para empezar a ganar saldo.
           </p>
           <Button variant="primary" size="md" onClick={copyReferralCode}>
@@ -397,21 +393,21 @@ Y aprovechá el descuento 🎁
       )}
 
       {/* Historial de transacciones (expandible) */}
-      <div className="bg-white/80 backdrop-blur-sm border border-purple-100 rounded-2xl overflow-hidden">
+      <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-700 rounded-2xl overflow-hidden">
         <button
           onClick={loadTransacciones}
-          className="w-full flex items-center justify-between p-4 hover:bg-purple-50 transition-colors"
+          className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/50 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5" style={{ color: protonColors.purple[500] }} />
-            <span className="font-medium" style={{ color: protonColors.purple[800] }}>
+            <DollarSign className="w-5 h-5 text-orange-400" />
+            <span className="font-medium text-white">
               Historial de movimientos
             </span>
           </div>
           {showTransacciones ? (
-            <ChevronUp className="w-5 h-5" style={{ color: protonColors.gray[500] }} />
+            <ChevronUp className="w-5 h-5 text-zinc-400" />
           ) : (
-            <ChevronDown className="w-5 h-5" style={{ color: protonColors.gray[500] }} />
+            <ChevronDown className="w-5 h-5 text-zinc-400" />
           )}
         </button>
 
@@ -423,9 +419,9 @@ Y aprovechá el descuento 🎁
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="border-t border-purple-100 p-4">
+              <div className="border-t border-zinc-700 p-4">
                 {transacciones.length === 0 ? (
-                  <p className="text-center text-sm py-4" style={{ color: protonColors.gray[500] }}>
+                  <p className="text-center text-sm py-4 text-zinc-400">
                     No hay movimientos aún
                   </p>
                 ) : (
@@ -433,17 +429,17 @@ Y aprovechá el descuento 🎁
                     {transacciones.map((tx) => (
                       <div
                         key={tx.id}
-                        className="flex items-center justify-between p-3 bg-purple-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg"
                       >
                         <div>
-                          <div className="text-sm font-medium" style={{ color: protonColors.purple[800] }}>
+                          <div className="text-sm font-medium text-white">
                             {tx.tipo === 'referido' && '🎁 Comisión por referido'}
                             {tx.tipo === 'compra' && '🛒 Pago con saldo'}
                             {tx.tipo === 'ajuste_admin' && '⚙️ Ajuste administrativo'}
                             {tx.tipo === 'bonus' && '🎉 Bonus'}
                             {tx.tipo === 'reembolso' && '↩️ Reembolso'}
                           </div>
-                          <div className="text-xs" style={{ color: protonColors.gray[500] }}>
+                          <div className="text-xs text-zinc-400">
                             {tx.descripcion || formatDate(tx.created_at)}
                           </div>
                         </div>

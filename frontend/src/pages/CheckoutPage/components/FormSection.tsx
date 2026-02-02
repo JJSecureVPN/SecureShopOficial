@@ -35,20 +35,20 @@ export const FormSection = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3"
+            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3"
           >
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-4 h-4 text-rose-600" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-4 h-4 text-red-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-rose-700">Error</p>
-              <p className="text-sm text-rose-600">{error}</p>
+              <p className="text-sm font-medium text-red-200">Error</p>
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-sm p-6">
         <CheckoutForm
           ref={formRef}
           planId={planId}

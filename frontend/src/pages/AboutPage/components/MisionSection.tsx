@@ -19,7 +19,7 @@ export function MisionSection() {
   ];
 
   return (
-    <section id="mision" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 scroll-mt-24 bg-gray-50/50">
+    <section id="mision" className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 scroll-mt-24">
       <div className="max-w-7xl mx-auto space-y-8 sm:space-y-12">
         <SectionTitle
           icon={<Target className="h-5 w-5" />}
@@ -30,13 +30,13 @@ export function MisionSection() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <motion.article 
-            className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8"
+            className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h3 className="text-xl sm:text-2xl font-serif font-medium text-gray-900 mb-6">¿Qué hacemos exactamente?</h3>
+            <h3 className="text-xl sm:text-2xl font-serif font-medium text-zinc-100 mb-6">¿Qué hacemos exactamente?</h3>
             <ul className="space-y-4">
               {items.map((item, index) => (
                 <motion.li 
@@ -47,10 +47,10 @@ export function MisionSection() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  <CheckCircle className="mt-1 h-5 w-5 text-emerald-500 flex-shrink-0" />
+                  <CheckCircle className="mt-1 h-5 w-5 text-emerald-400 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-gray-900">{item.title}</p>
-                    <p className="text-gray-500 text-sm sm:text-base">{item.copy}</p>
+                    <p className="font-medium text-zinc-100">{item.title}</p>
+                    <p className="text-zinc-400 text-sm sm:text-base">{item.copy}</p>
                   </div>
                 </motion.li>
               ))}
@@ -58,20 +58,20 @@ export function MisionSection() {
           </motion.article>
 
           <motion.article 
-            className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 sm:p-8"
+            className="rounded-2xl bg-zinc-800 border border-zinc-700 shadow-sm p-6 sm:p-8"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h3 className="text-xl sm:text-2xl font-serif font-medium text-gray-900 mb-4">Nuestra promesa</h3>
-            <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-6">
+            <h3 className="text-xl sm:text-2xl font-serif font-medium text-zinc-100 mb-4">Nuestra promesa</h3>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6">
               Nos comprometemos a mantener activa tu conexión incluso cuando el operador decide bloquearla. Cuando
               hay cambios, compartimos el estado en nuestra comunidad y priorizamos la solución de forma pública.
             </p>
-            <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-5 flex items-start gap-4">
-              <Sparkles className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-emerald-700 text-sm sm:text-base italic">
+            <div className="rounded-xl bg-emerald-900/10 border border-emerald-800 p-5 flex items-start gap-4">
+              <Sparkles className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+              <p className="text-emerald-300 text-sm sm:text-base italic">
                 "Innovamos sin pausa para que nunca te quedes sin opciones."
               </p>
             </div>

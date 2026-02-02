@@ -17,36 +17,36 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'default': <MessageCircle className="w-5 h-5" />
 };
 
-// Colores para cada categoría
+// Colores para cada categoría (versión dark)
 const categoryColors: Record<string, { bg: string; text: string; border: string; gradient: string }> = {
   'Chat Global': { 
-    bg: 'bg-emerald-50', 
-    text: 'text-emerald-600', 
-    border: 'border-emerald-200',
+    bg: 'bg-emerald-900/20', 
+    text: 'text-emerald-300', 
+    border: 'border-emerald-800',
     gradient: 'from-emerald-500 to-teal-600'
   },
   'Soporte Técnico': { 
-    bg: 'bg-blue-50', 
-    text: 'text-blue-600', 
-    border: 'border-blue-200',
+    bg: 'bg-blue-900/20', 
+    text: 'text-blue-300', 
+    border: 'border-blue-800',
     gradient: 'from-blue-500 to-indigo-600'
   },
   'Reventa': { 
-    bg: 'bg-purple-50', 
-    text: 'text-purple-600', 
-    border: 'border-purple-200',
+    bg: 'bg-purple-900/20', 
+    text: 'text-purple-300', 
+    border: 'border-purple-800',
     gradient: 'from-purple-500 to-pink-600'
   },
   'Sugerencias': { 
-    bg: 'bg-amber-50', 
-    text: 'text-amber-600', 
-    border: 'border-amber-200',
+    bg: 'bg-amber-900/20', 
+    text: 'text-amber-300', 
+    border: 'border-amber-800',
     gradient: 'from-amber-500 to-orange-600'
   },
   'default': { 
-    bg: 'bg-gray-50', 
-    text: 'text-gray-600', 
-    border: 'border-gray-200',
+    bg: 'bg-zinc-800', 
+    text: 'text-zinc-100', 
+    border: 'border-zinc-700',
     gradient: 'from-gray-500 to-gray-600'
   }
 };
@@ -100,8 +100,8 @@ export default function ChatPage() {
   const getColors = (roomName: string) => categoryColors[roomName] || categoryColors['default'];
 
   return (
-    <div className="bg-white text-gray-900 fixed inset-0 overflow-hidden" style={{ top: 0 }}>
-      <section className="h-full bg-gradient-to-b from-purple-100/50 via-purple-50/30 to-white pt-[100px] md:pt-[80px]">
+    <div className="bg-zinc-900 text-zinc-100 fixed inset-0 overflow-hidden" style={{ top: 0 }}>
+      <section className="h-full bg-zinc-900 pt-[100px] md:pt-[80px]">
         <div className="max-w-7xl mx-auto px-4 md:px-8 pb-4 h-full flex flex-col">
           
           {/* Header de la página */}
@@ -111,12 +111,12 @@ export default function ChatPage() {
             className="mb-4 flex-shrink-0"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-200">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-black/40">
                 <MessageCircle className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Chat en Vivo</h1>
-                <p className="text-purple-600 text-sm mt-1 flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-zinc-100">Chat en Vivo</h1>
+                <p className="text-purple-300 text-sm mt-1 flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                   {onlineCount > 0 ? (
                     <>{onlineCount} {onlineCount === 1 ? 'usuario conectado' : 'usuarios conectados'}</>
@@ -133,23 +133,23 @@ export default function ChatPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-xl shadow-purple-100/50 border border-purple-100 overflow-hidden flex-1 min-h-0"
+            className="bg-zinc-900 rounded-2xl shadow-xl shadow-black/40 border border-zinc-700 overflow-hidden flex-1 min-h-0"
           >
             <div className="flex h-full">
               
               {/* Sidebar de Categorías */}
               <div className={`
-                w-full md:w-72 lg:w-80 flex-shrink-0 border-r border-purple-100 bg-gradient-to-b from-purple-50/80 to-white overflow-y-auto
+                w-full md:w-72 lg:w-80 flex-shrink-0 border-r border-zinc-700 bg-zinc-800 overflow-y-auto hide-scrollbar
                 ${showRoomList ? 'block' : 'hidden md:block'}
               `}>
                 <div className="p-4">
-                  <h3 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-4 px-2">
+                  <h3 className="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-4 px-2">
                     Categorías
                   </h3>
                   
                   {rooms.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                      <Loader2 className="w-6 h-6 animate-spin text-orange-400" />
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -165,7 +165,7 @@ export default function ChatPage() {
                               w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-200 text-left
                               ${isSelected 
                                 ? `${colors.bg} ${colors.border} border-2 shadow-sm` 
-                                : 'hover:bg-white hover:shadow-sm border-2 border-transparent'
+                                : 'hover:bg-zinc-800 border-2 border-transparent'
                               }
                             `}
                           >
@@ -180,7 +180,7 @@ export default function ChatPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <h4 className={`font-semibold text-sm ${isSelected ? colors.text : 'text-gray-800'}`}>
+                                <h4 className={`font-semibold text-sm ${isSelected ? colors.text : 'text-zinc-100'}`}>
                                   {room.nombre}
                                 </h4>
                                 {unreadByRoom[room.id] > 0 && !isSelected && (
@@ -189,7 +189,7 @@ export default function ChatPage() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-400 line-clamp-2 mt-0.5">
+                              <p className="text-xs text-zinc-400 line-clamp-2 mt-0.5">
                                 {room.descripcion}
                               </p>
                             </div>
@@ -202,17 +202,17 @@ export default function ChatPage() {
 
                 {/* Info de usuario no logueado */}
                 {!user && (
-                  <div className="p-4 border-t border-purple-100 mt-auto">
-                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 text-center border border-purple-100">
-                      <MessageCircle className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-                      <p className="text-sm text-purple-700 mb-3">
+                  <div className="p-4 border-t border-zinc-700 mt-auto">
+                    <div className="rounded-xl p-4 text-center border border-zinc-700 bg-zinc-800">
+                      <MessageCircle className="w-8 h-8 mx-auto mb-2 text-purple-300" />
+                      <p className="text-sm text-purple-300 mb-3">
                         Inicia sesión para participar
                       </p>
                       <button
                         onClick={() => {
                           document.dispatchEvent(new CustomEvent('open-auth-modal'));
                         }}
-                        className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md shadow-purple-200"
+                        className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md shadow-black/40"
                       >
                         Iniciar Sesión
                       </button>
@@ -223,15 +223,15 @@ export default function ChatPage() {
 
               {/* Área de Chat */}
               <div className={`
-                flex-1 flex flex-col min-w-0 bg-white
+                flex-1 flex flex-col min-w-0 bg-zinc-900
                 ${!showRoomList ? 'block' : 'hidden md:flex'}
               `}>
                 {/* Botón volver a categorías - solo móvil cuando hay sala seleccionada */}
                 {!showRoomList && currentRoom && (
-                  <div className="md:hidden px-4 py-3 border-b border-purple-100 bg-purple-50/50">
+                  <div className="md:hidden px-4 py-3 border-b border-zinc-700 bg-zinc-800">
                     <button
                       onClick={handleBackToRooms}
-                      className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
+                      className="flex items-center gap-2 text-purple-300 hover:text-purple-400"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       <span className="text-sm font-medium">Elegir otra categoría</span>
@@ -259,11 +259,11 @@ export default function ChatPage() {
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center mx-auto mb-4">
+                      <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-4">
                         <MessageCircle className="w-10 h-10 text-purple-300" />
                       </div>
-                      <p className="text-purple-400 font-medium">Selecciona una categoría</p>
-                      <p className="text-sm text-gray-400 mt-1">para comenzar a chatear</p>
+                      <p className="text-purple-300 font-medium">Selecciona una categoría</p>
+                      <p className="text-sm text-zinc-400 mt-1">para comenzar a chatear</p>
                     </div>
                   </div>
                 )}

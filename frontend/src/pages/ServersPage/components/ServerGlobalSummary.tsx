@@ -36,7 +36,7 @@ const isFreeTierServer = (server?: {
 };
 
 export function ServerGlobalSummary() {
-  const { servers, totalUsers, onlineServers, loading } = useServerStats(9000);
+  const { servers, totalUsers, onlineServers } = useServerStats(9000);
 
   const summary = useMemo(() => {
     if (!servers.length) {
@@ -85,66 +85,74 @@ export function ServerGlobalSummary() {
     };
   }, [servers]);
 
-  if (loading && !servers.length) {
-    return null;
-  }
-
   const stats = [
     {
       label: "Servidores activos",
       value: onlineServers || 0,
       suffix: `/${servers.length}`,
       icon: Server,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
-      borderColor: "border-emerald-100",
+      color: "text-emerald-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-emerald-500/20",
+      accentBorder: "border-t-emerald-500/30",
+      note: "estado continuo",
     },
     {
       label: "Usuarios premium",
       value: numberFormatter.format(summary.premiumUsers || totalUsers || 0),
       icon: Crown,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      borderColor: "border-amber-100",
+      color: "text-amber-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-amber-500/20",
+      accentBorder: "border-t-amber-500/30",
+      note: "sesiones activas",
     },
     {
       label: "Usuarios gratuitos",
       value: numberFormatter.format(summary.freeUsers),
       icon: Users,
-      color: "text-sky-600",
-      bgColor: "bg-sky-50",
-      borderColor: "border-sky-100",
+      color: "text-sky-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-sky-500/20",
+      accentBorder: "border-t-sky-500/30",
+      note: "tier free/demo",
     },
     {
       label: "CPU promedio",
       value: percentageFormatter(summary.globalCpu),
       icon: Cpu,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      borderColor: "border-purple-100",
+      color: "text-purple-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-purple-500/20",
+      accentBorder: "border-t-purple-500/30",
+      note: "promedio 5m",
     },
     {
       label: "RAM promedio",
       value: percentageFormatter(summary.globalRam),
       icon: Gauge,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
-      borderColor: "border-indigo-100",
+      color: "text-indigo-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-indigo-500/20",
+      accentBorder: "border-t-indigo-500/30",
+      note: "promedio 5m",
     },
     {
       label: "Conexiones totales",
       value: numberFormatter.format(summary.premiumUsers + summary.freeUsers),
       icon: Wifi,
-      color: "text-teal-600",
-      bgColor: "bg-teal-50",
-      borderColor: "border-teal-100",
+      color: "text-teal-400",
+      bgColor: "bg-zinc-800",
+      borderColor: "border-teal-500/20",
+      accentBorder: "border-t-teal-500/30",
+      note: "usuarios online",
     },
   ];
 
   return (
-    <section className="py-8 sm:py-12 lg:py-16 bg-white">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="max-w-7xl mx-auto">
+    <section className="pt-6 sm:pt-8 lg:pt-10">
+      <div className="w-full px-4 sm:px-0">
+        <div className="mx-auto bg-zinc-800/30 rounded-[12px] lg:rounded-[20px] border border-zinc-700/50 pt-8 sm:pt-10 lg:pt-12 px-6 sm:px-8 lg:px-12 pb-8 sm:pb-10 lg:pb-12">
           {/* Header */}
           <motion.div 
             className="text-center mb-8 sm:mb-10"
@@ -152,45 +160,54 @@ export function ServerGlobalSummary() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <p className="text-xs font-semibold tracking-[0.2em] text-purple-600 uppercase mb-2">
+            <p className="text-xs font-semibold tracking-[0.2em] text-orange-400 uppercase mb-2">
               Panel de control
             </p>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-medium text-gray-900">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white">
               Resumen global
             </h2>
           </motion.div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className={`relative overflow-hidden rounded-2xl border ${stat.borderColor} ${stat.bgColor} p-4 sm:p-5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5`}
-              >
-                {/* Icon */}
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${stat.bgColor} border ${stat.borderColor} flex items-center justify-center mb-3`}>
-                  <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
-                </div>
-                
-                {/* Value */}
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-xl sm:text-2xl lg:text-3xl font-bold ${stat.color}`}>
-                    {stat.value}
-                  </span>
-                  {stat.suffix && (
-                    <span className="text-sm text-gray-400 font-medium">{stat.suffix}</span>
-                  )}
-                </div>
-                
-                {/* Label */}
-                <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium">
-                  {stat.label}
-                </p>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+            {stats.map((stat, index) => {
+              const isPrimary = index < 3;
+
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className={`relative overflow-hidden rounded-2xl border ${stat.borderColor} ${stat.bgColor} p-4 sm:p-5 transition-all duration-300 hover:border-zinc-600 ${isPrimary ? "lg:pt-6" : ""} border-t-4 ${stat.accentBorder}`}
+                >
+                  {/* Icon */}
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${stat.bgColor} border ${stat.borderColor} flex items-center justify-center mb-3`}>
+                    <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
+                  </div>
+                  
+                  {/* Value */}
+                  <div className="flex items-baseline gap-1">
+                    <span className={`${isPrimary ? "text-2xl sm:text-3xl lg:text-4xl" : "text-xl sm:text-2xl lg:text-3xl"} font-bold ${stat.color}`}>
+                      {stat.value}
+                    </span>
+                    {stat.suffix && (
+                      <span className="text-sm text-zinc-400 font-medium">{stat.suffix}</span>
+                    )}
+                  </div>
+                  
+                  {/* Label */}
+                  <p className={`text-xs sm:text-sm text-zinc-300 mt-1 font-medium ${isPrimary ? "lg:mt-2" : ""}`}>
+                    {stat.label}
+                  </p>
+
+                  {/* Note */}
+                  <p className="text-[11px] sm:text-xs text-zinc-500 mt-1 font-medium">
+                    {stat.note}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

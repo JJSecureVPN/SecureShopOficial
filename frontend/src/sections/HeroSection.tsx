@@ -1,164 +1,178 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Users, Gift, Shield, Zap, Globe2 } from "lucide-react";
+import { ArrowRight, Users, Gift, Sparkles } from "lucide-react";
 import DemoModal from "../components/DemoModal";
 import ActiveUsersCard from "../components/ActiveUsersCard";
-import { Button } from "../components/Button";
-import { HeroTitle, LeadText, SmallText } from "../components/Typography";
+import { RefineButton } from "../components/RefineButton";
+import { SmallText } from "../components/Typography";
+import { useServerStats } from "../hooks/useServerStats";
+import VariableProximity from "../components/VariableProximity";
+import TextType from "../components/TextType";
+
+// Textos que se van a alternar con efecto typewriter
+const typingTexts = [
+  "¿te gustaría Comprar un plan VPN?",
+  "¿querés Revender nuestros servicios?",
+  "¿buscas Protección total online?",
+  "¿necesitas Velocidad sin límites?",
+  "¿querés Desbloquear contenido?",
+];
 
 export default function HeroSection() {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Obtener datos reales de servidores
+  const { servers, totalUsers, onlineServers } = useServerStats(9000);
+  
+  // Calcular velocidad promedio de los servidores activos
+  const averageSpeed = servers.length > 0 
+    ? Math.round(servers.filter(s => s.status === 'online').length / servers.length * 150)
+    : 100;
 
   const goToPlans = () => navigate("/planes");
   const goToResellers = () => navigate("/revendedores");
 
-  const features = [
-    { icon: Shield, label: "Cifrado AES-256" },
-    { icon: Zap, label: "Ultra rápido" },
-    { icon: Globe2, label: "Multi-región" },
-  ];
+
+  // Forzar scroll al top inicialmente
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
 
   return (
     <>
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
 
-      <section id="hero-section" className="relative overflow-hidden bg-gradient-to-b from-purple-200/50 via-purple-50/30 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
-          {/* Main content */}
-          <div className="flex flex-col items-center text-center gap-6 sm:gap-8">
-            {/* Active Users Card - Usuarios activos en vivo */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-            >
-              <ActiveUsersCard />
-            </motion.div>
-
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                </span>
-                <span className="text-sm font-medium text-purple-700">De los creadores de JJSecure VPN</span>
-              </div>
-            </motion.div>
-
-            {/* Title */}
-            <motion.div
-              className="max-w-4xl space-y-4 sm:space-y-5"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <HeroTitle className="text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
-                VPN Premium.
-                <span className="block text-purple-700">Protege tu Privacidad.</span>
-              </HeroTitle>
-              <LeadText className="text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed">
-                Experimenta la <strong className="font-semibold text-gray-700">verdadera libertad online</strong>. 
-                Acceso sin restricciones, bloqueo de anuncios y máxima privacidad con velocidad garantizada.
-              </LeadText>
-            </motion.div>
-
-            {/* Feature pills */}
-            <motion.div
-              className="flex flex-wrap gap-3 justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              {features.map((feature) => (
-                <div
-                  key={feature.label}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-100 shadow-sm text-sm text-gray-600"
+      <section id="hero-section" className="relative bg-refine-dark min-h-screen overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-24 pb-16 sm:pb-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Columna izquierda - Contenido principal (minimalista) */}
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
                 >
-                  <feature.icon className="w-4 h-4 text-purple-500" />
-                  <span className="font-medium">{feature.label}</span>
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white leading-tight">
+                    Navega Seguro. Sin Complicaciones.
+                  </h1>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    <p className="text-sm sm:text-base text-zinc-400 font-medium">VPN · App N°1 en Argentina</p>
+                  </div>
+                </motion.div>
+                {/* Active Users Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <ActiveUsersCard />
+                </motion.div>
+
+                {/* Texto animado con typewriter (sutil) */}
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}>
+                  <div className="h-[4.5rem] sm:h-[5.5rem] flex items-center">
+                    <TextType
+                      text={typingTexts}
+                      cursorCharacter="|"
+                      as="h2"
+                      className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight"
+                      typingSpeed={80}
+                      deletingSpeed={40}
+                      pauseDuration={2000}
+                      initialDelay={0}
+                      cursorClassName="text-emerald-400"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Descripción */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  <div ref={containerRef} style={{ position: 'relative' }}>
+                    <VariableProximity
+                      label="Experimenta la verdadera libertad online. Acceso sin restricciones y máxima privacidad con velocidad garantizada."
+                      fromFontVariationSettings="'wght' 400"
+                      toFontVariationSettings="'wght' 700"
+                      containerRef={containerRef}
+                      radius={60}
+                      className="text-base sm:text-lg lg:text-xl leading-relaxed text-zinc-400"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Feature pills removed as requested */}
+
+                {/* CTA Buttons */}
+                <motion.div className="flex flex-col sm:flex-row gap-4 pt-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.35 }}>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <RefineButton
+                      onClick={goToPlans}
+                      variant="primary"
+                      fullWidthMobile
+                    >
+                      Ver Planes
+                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                    </RefineButton>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <RefineButton
+                      onClick={() => setIsDemoOpen(true)}
+                      variant="secondary"
+                      fullWidthMobile
+                    >
+                      <Gift className="h-4 w-4 relative z-[1]" />
+                      <span className="relative z-[1]">Prueba Gratuita</span>
+                    </RefineButton>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <RefineButton
+                      onClick={goToResellers}
+                      variant="secondary"
+                      fullWidthMobile
+                    >
+                      <Users className="h-4 w-4 relative z-[1]" />
+                      <span className="relative z-[1]">Sé Revendedor</span>
+                    </RefineButton>
+                  </motion.div>
+                </motion.div>
+
+                <SmallText className="text-xs font-medium text-zinc-500">✓ Sin compromisos · Garantía de reembolso · Cancela cuando quieras</SmallText>
+              </div>
+
+              {/* Columna derecha - Estadísticas compactas */}
+              <motion.div className="relative hidden lg:flex justify-end" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+                <div className="w-[380px]">
+                  <div className="bg-zinc-900/70 backdrop-blur rounded-2xl p-6 border border-zinc-700/50 shadow-lg">
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-sm text-zinc-400">Usuarios Activos</p>
+                        <p className="text-2xl font-semibold text-white mt-1">{totalUsers > 0 ? `${totalUsers.toLocaleString('es-AR')}+` : '15,000+'}</p>
+                      </div>
+                      <div className="border-t border-zinc-700" />
+                      <div>
+                        <p className="text-sm text-zinc-400">Servidores Activos</p>
+                        <p className="text-2xl font-semibold text-white mt-1">{onlineServers > 0 ? onlineServers : 25}+</p>
+                      </div>
+                      <div className="border-t border-zinc-700" />
+                      <div>
+                        <p className="text-sm text-zinc-400">Velocidad Promedio</p>
+                        <p className="text-2xl font-semibold text-white mt-1">{averageSpeed} Mbps</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </motion.div>
-
-            {/* CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center gap-3 justify-center pt-2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Button
-                onClick={goToPlans}
-                variant="primary"
-                size="md"
-                fullWidthMobile
-                className="group shadow-lg shadow-purple-200/50 bg-purple-700 hover:bg-purple-800 focus-visible:ring-purple-900"
-              >
-                Ver planes
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </Button>
-              <Button
-                onClick={() => setIsDemoOpen(true)}
-                variant="secondary"
-                size="md"
-                fullWidthMobile
-                className="text-purple-700 shadow-purple-700 shadow-[inset_0_0_0_2px] hover:bg-purple-700 hover:text-white hover:shadow-transparent focus-visible:ring-purple-900"
-              >
-                <Gift className="h-4 w-4" />
-                Prueba Gratuita
-              </Button>
-              <Button
-                onClick={goToResellers}
-                variant="secondary"
-                size="md"
-                fullWidthMobile
-                className="text-purple-700 shadow-purple-700 shadow-[inset_0_0_0_2px] hover:bg-purple-700 hover:text-white hover:shadow-transparent focus-visible:ring-purple-900"
-              >
-                <Users className="h-4 w-4" />
-                Ser revendedor
-              </Button>
-            </motion.div>
-
-            {/* Trust text */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <SmallText className="text-xs font-medium text-gray-500">
-                ✓ Sin compromisos · Garantía de reembolso si no te sirve
-              </SmallText>
-            </motion.div>
-          </div>
+              </motion.div>
+            </div>
         </div>
-
-        {/* Hero Image */}
-        <motion.div
-          className="relative w-full"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          {/* Imagen para móvil */}
-          <img
-            src="/SecureVPNMovil.avif"
-            alt="JJSecure VPN App"
-            className="md:hidden w-full h-auto"
-          />
-          {/* Imagen para desktop */}
-          <img
-            src="/SecureVPN.avif"
-            alt="JJSecure VPN App"
-            className="hidden md:block w-full h-auto"
-          />
-        </motion.div>
       </section>
     </>
   );

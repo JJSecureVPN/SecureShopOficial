@@ -103,15 +103,15 @@ function ChatMessageComponent({ message, isAdmin, categoryGradientClass, onDelet
             isOwnMessage
               ? `bg-gradient-to-r ${ownGradientClass} text-white`
               : isFromAdmin
-                ? 'bg-purple-50 border border-purple-200 text-gray-900'
-                : 'bg-white border border-gray-200 text-gray-900'
-          } ${message.is_pinned ? 'ring-2 ring-yellow-200' : ''}`}
+                ? 'bg-purple-800 border border-purple-700 text-zinc-100'
+                : 'bg-zinc-800 border border-zinc-700 text-zinc-100'
+          } ${message.is_pinned ? 'ring-2 ring-yellow-700' : ''}`}
         >
           {/* Encabezado */}
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className={`text-sm font-semibold ${
-                isOwnMessage ? 'text-white' : (isFromAdmin ? 'text-purple-700' : 'text-gray-900')
+                isOwnMessage ? 'text-white' : (isFromAdmin ? 'text-purple-300' : 'text-zinc-100')
               }`}
             >
               {isOwnMessage ? 'Tú' : getDisplayName()}
@@ -120,17 +120,17 @@ function ChatMessageComponent({ message, isAdmin, categoryGradientClass, onDelet
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
                 isOwnMessage
-                  ? 'bg-white/15 text-white'
+                  ? 'bg-white/10 text-white'
                   : isFromAdmin
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'bg-gray-100 text-gray-700'
+                    ? 'bg-purple-800 text-purple-200'
+                    : 'bg-zinc-700 text-zinc-200'
               }`}
             >
               {roleLabel}
             </span>
 
             {message.is_pinned && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-800">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-800 text-yellow-200">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.06 1.06l1.06 1.06z" />
                 </svg>
@@ -138,29 +138,29 @@ function ChatMessageComponent({ message, isAdmin, categoryGradientClass, onDelet
               </span>
             )}
 
-            <span className={`text-[11px] ${isOwnMessage ? 'text-white/80' : 'text-gray-500'}`}>
+            <span className={`text-[11px] ${isOwnMessage ? 'text-white/80' : 'text-zinc-400'}`}>
               {formatDate(message.created_at)} {formatTime(message.created_at)}
             </span>
           </div>
 
           {/* Mensaje */}
-          <p className={`mt-1 text-sm break-words whitespace-pre-wrap ${isOwnMessage ? 'text-white' : 'text-gray-800'}`}>
+          <p className={`mt-1 text-sm break-words whitespace-pre-wrap ${isOwnMessage ? 'text-white' : 'text-zinc-100'}`}>
             {message.content}
           </p>
 
           {/* Acciones (visibles en hover) */}
           {(isOwnMessage || isAdmin) && (
             <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1">
                 {/* Fijar (solo admin) */}
                 {isAdmin && onPin && (
                   <button
                     onClick={() => onPin(message.id, !message.is_pinned)}
-                    className={`p-1.5 rounded-lg border shadow-sm transition-colors ${
-                      message.is_pinned
-                        ? 'bg-yellow-50 text-yellow-600 border-yellow-200'
-                        : 'bg-white text-gray-500 hover:text-purple-700 border-gray-200 hover:border-purple-200'
-                    }`}
+                      className={`p-1.5 rounded-lg border shadow-sm transition-colors ${
+                        message.is_pinned
+                          ? 'bg-yellow-800 text-yellow-200 border-yellow-700'
+                          : 'bg-zinc-800 text-zinc-300 hover:text-purple-300 border-zinc-700 hover:border-purple-700'
+                      }`}
                     title={message.is_pinned ? 'Desfijar mensaje' : 'Fijar mensaje'}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -177,7 +177,7 @@ function ChatMessageComponent({ message, isAdmin, categoryGradientClass, onDelet
                         onDelete(message.id);
                       }
                     }}
-                    className="p-1.5 rounded-lg border shadow-sm bg-white text-gray-500 hover:text-red-600 border-gray-200 hover:border-red-200 transition-colors"
+                      className="p-1.5 rounded-lg border shadow-sm bg-zinc-800 text-zinc-300 hover:text-red-400 border-zinc-700 hover:border-red-400 transition-colors"
                     title="Eliminar mensaje"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
