@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Sparkles, Shield } from "lucide-react";
+import SegmentedControl from "../../components/SegmentedControl";
+import CompactHeroControl from "../../components/CompactHeroControl";
 import { motion } from "framer-motion";
 import DemoModal from "../../components/DemoModal";
 import { RefineButton } from "../../components/RefineButton";
@@ -123,6 +125,35 @@ export default function PlanesPage({ }: PlanesPageProps) {
     };
 
     cargarPlanes();
+  }, []);
+
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
   }, []);
 
   const diasDisponibles = useMemo(() => obtenerDiasDisponibles(planes), [planes]);
@@ -333,32 +364,33 @@ export default function PlanesPage({ }: PlanesPageProps) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="flex justify-center mb-8"
+              className="flex justify-center mt-16 mb-8 md:hidden"
             >
-              <div className="inline-flex items-center gap-1 rounded-full p-1.5 bg-zinc-800/80 backdrop-blur-sm border border-zinc-700">
-                <button
-                  onClick={activarModoCompra}
-                  className={`px-5 py-2 rounded-full font-semibold text-sm transition-all duration-200 ${
-                    modoSeleccion === "compra"
-                      ? "bg-indigo-600 text-white shadow-md"
-                      : "text-zinc-400 hover:text-indigo-400 hover:bg-zinc-800"
-                  }`}
-                >
-                  Nueva cuenta
-                </button>
-                <button
-                  onClick={activarModoRenovacion}
-                  className={`px-5 py-2 rounded-full font-semibold text-sm transition-all duration-200 ${
-                    modoSeleccion === "renovacion"
-                      ? "bg-indigo-600 text-white shadow-md"
-                      : "text-zinc-400 hover:text-indigo-400 hover:bg-zinc-800"
-                  }`}
-                >
-                  Renovar cuenta
-                </button>
+              <div className="w-full max-w-[720px]">
+                <SegmentedControl
+                  value={modoSeleccion}
+                  onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                  descriptions={{
+                    compra: 'Crea una cuenta VPN con acceso ilimitado a servidores y cambio de ubicación.',
+                    renovacion: 'Renueva tu suscripción VPN y conserva tu configuración y dispositivos.'
+                  }}
+                />
               </div>
             </motion.div>
-            <div className="w-full">
+            {/* Desktop hero compact (above the three-column layout) */}
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="hidden md:block mt-12 mb-10"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <CompactHeroControl
+                  value={modoSeleccion}
+                  onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                />
+              </div>
+            </motion.div>            <div className="w-full">
             {modoSeleccion === "compra" && (
               <div className="space-y-16">
                 <motion.div

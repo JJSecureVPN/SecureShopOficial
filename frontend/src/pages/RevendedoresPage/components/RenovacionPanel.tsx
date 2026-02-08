@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import CuponInput from "../../../components/CuponInput";
 import { Button } from "../../../components/Button";
-import { LeadText, SectionTitle, SmallText } from "../../../components/Typography";
+import { SmallText } from "../../../components/Typography";
 import { ValidacionCupon } from "../../../services/api.service";
 import { PlanRevendedor } from "../../../types";
 import { DIAS_POR_CREDITOS } from "../constants";
@@ -92,15 +92,7 @@ export function RenovacionPanel({
 
   return (
     <div className="space-y-4 md:space-y-6 xl:space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <SectionTitle className="mb-2 sm:mb-3">Renovar revendedor</SectionTitle>
-        <LeadText className="text-xs sm:text-sm md:text-base">
-          {pasoRenovacion === "buscar"
-            ? "Busca tu cuenta existente para renovarla"
-            : "Completa la información y elige tu plan"}
-        </LeadText>
-      </div>
+
 
       {/* Main Container */}
       <div className={`mx-auto w-full ${pasoRenovacion === "configurar" && revendedor ? "max-w-6xl" : "max-w-2xl"}`}>
@@ -110,7 +102,7 @@ export function RenovacionPanel({
           <div className={`space-y-4 md:space-y-5 xl:space-y-6 ${pasoRenovacion === "configurar" && revendedor ? "lg:flex-1 lg:min-w-0" : ""}`}>
           {/* Error State */}
           {error && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-3 sm:p-4 lg:p-5 xl:p-6 flex items-start gap-3">
+            <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-2xl p-3 sm:p-4 lg:p-5 xl:p-6 flex items-start gap-3">
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-red-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs sm:text-sm text-red-300">{error}</p>
             </div>
@@ -118,7 +110,7 @@ export function RenovacionPanel({
 
           {/* Step 1: Search */}
           {pasoRenovacion === "buscar" && (
-            <div className="rounded-2xl bg-zinc-900/50 p-4 sm:p-5 lg:p-6 border border-zinc-700">
+            <div className="mt-8 rounded-2xl bg-zinc-900/50 p-4 sm:p-5 lg:p-6 border border-zinc-700">
               <h3 className="text-xs sm:text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4 sm:mb-5">
                 Buscar tu cuenta
               </h3>

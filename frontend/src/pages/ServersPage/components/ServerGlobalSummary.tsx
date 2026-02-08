@@ -150,9 +150,10 @@ export function ServerGlobalSummary() {
   ];
 
   return (
-    <section className="pt-6 sm:pt-8 lg:pt-10">
-      <div className="w-full px-4 sm:px-0">
-        <div className="mx-auto bg-zinc-800/30 rounded-[12px] lg:rounded-[20px] border border-zinc-700/50 pt-8 sm:pt-10 lg:pt-12 px-6 sm:px-8 lg:px-12 pb-8 sm:pb-10 lg:pb-12">
+    <section className="pt-6 sm:pt-8 lg:pt-10 relative z-10 lg:-mt-[41px]">
+      <div className="w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="mx-auto bg-zinc-800/30 rounded-[12px] lg:rounded-[20px] border border-zinc-700/50 pt-8 sm:pt-10 lg:pt-12 px-6 sm:px-8 lg:px-12 pb-8 sm:pb-10 lg:pb-12">
           {/* Header */}
           <motion.div 
             className="text-center mb-8 sm:mb-10"
@@ -211,6 +212,7 @@ export function ServerGlobalSummary() {
           </div>
         </div>
       </div>
+    </div>
     </section>
   );
 }

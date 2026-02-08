@@ -46,22 +46,46 @@ export function crearRutasHelpCenter(supabaseService: SupabaseService): Router {
         created_by
       } = req.body;
 
-      if (!title || !author_name) {
-        return res.status(400).json({ success: false, error: 'Título y nombre obligatorios' });
+      // Evitar error TS6133 (variables declaradas pero no usadas) en compilación.
+      // Se usan como 'void' para indicar que su no-uso es intencional.
+      void content;
+      void links;
+      void images;
+
+      if (!author_name) {
+        return res.status(400).json({ success: false, error: 'Nombre obligatorio' });
       }
 
       const client = supabaseService.getClient();
       if (!client) return res.status(500).json({ success: false, error: 'Supabase no configurado' });
 
+      let finalTitle = title;
+      if (!finalTitle) {
+        // Try to infer title from uploaded HTML filename
+        const htmlUrl = (req.body.content_html_url as string) || '';
+        if (htmlUrl) {
+          try {
+            const dec = decodeURIComponent(htmlUrl);
+            const parts = dec.split('/');
+            const filename = parts[parts.length - 1] || '';
+            finalTitle = filename.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ') || `Tutorial de ${author_name}`;
+          } catch (e) {
+            finalTitle = `Tutorial de ${author_name}`;
+          }
+        } else {
+          finalTitle = `Tutorial de ${author_name}`;
+        }
+      }
+
       const insertPayload: any = {
-        title,
+        title: finalTitle,
         author_name,
         author_email: author_email || null,
         author_phone: author_phone || null,
-        content: content || null,
+        content: null,
         content_html_url: (req.body.content_html_url as string) || null,
-        links: Array.isArray(links) ? links : (links ? [links] : []),
-        images: Array.isArray(images) ? images : (images ? [images] : []),
+        links: null,
+        images: null,
         created_by: created_by || null
       };
 
@@ -164,6 +188,17 @@ export function crearRutasHelpCenter(supabaseService: SupabaseService): Router {
       const lower = filename.toLowerCase();
       if (!lower.endsWith('.html') && !lower.endsWith('.htm')) {
         return res.status(400).json({ success: false, error: 'Sólo se permiten archivos .html' });
+      }
+
+      // Quick content check: ensure it looks like a full HTML document
+      try {
+        const txt = buffer.toString('utf8').toLowerCase();
+        if (!txt.includes('<html') && !txt.includes('<!doctype') && !txt.includes('<head') && !txt.includes('<body')) {
+          return res.status(400).json({ success: false, error: 'El archivo no parece un documento HTML completo. Asegúrate de incluir <html> y <body>.' });
+        }
+      } catch (e) {
+        // If decoding fails, reject
+        return res.status(400).json({ success: false, error: 'No se pudo procesar el archivo HTML' });
       }
 
       const key = `tutorials/html/${Date.now()}_${Math.random().toString(36).slice(2)}_${filename}`;

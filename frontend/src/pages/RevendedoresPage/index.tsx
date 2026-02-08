@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { BarChart3, RefreshCw, Zap } from "lucide-react";
+import { motion } from 'framer-motion';
 import { PlanRevendedor } from "../../types";
 import { apiService, ValidacionCupon } from "../../services/api.service";
 import { ModeSelector } from "./components/ModeSelector";
+import CompactHeroControl from "../../components/CompactHeroControl";
 import { RenovacionPanel } from "./components/RenovacionPanel";
 import PlanGroupsSection from "./components/PlanGroupsSection";
 import { SupportSection } from "./components/SupportSection";
@@ -687,11 +689,33 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="w-full">
 
-            <ModeSelector
-              mode={modoSeleccion}
-              onSelectCompra={activarModoCompra}
-              onSelectRenovacion={activarModoRenovacion}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="md:hidden"
+            >
+              <ModeSelector
+                mode={modoSeleccion}
+                onSelectCompra={activarModoCompra}
+                onSelectRenovacion={activarModoRenovacion}
+              />
+            </motion.div>
+
+            {/* Desktop hero compact */}
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="hidden md:block mt-12 mb-10"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <CompactHeroControl
+                  value={modoSeleccion}
+                  onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                />
+              </div>
+            </motion.div>
 
             {modoSeleccion === "renovacion" && (
               <RenovacionPanel

@@ -67,11 +67,12 @@ export default function PlanGroupsSection({
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-8 flex justify-center"
           >
             <button
               onClick={handleBackToSelection}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-white transition-all"
+              aria-label="Volver a selección de sistemas"
+              className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-sm sm:text-base font-semibold transition-all shadow-lg ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-offset-2 ${selectedGroup === 'creditos' ? 'bg-purple-600 hover:bg-purple-500 text-white focus:ring-purple-400' : 'bg-orange-600 hover:bg-orange-500 text-white focus:ring-orange-400'}`}
             >
               <ArrowLeft className="w-4 h-4" />
               Volver a selección de sistemas

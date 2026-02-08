@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ThumbsUp, ThumbsDown, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -140,7 +141,7 @@ export default function AdminHelpCenter() {
 
               {t.content_html_url && (
                 <div className="mt-3">
-                  <button onClick={() => setSelectedHtmlUrl(`/api/help-center/html/${t.id}`)} className="px-2 py-1 bg-zinc-700 rounded text-sm">Previsualizar</button>
+                  <Link to={`/ayuda/tutoriales/view/${t.id}`} className="px-2 py-1 bg-zinc-700 rounded text-sm">Previsualizar</Link>
                 </div>
               )}
 

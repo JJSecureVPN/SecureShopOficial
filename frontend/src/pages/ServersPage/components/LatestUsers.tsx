@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, User, Users } from "lucide-react";
+import { Sparkles, User, Users } from "lucide-react";
 import { useLatestUsers } from "../../../hooks/useLatestUsers";
 
 export function LatestUsers() {
@@ -91,10 +91,7 @@ export function LatestUsers() {
                 </div>
               </div>
 
-              <button className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all duration-300 hover:gap-3">
-                <span>Ver más estadísticas</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+
             </motion.div>
 
             {/* Right side - Carousel */}

@@ -93,7 +93,7 @@ export function RenovacionPanel({
     <div className="space-y-8">
       {/* Error State */}
       {error && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-4 md:p-5 flex items-start gap-3">
+        <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-2xl p-4 md:p-5 lg:p-5 xl:p-6 flex items-start gap-3">
           <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs md:text-sm text-red-300">{error}</p>
         </div>
@@ -101,7 +101,7 @@ export function RenovacionPanel({
 
       {/* Step 1: Search */}
       {pasoRenovacion === "buscar" && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-8">
           <div>
               <div className="mb-6">
               <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-indigo-400 mb-1">Paso 1</p>

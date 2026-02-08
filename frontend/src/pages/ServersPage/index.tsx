@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart3, Users } from "lucide-react";
 import { ServerStats } from "./components/ServerStats";
@@ -25,6 +25,35 @@ const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps
       icon: <Users className="w-4 h-4" />,
     },
   ];
+
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-900 text-zinc-100">

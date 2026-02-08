@@ -23,6 +23,35 @@ export default function ValidezPage({ isMobileMenuOpen: _isMobileMenuOpen, setIs
     cargar();
   }, []);
 
+  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // con transform rompan el comportamiento sticky del header global)
+  useEffect(() => {
+    const headerEl = document.querySelector('header');
+    if (!headerEl) return;
+
+    const prev = {
+      position: headerEl.style.position || '',
+      top: headerEl.style.top || '',
+      left: headerEl.style.left || '',
+      right: headerEl.style.right || '',
+      zIndex: headerEl.style.zIndex || '',
+    };
+
+    headerEl.style.position = 'fixed';
+    headerEl.style.top = '0';
+    headerEl.style.left = '0';
+    headerEl.style.right = '0';
+    headerEl.style.zIndex = '10001';
+
+    return () => {
+      headerEl.style.position = prev.position;
+      headerEl.style.top = prev.top;
+      headerEl.style.left = prev.left;
+      headerEl.style.right = prev.right;
+      headerEl.style.zIndex = prev.zIndex;
+    };
+  }, []);
+
   const planesCredit = useMemo(
     () => planes.filter((p) => p.account_type === "credit").sort((a, b) => a.max_users - b.max_users),
     [planes]

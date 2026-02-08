@@ -31,6 +31,7 @@ import NoticiasPage from "./pages/NoticiasPage";
 import HelpPage from "./pages/HelpPage";
 import HelpCenter from "./pages/HelpCenter";
 import AdminHelpCenter from "./pages/AdminHelpCenter";
+import HelpHtmlView from "./pages/HelpHtmlView";
 import { useRegisterActiveSession } from "./hooks/useRegisterActiveSession";
 import { useLenis } from "./hooks/useLenis";
 
@@ -93,6 +94,7 @@ const AppContent = () => {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/ayuda" element={<HelpPage />} />
           <Route path="/ayuda/tutoriales" element={<HelpCenter />} />
+          <Route path="/ayuda/tutoriales/view/:id" element={<HelpHtmlView />} />
           <Route path="/ayuda/tutoriales/admin" element={<AdminHelpCenter />} />
           <Route path="/terminos" element={<TermsPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/privacidad" element={<PrivacyPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />

@@ -24,7 +24,7 @@ export default function SystemCard({
 }) {
   const [copied, setCopied] = useState(false);
   // Use clear border accent: purple for creditos, orange for validez
-  const accentClass = group.id === "validez" ? "border-orange-500/40" : "border-purple-500/40";
+  const accentClass = group.id === "validez" ? "border-orange-500" : "border-purple-500";
   const accentText = group.id === "validez" ? "text-orange-400" : "text-purple-400";
   return (
     <motion.div
@@ -36,7 +36,7 @@ export default function SystemCard({
       onClick={() => onSelect(group.id)}
     >
       <motion.div
-        className={`relative overflow-hidden rounded-3xl bg-zinc-900 border border-zinc-800/50 h-full transition-all duration-500 ${accentClass}`}
+        className={`relative overflow-hidden rounded-3xl bg-zinc-900 border-2 h-full transition-all duration-500 ${accentClass} hover:shadow-xl hover:scale-[1.01]`}
       >
         <button
           onClick={(e) => {
