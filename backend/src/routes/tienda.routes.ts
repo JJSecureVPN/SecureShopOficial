@@ -926,7 +926,6 @@ export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSoc
       }
 
       // Obtener información del plan (no necesaria para el email pero útil para el log)
-      // const plan = tiendaService.obtenerPlanPorId(pago.plan_id);
 
       // Reenviar email
       const emailService = (await import("../services/email.service")).default;
