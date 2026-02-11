@@ -23,41 +23,36 @@ export default function ActiveUsersCard() {
       className="relative"
     >
       <div
-        className="relative rounded-xl p-4 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
+        className="bg-zinc-900/50 backdrop-blur-xl rounded-xl p-5 border border-zinc-800/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Glow layer (appears on hover) */}
+        {/* Glow effect on hover (matches StatCard) */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-xl opacity-0 pointer-events-none"
-          animate={{ opacity: [0, 0.8, 0] }}
-          transition={{ duration: 2, repeat: 0 }}
+          animate={{ opacity: isHovered ? [0.5, 0.8, 0.5] : 0 }}
+          transition={{ duration: 2, repeat: isHovered ? Infinity : 0 }}
         />
 
         <div className="relative z-10 flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 p-2.5 bg-indigo-600/10 rounded-lg border border-indigo-500/20">
-              <Users className="w-5 h-5 text-indigo-400" />
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-emerald-400" />
+              <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Visitantes</p>
             </div>
-            <div>
-              <p className="text-xs text-zinc-400">Visitantes</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : totalUsers}</p>
-            </div>
+
+            <motion.p 
+              className="text-2xl font-bold text-white"
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {loading ? '...' : totalUsers}
+            </motion.p>
           </div>
 
           <motion.div
-            animate={
-              loading
-                ? { rotate: [0, 360] }
-                : isHovered
-                ? { rotate: 360 }
-                : { rotate: 0 }
-            }
-            transition={
-              loading
-                ? { duration: 1.2, repeat: Infinity, ease: 'linear' }
-                : { duration: 0.6, ease: 'easeInOut' }
-            }
+            animate={{ rotate: isHovered ? 360 : 0 }}
+            transition={{ duration: 0.6 }}
             className="text-emerald-400/20"
           >
             <Users className="w-6 h-6" />

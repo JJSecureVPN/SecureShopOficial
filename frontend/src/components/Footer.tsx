@@ -11,7 +11,6 @@ function Footer() {
           <div className="px-4 sm:px-8 lg:px-12 py-4 flex items-center justify-between">
             <Link className="hover:no-underline text-white flex items-center gap-3" to="/">
               <img src="/INTERNET ILIMITADO.avif" alt="SecureShop VPN" className="h-8 w-auto" />
-              <span className="text-sm font-semibold text-white hidden sm:inline">SecureShop VPN</span>
             </Link>
           </div>
 

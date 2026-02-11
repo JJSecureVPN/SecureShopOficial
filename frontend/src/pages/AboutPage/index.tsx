@@ -13,6 +13,7 @@ interface AboutPageProps {
   setIsMobileMenuOpen: (value: boolean) => void;
 }
 
+// eslint-disable-next-line no-empty-pattern
 export default function AboutPage({ }: AboutPageProps) {
   return (
     <div className="min-h-screen bg-zinc-900 text-zinc-100">

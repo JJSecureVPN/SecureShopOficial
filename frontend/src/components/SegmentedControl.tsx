@@ -53,27 +53,27 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
   const activeTab = finalTabs[activeIndex];
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-3.5 ${className}`}>
       {/* Control principal */}
       <div className="relative mx-auto max-w-2xl">
-        <div className="relative rounded-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 border border-zinc-700/50 p-1.5 shadow-xl backdrop-blur-sm">
-          {/* Indicador animado con gradiente */}
+        <div className="relative rounded-xl bg-zinc-900/60 border border-zinc-800/60 p-1 shadow-sm backdrop-blur-sm">
+          {/* Indicador animado */}
           <motion.div
-            className="absolute top-1.5 bottom-1.5 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 rounded-xl shadow-lg"
+            className="absolute top-1 bottom-1 bg-indigo-600/90 rounded-lg shadow-sm"
             animate={{
-              left: activeIndex === 0 ? 6 : 'calc(50% + 6px)',
-              right: activeIndex === 0 ? 'calc(50% + 6px)' : 6
+              left: activeIndex === 0 ? 4 : 'calc(50% + 4px)',
+              right: activeIndex === 0 ? 'calc(50% + 4px)' : 4
             }}
             transition={{ 
               type: 'spring', 
-              stiffness: 380, 
-              damping: 32,
-              mass: 0.8
+              stiffness: 320, 
+              damping: 30,
+              mass: 0.6
             }}
-            style={{ width: 'calc(50% - 12px)' }}
+            style={{ width: 'calc(50% - 8px)' }}
           >
-            {/* Brillo interno */}
-            <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-white/20 rounded-xl" />
+            {/* Brillo sutil */}
+            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/5 rounded-lg" />
           </motion.div>
 
           {/* Tabs */}
@@ -88,12 +88,12 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                   onClick={() => onChange(tab.value)}
                   className={`
                     relative flex-1 flex items-center justify-center
-                    py-3 px-4 rounded-xl
-                    font-semibold text-sm
+                    py-2.5 px-4 rounded-lg
+                    font-medium text-sm
                     transition-all duration-200
                     ${isActive 
                       ? 'text-white' 
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                     }
                   `}
                   aria-pressed={isActive}
@@ -107,10 +107,11 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
                           className="absolute -top-1 -right-1"
                         >
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
-                            <Sparkles className="w-3 h-3" />
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/90 text-white text-[10px] font-medium rounded-md shadow-sm">
+                            <Sparkles className="w-2.5 h-2.5" />
                             {tab.badge}
                           </span>
                         </motion.div>
@@ -119,10 +120,10 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                   )}
 
                   {/* Contenido del tab */}
-                  <div className="flex items-center justify-center gap-2.5">
+                  <div className="flex items-center justify-center gap-2">
                     <Icon 
-                      className={`w-5 h-5 transition-transform ${
-                        isActive ? 'scale-110' : 'scale-100'
+                      className={`w-4 h-4 transition-transform ${
+                        isActive ? 'scale-105' : 'scale-100'
                       }`}
                     />
                     <span className="whitespace-nowrap">{tab.label}</span>
@@ -139,44 +140,44 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
         <AnimatePresence mode="wait">
           <motion.div
             key={value}
-            initial={{ opacity: 0, y: -10, height: 0 }}
+            initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: 10, height: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="mx-auto max-w-2xl overflow-hidden mb-6"
+            exit={{ opacity: 0, y: 8, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto max-w-2xl overflow-hidden"
           >
-            <div className="relative rounded-xl bg-zinc-900/50 border border-zinc-800/50 p-5 backdrop-blur-sm">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 via-purple-600/5 to-indigo-600/5 rounded-xl" />
+            <div className="relative rounded-lg bg-zinc-900/30 border border-zinc-800/40 p-4 backdrop-blur-sm">
+              {/* Glow sutil */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/3 via-purple-600/3 to-indigo-600/3 rounded-lg" />
               
-              <div className="relative flex items-start gap-4">
-                <div className="flex-shrink-0 p-2.5 bg-indigo-600/10 rounded-lg border border-indigo-500/20">
+              <div className="relative flex items-start gap-3">
+                <div className="flex-shrink-0 p-2 bg-indigo-600/8 rounded-lg border border-indigo-500/15">
                   {React.createElement(activeTab.icon, { 
-                    className: "w-5 h-5 text-indigo-400" 
+                    className: "w-4 h-4 text-indigo-400/90" 
                   })}
                 </div>
                 
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-white">
+                    <h3 className="text-sm font-semibold text-white/95">
                       {activeTab.label}
                     </h3>
                     {activeTab.badge && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-400 text-xs font-medium rounded-full border border-amber-500/20">
-                        <Sparkles className="w-3 h-3" />
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/8 text-orange-400/90 text-[10px] font-medium rounded border border-orange-500/15">
+                        <Sparkles className="w-2.5 h-2.5" />
                         {activeTab.badge}
                       </span>
                     )}
                   </div>
                   
-                  <p className="text-sm text-zinc-400 leading-relaxed">
+                  <p className="text-[13px] text-zinc-400/90 leading-relaxed">
                     {activeTab.description}
                   </p>
 
                   {/* Info adicional según el tipo */}
-                  <div className="flex items-center gap-2 pt-2">
-                    <Clock className="w-4 h-4 text-zinc-500" />
-                    <span className="text-xs text-zinc-500">
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <Clock className="w-3.5 h-3.5 text-zinc-500/70" />
+                    <span className="text-xs text-zinc-500/80">
                       {value === 'compra' 
                         ? 'Configuración en 2 minutos' 
                         : 'Proceso instantáneo'

@@ -184,7 +184,21 @@ export default function HeroSection() {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
+  // Mostrar / ocultar efectos pesados según el tamaño de pantalla
+  const [isDesktop, setIsDesktop] = useState<boolean>(() => typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: any) => setIsDesktop(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler);
+      else mq.removeListener(handler);
+    };
+  }, []);
+
   // Obtener datos reales de servidores
   const { servers, totalUsers, onlineServers } = useServerStats(9000);
   
@@ -206,15 +220,20 @@ export default function HeroSection() {
   return (
     <>
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
-      <MouseFollower />
+      {isDesktop && <MouseFollower />}
 
       <section id="hero-section" className="relative bg-refine-dark min-h-screen overflow-hidden">
-        {/* Animated background */}
-        <AnimatedBackground />
-        <FloatingParticles />
-        
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        {/* Heavy effects (desktop only) */}
+        {isDesktop && (
+          <>
+            {/* Animated background */}
+            <AnimatedBackground />
+            <FloatingParticles />
+
+            {/* Grid pattern overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+          </>
+        )} 
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-24 pb-16 sm:pb-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -428,8 +447,8 @@ export default function HeroSection() {
 
         {/* Bottom soft fade to blend with next sections */}
         <div className="absolute left-0 right-0 bottom-0 pointer-events-none z-0">
-          {/* Large soft blurred shape to diffuse the animated background */}
-          <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[120%] h-40 bg-gradient-to-b from-transparent to-zinc-900/80 blur-3xl opacity-70" />
+          {/* Large soft blurred shape to diffuse the animated background (desktop only) */}
+          {isDesktop && <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[120%] h-40 bg-gradient-to-b from-transparent to-zinc-900/80 blur-3xl opacity-70" />}
           {/* Gradient overlay to smoothly darken toward the page background */}
           <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent to-zinc-900/95" />
         </div>

@@ -276,7 +276,7 @@ export function ServersHero() {
                 preload="auto"
                 className="w-[690px] max-h-[520px] h-auto block z-0 object-contain"
                 style={{ filter: `brightness(var(--video-brightness, 1.15)) contrast(var(--video-contrast, 1.03)) saturate(var(--video-saturate, 1.05))` }}
-                src="/refine-core-hero.mp4"
+                src="/VideoSecure.mp4"
                 aria-hidden
               />
             </motion.div>
