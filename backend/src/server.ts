@@ -334,10 +334,10 @@ class Server {
     // Rutas de la API - Donaciones
     this.app.use("/api", crearRutasDonaciones(this.donacionesService));
 
-    // Rutas de la API - Revendedores
+    // Rutas de la API - Revendedores (con acceso a RenovacionService para webhooks de renovaciones)
     this.app.use(
       "/api",
-      crearRutasRevendedores(this.tiendaRevendedoresService)
+      crearRutasRevendedores(this.tiendaRevendedoresService, this.renovacionService)
     );
 
     // Rutas de la API - Renovaciones

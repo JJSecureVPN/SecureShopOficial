@@ -1,0 +1,62 @@
+{
+  "enabled": true,
+  "version": "1.0.0",
+  "ultima_actualizacion": "2026-02-14T01:00:00Z",
+  "moneda": "ARS",
+  "notas": "Configuración de planes VPN SecureShop",
+  "hero": {
+    "titulo": "Planes VPN",
+    "descripcion": "Elige el plan que mejor se ajuste a tus necesidades",
+    "promocion": {
+      "habilitada": false,
+      "texto": "¡Promoción especial!",
+      "borderColor": "#ff6b6b",
+      "bgColor": "#fff5f5",
+      "textColor": "#c92a2a",
+      "iconColor": "#ff6b6b",
+      "shadowColor": "rgba(255, 107, 107, 0.25)"
+    }
+  },
+  "planes_disponibles": {
+    "vpn_7_dias": "VPN 7 Días",
+    "vpn_15_dias": "VPN 15 Días",
+    "vpn_30_dias": "VPN 30 Días",
+    "revendedor_5_creditos": "Revendedor 5 Créditos",
+    "revendedor_10_creditos": "Revendedor 10 Créditos",
+    "revendedor_20_creditos": "Revendedor 20 Créditos",
+    "revendedor_50_creditos": "Revendedor 50 Créditos",
+    "revendedor_100_creditos": "Revendedor 100 Créditos",
+    "revendedor_200_creditos": "Revendedor 200 Créditos",
+    "revendedor_5_usuarios_1mes": "Revendedor 5 Usuarios (1 Mes)",
+    "revendedor_10_usuarios_1mes": "Revendedor 10 Usuarios (1 Mes)",
+    "revendedor_25_usuarios_1mes": "Revendedor 25 Usuarios (1 Mes)",
+    "revendedor_50_usuarios_1mes": "Revendedor 50 Usuarios (1 Mes)",
+    "revendedor_100_usuarios_1mes": "Revendedor 100 Usuarios (1 Mes)"
+  },
+  "precios_normales": {
+    "vpn_7_dias": 99,
+    "vpn_15_dias": 199,
+    "vpn_30_dias": 349,
+    "revendedor_5_creditos": 199,
+    "revendedor_10_creditos": 349,
+    "revendedor_20_creditos": 649,
+    "revendedor_50_creditos": 1499,
+    "revendedor_100_creditos": 2799,
+    "revendedor_200_creditos": 4999,
+    "revendedor_5_usuarios_1mes": 299,
+    "revendedor_10_usuarios_1mes": 599,
+    "revendedor_25_usuarios_1mes": 1299,
+    "revendedor_50_usuarios_1mes": 2499,
+    "revendedor_100_usuarios_1mes": 4999
+  },
+  "overrides": {},
+  "promo_config": {
+    "activa": false,
+    "activada_en": null,
+    "duracion_horas": 24,
+    "auto_desactivar": true,
+    "descuento_porcentaje": 20,
+    "solo_nuevos": false,
+    "solo_renovaciones": false
+  }
+}

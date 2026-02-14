@@ -48,14 +48,14 @@ interface PromoConfig {
 }
 
 interface PromoHeaderProps {
-  tipo?: "planes" | "revendedores";
+  tipo?: "planes" | "revendedores" | undefined;
   showButton?: boolean;
   buttonText?: string;
   onButtonClick?: () => void;
 }
 
 export function PromoHeader({ 
-  tipo = "planes",
+  tipo,
   showButton = true, 
   buttonText = "Obtener la oferta",
   onButtonClick 
@@ -111,18 +111,42 @@ export function PromoHeader({
         setPromoPlanes(planesCfg);
         setPromoRevendedores(revCfg);
 
-        const preferida = tipo;
-        const preferidaCfg = preferida === "revendedores" ? revCfg : planesCfg;
-        const alternativaTipo = preferida === "revendedores" ? "planes" : "revendedores";
-        const alternativaCfg = alternativaTipo === "revendedores" ? revCfg : planesCfg;
+        // Lógica mejorada para decidir qué promo mostrar
+        // 1. Si tipo está definido (planes o revendedores), preferir esa si está activa
+        // 2. Si esa no está activa, buscar la otra que esté activa
+        // 3. Si tipo no está definido (otras páginas), mostrar cualquiera que esté activa
+        
+        let mostradaTipo: "planes" | "revendedores" | null = null;
+        let mostradaCfg: PromoConfig | null = null;
 
-        const preferidaActiva = Boolean(preferidaCfg?.activa);
-        const alternativaActiva = Boolean(alternativaCfg?.activa);
-
-        const mostradaTipo: "planes" | "revendedores" | null =
-          preferidaActiva ? preferida : (alternativaActiva ? alternativaTipo : null);
-
-        const mostradaCfg = mostradaTipo === "revendedores" ? revCfg : (mostradaTipo === "planes" ? planesCfg : null);
+        if (tipo === "planes") {
+          // En /planes: preferir planes, pero mostrar revendedores si planes no está activa
+          if (planesCfg?.activa) {
+            mostradaTipo = "planes";
+            mostradaCfg = planesCfg;
+          } else if (revCfg?.activa) {
+            mostradaTipo = "revendedores";
+            mostradaCfg = revCfg;
+          }
+        } else if (tipo === "revendedores") {
+          // En /revendedores: preferir revendedores, pero mostrar planes si revendedores no está activa
+          if (revCfg?.activa) {
+            mostradaTipo = "revendedores";
+            mostradaCfg = revCfg;
+          } else if (planesCfg?.activa) {
+            mostradaTipo = "planes";
+            mostradaCfg = planesCfg;
+          }
+        } else {
+          // En otras páginas: mostrar la que esté activa, preferencia a revendedores
+          if (revCfg?.activa) {
+            mostradaTipo = "revendedores";
+            mostradaCfg = revCfg;
+          } else if (planesCfg?.activa) {
+            mostradaTipo = "planes";
+            mostradaCfg = planesCfg;
+          }
+        }
 
         configRef.current = mostradaCfg;
         setPromoMostradaTipo(mostradaTipo);
@@ -137,7 +161,7 @@ export function PromoHeader({
     // Fetch cada 30 segundos para sincronizar
     const fetchInterval = setInterval(fetchPromo, 30000);
     return () => clearInterval(fetchInterval);
-  }, [tipo]);
+  }, [tipo]); // tipo ahora puede ser undefined
 
   // Contador local que actualiza cada segundo
   useEffect(() => {

@@ -214,7 +214,7 @@ export interface Noticia {
   imagen_url?: string;
   imagen_alt?: string;
   estado: 'borrador' | 'publicada' | 'archivada' | 'pausada';
-  visible_para: 'todos' | 'clientes' | 'admin';
+  visible_para: 'todos' | 'clientes' | 'admin' | 'vpn';
   fecha_publicacion?: string;
   fecha_expiracion?: string;
   mostrar_desde?: string;
@@ -248,7 +248,7 @@ export interface CrearNoticia {
   imagen_url?: string;
   imagen_alt?: string;
   estado?: 'borrador' | 'publicada' | 'archivada' | 'pausada';
-  visible_para?: 'todos' | 'clientes' | 'admin';
+  visible_para?: 'todos' | 'clientes' | 'admin' | 'vpn';
   fecha_publicacion?: string;
   fecha_expiracion?: string;
   mostrar_desde?: string;

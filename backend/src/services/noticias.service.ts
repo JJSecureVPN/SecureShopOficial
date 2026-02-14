@@ -69,10 +69,9 @@ export class NoticiasService {
         )
         .eq('estado', 'publicada')
         .eq('visible_para', 'todos')
-        .lte('mostrar_desde', new Date().toISOString())
-        .or(
-          `mostrar_hasta.is.null,mostrar_hasta.gt.${new Date().toISOString()}`
-        );
+        // Match the SQL view logic: (mostrar_desde IS NULL OR mostrar_desde <= NOW())
+        .or(`mostrar_desde.is.null,mostrar_desde.lte.${new Date().toISOString()}`)
+        .or(`mostrar_hasta.is.null,mostrar_hasta.gt.${new Date().toISOString()}`);
 
       if (categoria) {
         query = query.eq('categoria.slug', categoria);
@@ -91,6 +90,54 @@ export class NoticiasService {
       return { data, count: count ?? undefined };
     } catch (error) {
       console.error('Error obteniendo noticias públicas:', error);
+      return {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+      };
+    }
+  }
+
+  /**
+   * Obtiene noticias para la app VPN (visible_para = 'vpn')
+   */
+  static async obtenerNoticiasVPN(
+    categoria?: string,
+    page = 1,
+    limit = 10
+  ): Promise<NoticiasResponse> {
+    try {
+      let query = getSupabaseClient()
+        .from('noticias')
+        .select(
+          `*,
+          categoria:noticia_categories(id, nombre, slug, color, icono),
+          stats:noticia_stats(vistas, clics, compartidas)`,
+          { count: 'exact' }
+        )
+        .eq('estado', 'publicada')
+        .eq('visible_para', 'vpn')
+        // Match the SQL view logic: (mostrar_desde IS NULL OR mostrar_desde <= NOW())
+        // and (mostrar_hasta IS NULL OR mostrar_hasta > NOW())
+        // Use .or to include the IS NULL checks as well as the comparison to now.
+        .or(`mostrar_desde.is.null,mostrar_desde.lte.${new Date().toISOString()}`)
+        .or(`mostrar_hasta.is.null,mostrar_hasta.gt.${new Date().toISOString()}`);
+
+      if (categoria) {
+        query = query.eq('categoria.slug', categoria);
+      }
+
+      query = query
+        .order('destacada', { ascending: false })
+        .order('prioridad', { ascending: false })
+        .order('fecha_publicacion', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      return { data, count: count ?? undefined };
+    } catch (error) {
+      console.error('Error obteniendo noticias VPN:', error);
       return {
         error: error instanceof Error ? error.message : 'Error desconocido',
       };

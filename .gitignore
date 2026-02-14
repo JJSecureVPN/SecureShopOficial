@@ -10,6 +10,10 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+*.env.production
+backend/.env*
+frontend/.env*
 
 # Database
 *.db
@@ -28,7 +32,18 @@ build/
 *.swo
 *~
 
-# OS
+# Temporary files
+tmp_test_*.html*
+tmp_test_*.json
+VPS_RECOVERY_CHECKLIST.md
+*_RECOVERY_*.md
+setup-vps.sh
+vps-recovery*.sh
+
+# VPS specific
+*.b64
+admin_noticias.json
+backend/public/config/*.json# OS
 .DS_Store
 Thumbs.db
 

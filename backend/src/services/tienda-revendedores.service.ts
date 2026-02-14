@@ -224,6 +224,8 @@ export class TiendaRevendedoresService {
 
   /**
    * Procesa un webhook de MercadoPago para revendedores
+   * NOTA: Si el pagoId corresponde a una renovación (no a un pago directo), 
+   * se delega al servicio de renovaciones
    */
   async procesarWebhook(body: any): Promise<void> {
     console.log("[TiendaRevendedores] 📨 Procesando webhook...", JSON.stringify(body).substring(0, 200));
@@ -246,7 +248,15 @@ export class TiendaRevendedoresService {
     // Obtener el pago de nuestra base de datos
     const pago = this.db.obtenerPagoRevendedorPorId(pagoId);
     if (!pago) {
-      console.error("[TiendaRevendedores] ❌ Pago no encontrado en BD:", pagoId);
+      // ⚠️ IMPORTANTE: El pagoId podría ser un ID de renovación (no de pago directo)
+      // Esto ocurre cuando se crea una renovación de revendedor: la external_reference
+      // es el ID de la renovación, no del pago. En ese caso, ignoramos aquí y dejamos
+      // que el webhook sea procesado por RenovacionService (vía webhook unificado o directo)
+      console.warn(
+        "[TiendaRevendedores] ℹ️ ID no encontrado en table pagos_revendedores:",
+        pagoId,
+        "- Podría ser una renovación de revendedor. Delegando a RenovacionService."
+      );
       return;
     }
 

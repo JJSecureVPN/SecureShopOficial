@@ -1,10 +1,12 @@
 import { Router, Request, Response } from "express";
 import { TiendaRevendedoresService } from "../services/tienda-revendedores.service";
+import { RenovacionService } from "../services/renovacion.service";
 import { configService } from "../services/config.service";
 import { CrearPagoRevendedorInput, ApiResponse } from "../types";
 
 export function crearRutasRevendedores(
-  tiendaRevendedores: TiendaRevendedoresService
+  tiendaRevendedores: TiendaRevendedoresService,
+  renovacionService?: RenovacionService
 ): Router {
   const router = Router();
   console.log(
@@ -285,6 +287,7 @@ export function crearRutasRevendedores(
   /**
    * POST /api/webhook-revendedor
    * Webhook de MercadoPago para notificaciones de pago de revendedores
+   * MEJORADO: También intenta procesar como renovación si no encuentra un pago
    */
   router.post("/webhook-revendedor", async (req: Request, res: Response) => {
     try {
@@ -293,10 +296,19 @@ export function crearRutasRevendedores(
         JSON.stringify(req.body, null, 2)
       );
 
-      // Procesar webhook de forma asíncrona
-      tiendaRevendedores.procesarWebhook(req.body).catch((error) => {
-        console.error("[Webhook Revendedor] Error procesando:", error);
-      });
+      // Procesar webhook de forma asíncrona en ambos servicios
+      // (Primero TiendaRevendedores que trata de encontrar un pago,
+      //  luego RenovacionService por si es una renovación de revendedor)
+      Promise.all([
+        tiendaRevendedores.procesarWebhook(req.body).catch((error) => {
+          console.error("[Webhook Revendedor] Error en TiendaRevendedores:", error);
+        }),
+        renovacionService
+          ? renovacionService.procesarWebhook(req.body).catch((error) => {
+              console.error("[Webhook Revendedor] Error en RenovacionService:", error);
+            })
+          : Promise.resolve()
+      ]);
 
       // Responder inmediatamente a MercadoPago
       res.status(200).json({ success: true });

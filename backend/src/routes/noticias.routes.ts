@@ -312,6 +312,33 @@ noticiasRouter.patch(
 // ============================================
 
 /**
+ * GET /api/noticias/vpn
+ * Obtiene noticias publicadas destinadas a la app VPN (visible_para = 'vpn')
+ */
+noticiasRouter.get('/vpn', async (req: Request, res: Response) => {
+  try {
+    const { categoria, page = '1', limit = '10' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const limitNum = Math.min(50, parseInt(limit as string) || 10);
+
+    const result = await NoticiasService.obtenerNoticiasVPN(
+      categoria as string | undefined,
+      pageNum,
+      limitNum
+    );
+
+    if (result.error) {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+
+    return res.json({ success: true, data: result.data, count: result.count });
+  } catch (error) {
+    console.error('Error en GET /vpn:', error);
+    return res.status(500).json({ success: false, error: 'Error obteniendo noticias VPN' });
+  }
+});
+
+/**
  * GET /api/noticias
  * Obtiene noticias publicadas (filtradas y paginadas)
  */

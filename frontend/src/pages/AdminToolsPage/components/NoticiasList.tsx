@@ -59,6 +59,11 @@ export default function NoticiasList({
                 <span className="px-2 py-1 bg-neutral-800 text-neutral-300 rounded">
                   {noticia.categoria_nombre || 'Sin categoría'}
                 </span>
+                {noticia.visible_para === 'vpn' && (
+                  <span className="px-2 py-1 bg-purple-900 text-purple-300 rounded">
+                    VPN
+                  </span>
+                )}
                 <span className="px-2 py-1 bg-neutral-800 text-neutral-300 rounded">
                   {noticia.estado === 'publicada' ? '✓ Publicada' : noticia.estado}
                 </span>

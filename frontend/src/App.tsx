@@ -49,7 +49,12 @@ const AppContent = () => {
   // Inicializar smooth scroll con Lenis
   useLenis(isLoading);
 
-  const promoHeaderTipo = displayLocation.pathname === "/revendedores" ? "revendedores" : "planes";
+  // Determinar el tipo de promo según la página actual
+  // En páginas específicas, preferir esa promo. En otras páginas, dejar que el componente elija
+  const promoHeaderTipo = 
+    displayLocation.pathname === "/revendedores" ? "revendedores" : 
+    displayLocation.pathname === "/planes" ? "planes" : 
+    undefined; // undefined permite al componente elegir qué mostrar
 
   useEffect(() => {
     if (location.pathname === displayLocation.pathname) {

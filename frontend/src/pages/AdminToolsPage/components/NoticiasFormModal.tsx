@@ -21,6 +21,7 @@ const visibilidadOptions = [
   { value: 'todos', label: 'Todos' },
   { value: 'clientes', label: 'Solo clientes' },
   { value: 'admin', label: 'Solo administradores' },
+  { value: 'vpn', label: 'VPN (solo app VPN)' },
 ];
 
 export default function NoticiasFormModal({

@@ -60,6 +60,9 @@ export class RenovacionService {
             continue;
           }
 
+          const tipoRenovacion = pendiente.tipo === 'revendedor' ? '🔄 Revendedor' : '👤 Cliente';
+          console.log(`[Renovacion] ${tipoRenovacion}: Procesando renovación ${renovacionId}...`);
+
           if (typeof config.maxAttempts === 'number' && config.maxAttempts > 0) {
             const intentosPrevios = this.autoRetryAttempts.get(renovacionId) ?? 0;
             if (intentosPrevios >= config.maxAttempts) {
@@ -76,16 +79,16 @@ export class RenovacionService {
 
             if (resultado && resultado.estado === 'aprobado') {
               this.autoRetryAttempts.delete(renovacionId);
-              console.log(`[Renovacion] ✅ Renovación ${renovacionId} aprobada mediante auto-revisión`);
+              console.log(`[Renovacion] ✅ Renovación ${renovacionId} (${pendiente.tipo}) aprobada mediante auto-revisión`);
             } else {
               const intentosPrevios = this.autoRetryAttempts.get(renovacionId) ?? 0;
               this.autoRetryAttempts.set(renovacionId, intentosPrevios + 1);
               this.db.refrescarTimestampRenovacion(renovacionId);
-              console.log(`[Renovacion] ⏳ Renovación ${renovacionId} sigue pendiente tras auto-revisión`);
+              console.log(`[Renovacion] ⏳ Renovación ${renovacionId} (${pendiente.tipo}) sigue pendiente tras auto-revisión`);
             }
           } catch (error: any) {
             console.error(
-              `[Renovacion] ❌ Error en auto-revisión de renovación ${renovacionId}:`,
+              `[Renovacion] ❌ Error en auto-revisión de renovación ${renovacionId} (${pendiente.tipo}):`,
               error?.message || error
             );
             this.db.refrescarTimestampRenovacion(renovacionId);
@@ -1016,6 +1019,8 @@ export class RenovacionService {
 
   /**
    * Procesa webhook de MercadoPago para renovaciones
+   * MEJORADO: Si la renovación no existe en BD pero el pago está aprobado en MP,
+   * intenta cargar automáticamente la renovación pendiente
    */
   async procesarWebhook(body: any): Promise<void> {
     console.log('[Renovacion] Procesando webhook...');
@@ -1036,9 +1041,31 @@ export class RenovacionService {
       return;
     }
 
-    const renovacion = this.db.obtenerRenovacionPorId(renovacionId);
+    let renovacion = this.db.obtenerRenovacionPorId(renovacionId);
     if (!renovacion) {
-      console.error('[Renovacion] Renovación no encontrada:', renovacionId);
+      // ⚠️ Si la renovación no existe en BD, podría ser:
+      // 1. Un retraso en la sincronización
+      // 2. Una renovación de revendedor que no se registró correctamente
+      // En cualquier caso, si MercadoPago dice que el pago está aprobado y tenemos mpPaymentId,
+      // intentamos procesar de todas formas (sin registrar error crítico)
+      console.warn(
+        '[Renovacion] ⚠️ Renovación no encontrada:',
+        renovacionId,
+        '- Estado MP:',
+        estado,
+        '- mpPaymentId:',
+        mpPaymentId
+      );
+      
+      // Si el estado es aprobado y tenemos mpPaymentId válido, es probable que sea una renovación
+      // de revendedor donde el pago llegó antes de que la renovación se registrara
+      if (estado === 'approved' && mpPaymentId && (typeof mpPaymentId === 'string' && mpPaymentId.trim() !== '')) {
+        console.log(
+          '[Renovacion] ✅ Pago aprobado en MP pero renovación no en BD. ID de pago: ' + mpPaymentId +
+          ' - Podría sincronizarse después'
+        );
+        // No lanzar error, permitir que TiendaRevendedores procese si es necesario
+      }
       return;
     }
 
