@@ -22,6 +22,10 @@ function getSupabaseClient() {
   return supabase;
 }
 
+// Simple in-memory cache para acelerar endpoints públicos de noticias
+const NOTICIAS_CACHE_TTL_MS = 20_000; // 20s
+const noticiasCache = new Map<string, { expiresAt: number; data: any[]; count?: number }>();
+
 type NoticiasInsert = any;
 type NoticiasUpdate = any;
 
@@ -59,22 +63,21 @@ export class NoticiasService {
     limit = 10
   ): Promise<NoticiasResponse> {
     try {
-      let query = getSupabaseClient()
-        .from('noticias')
-        .select(
-          `*,
-          categoria:noticia_categories(id, nombre, slug, color, icono),
-          stats:noticia_stats(vistas, clics, compartidas)`,
-          { count: 'exact' }
-        )
-        .eq('estado', 'publicada')
-        .eq('visible_para', 'todos')
-        // Match the SQL view logic: (mostrar_desde IS NULL OR mostrar_desde <= NOW())
-        .or(`mostrar_desde.is.null,mostrar_desde.lte.${new Date().toISOString()}`)
-        .or(`mostrar_hasta.is.null,mostrar_hasta.gt.${new Date().toISOString()}`);
+      const cacheKey = `public:${categoria ?? 'all'}:p${page}:l${limit}`;
+      const cached = noticiasCache.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        // Cache hit
+        return { data: cached.data, count: cached.count };
+      }
+
+      const start = Date.now();
+
+      // Usar la vista `noticias_activas` (más ligera que JOINs desde `noticias`)
+      let query: any = getSupabaseClient().from('noticias_activas').select('*');
 
       if (categoria) {
-        query = query.eq('categoria.slug', categoria);
+        // la vista expone `categoria_slug`
+        query = query.eq('categoria_slug', categoria);
       }
 
       query = query
@@ -83,11 +86,15 @@ export class NoticiasService {
         .order('fecha_publicacion', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
-      const { data, error, count } = await query;
+      const { data, error } = await query; // evitamos `count: 'exact'` para reducir latencia
+      const took = Date.now() - start;
+      console.log(`[NoticiasService] obtenerNoticiasPublicas - query took ${took}ms (categoria=${categoria ?? 'all'})`);
 
       if (error) throw error;
 
-      return { data, count: count ?? undefined };
+      noticiasCache.set(cacheKey, { expiresAt: Date.now() + NOTICIAS_CACHE_TTL_MS, data });
+
+      return { data, count: undefined };
     } catch (error) {
       console.error('Error obteniendo noticias públicas:', error);
       return {
@@ -105,24 +112,19 @@ export class NoticiasService {
     limit = 10
   ): Promise<NoticiasResponse> {
     try {
-      let query = getSupabaseClient()
-        .from('noticias')
-        .select(
-          `*,
-          categoria:noticia_categories(id, nombre, slug, color, icono),
-          stats:noticia_stats(vistas, clics, compartidas)`,
-          { count: 'exact' }
-        )
-        .eq('estado', 'publicada')
-        .eq('visible_para', 'vpn')
-        // Match the SQL view logic: (mostrar_desde IS NULL OR mostrar_desde <= NOW())
-        // and (mostrar_hasta IS NULL OR mostrar_hasta > NOW())
-        // Use .or to include the IS NULL checks as well as the comparison to now.
-        .or(`mostrar_desde.is.null,mostrar_desde.lte.${new Date().toISOString()}`)
-        .or(`mostrar_hasta.is.null,mostrar_hasta.gt.${new Date().toISOString()}`);
+      const cacheKey = `vpn:${categoria ?? 'all'}:p${page}:l${limit}`;
+      const cached = noticiasCache.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        return { data: cached.data, count: cached.count };
+      }
+
+      const start = Date.now();
+
+      // Usar la vista `noticias_vpn` (más eficiente que JOINs repetidos)
+      let query: any = getSupabaseClient().from('noticias_vpn').select('*');
 
       if (categoria) {
-        query = query.eq('categoria.slug', categoria);
+        query = query.eq('categoria_slug', categoria);
       }
 
       query = query
@@ -131,11 +133,15 @@ export class NoticiasService {
         .order('fecha_publicacion', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
-      const { data, error, count } = await query;
+      const { data, error } = await query; // evitamos count para ganar velocidad
+      const took = Date.now() - start;
+      console.log(`[NoticiasService] obtenerNoticiasVPN - query took ${took}ms (categoria=${categoria ?? 'all'})`);
 
       if (error) throw error;
 
-      return { data, count: count ?? undefined };
+      noticiasCache.set(cacheKey, { expiresAt: Date.now() + NOTICIAS_CACHE_TTL_MS, data });
+
+      return { data, count: undefined };
     } catch (error) {
       console.error('Error obteniendo noticias VPN:', error);
       return {

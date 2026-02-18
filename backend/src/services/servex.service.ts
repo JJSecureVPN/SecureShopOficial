@@ -210,7 +210,7 @@ export class ServexService {
           );
 
           if (lista.length > 0) {
-            const revendedor = lista.find((r: any) => r.username === revendedorData.username) || lista[0];
+            const revendedor = lista.find((r: any) => (r.username || "").toLowerCase() === (revendedorData.username || "").toLowerCase()) || lista[0];
             
             if (revendedor && revendedor.id) {
               console.log(
@@ -504,9 +504,9 @@ export class ServexService {
           `[Servex] Total de clientes con scope=todos: ${clientesTodos.length}`
         );
 
-        // Buscar en la lista con scope=todos
+        // Buscar en la lista con scope=todos (comparación case-insensitive)
         const clienteEnTodos = clientesTodos.find(
-          (c: any) => c.username === username
+          (c: any) => (c.username || "").toLowerCase() === username.toLowerCase()
         );
         if (clienteEnTodos) {
           console.log(
@@ -542,8 +542,8 @@ export class ServexService {
         `[Servex] Encontrados ${clientes.length} clientes con búsqueda`
       );
 
-      // Buscar coincidencia exacta
-      const clienteExacto = clientes.find((c: any) => c.username === username);
+      // Buscar coincidencia exacta (case-insensitive)
+      const clienteExacto = clientes.find((c: any) => (c.username || "").toLowerCase() === username.toLowerCase());
       if (clienteExacto) {
         console.log(
           "[Servex] ✅ Cliente encontrado con search:",
@@ -583,9 +583,9 @@ export class ServexService {
       const revendedores = response.data?.resellers || [];
       console.log(`[Servex] Encontrados ${revendedores.length} revendedores`);
 
-      // Buscar coincidencia exacta
+      // Buscar coincidencia exacta (case-insensitive)
       const revendedorExacto = revendedores.find(
-        (r: any) => r.username === username
+        (r: any) => (r.username || "").toLowerCase() === username.toLowerCase()
       );
       if (revendedorExacto) {
         console.log(

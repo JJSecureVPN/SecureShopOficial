@@ -7,7 +7,7 @@
 echo "🚀 Iniciando deploy seguro con protección EADDRINUSE..."
 
 # Variables
-REMOTE_HOST="root@149.50.148.6"
+REMOTE_HOST="root@185.194.204.192"
 BACKEND_PATH="/home/secureshop/secureshop-vpn/backend"
 FRONTEND_PATH="/home/secureshop/secureshop-vpn/frontend"
 PORT=4001

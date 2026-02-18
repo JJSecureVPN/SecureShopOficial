@@ -449,7 +449,7 @@ export class DatabaseService {
           servex_expiracion = ?,
           servex_connection_limit = ?,
           fecha_actualizacion = datetime('now')
-      WHERE servex_username = ?
+      WHERE LOWER(servex_username) = LOWER(?)
       AND estado = 'aprobado'
     `);
     stmt.run(nuevoCuentaId, nuevaExpiracion, connectionLimit, username);
@@ -919,7 +919,7 @@ export class DatabaseService {
       UPDATE pagos_revendedores
       SET servex_revendedor_id = ?,
           fecha_actualizacion = datetime('now')
-      WHERE servex_username = ?
+      WHERE LOWER(servex_username) = LOWER(?)
     `);
 
     const result = stmt.run(nuevoServexId, username);
@@ -978,7 +978,7 @@ export class DatabaseService {
   buscarClientePorUsername(username: string): any | null {
     const stmt = this.db.prepare(`
       SELECT * FROM pagos 
-      WHERE servex_username = ?
+      WHERE LOWER(servex_username) = LOWER(?)
       AND estado = 'aprobado'
       ORDER BY fecha_creacion DESC
       LIMIT 1
@@ -992,7 +992,7 @@ export class DatabaseService {
   buscarRevendedorPorUsername(username: string): any | null {
     const stmt = this.db.prepare(`
       SELECT * FROM pagos_revendedores 
-      WHERE servex_username = ?
+      WHERE LOWER(servex_username) = LOWER(?)
       AND estado = 'aprobado'
       ORDER BY fecha_creacion DESC
       LIMIT 1
