@@ -621,9 +621,12 @@ router.get("/mercadopago", (_req: Request, res: Response) => {
   try {
     const { config: appConfig } = require("../config");
 
+    // Asegurar que el publicKey esté limpio de espacios
+    const publicKey = appConfig.mercadopago.publicKey.trim();
+    
     return res.status(200).json({
       success: true,
-      publicKey: appConfig.mercadopago.publicKey,
+      publicKey: publicKey,
     });
   } catch (error) {
     console.error("Error obteniendo config MercadoPago:", error);

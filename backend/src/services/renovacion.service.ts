@@ -18,6 +18,53 @@ export class RenovacionService {
   private autoRetryRunning = false;
   private autoRetryAttempts = new Map<number, number>();
 
+  private parseYYYYMMDDToUTC(dateStr?: string): Date | null {
+    if (!dateStr || typeof dateStr !== 'string') {
+      return null;
+    }
+
+    const match = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/.exec(dateStr);
+    if (!match) {
+      return null;
+    }
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return null;
+    }
+
+    return new Date(Date.UTC(year, month - 1, day));
+  }
+
+  private utcTodayStart(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+
+  private addDaysUTC(date: Date, days: number): Date {
+    const result = new Date(date.getTime());
+    result.setUTCDate(result.getUTCDate() + days);
+    return result;
+  }
+
+  private formatUTCDateOnly(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  private getRenovacionBaseDateUTC(expirationDateStr?: string): Date {
+    const today = this.utcTodayStart();
+    const expiration = this.parseYYYYMMDDToUTC(expirationDateStr);
+
+    if (expiration && expiration.getTime() >= today.getTime()) {
+      return expiration;
+    }
+
+    return today;
+  }
+
   /**
    * Getter para acceder al servicio de Servex desde las rutas
    */
@@ -701,7 +748,7 @@ export class RenovacionService {
 
     // 6. Crear preferencia en MercadoPago
     const descripcion = tipoRenovacion === 'validity' 
-      ? `Renovación 30 días - ${cantidad} usuarios - ${revendedorExistente.servex_username}`
+      ? `Renovación ${input.dias} días - ${cantidad} usuarios - ${revendedorExistente.servex_username}`
       : `Recarga ${cantidad} créditos - ${revendedorExistente.servex_username}`;
 
     try {
@@ -742,6 +789,13 @@ export class RenovacionService {
     const renovacion = this.db.obtenerRenovacionPorId(renovacionId);
     if (!renovacion) {
       throw new Error('Renovación no encontrada');
+    }
+
+    // Idempotencia: si ya se aplicó en Servex, no volver a ejecutar (evita sumar días duplicados)
+    const yaProcesadaEnServex = Boolean((renovacion as any).servex_procesado);
+    if (renovacion.estado === 'aprobado' && yaProcesadaEnServex) {
+      console.warn(`[Renovacion] ⚠️ Renovación ${renovacionId} ya fue procesada en Servex. Omitiendo re-ejecución.`);
+      return;
     }
 
     const estadoPrevio = renovacion.estado;
@@ -795,8 +849,9 @@ export class RenovacionService {
           console.log(`[Renovacion] servex_id: ${renovacion.servex_id}, dias_agregados: ${renovacion.dias_agregados}`);
 
           if (tipoRenovacion === 'validity') {
-            // Renovación de validez: MANTENER usuarios actuales y agregar 30 días
-            console.log(`[Renovacion] Validity: Agregando 30 días, manteniendo usuarios actuales`);
+            // Renovación de validez: MANTENER usuarios actuales y AGREGAR días (acumulativo)
+            const diasAgregar = Number(renovacion.dias_agregados) || 30;
+            console.log(`[Renovacion] Validity: Agregando ${diasAgregar} días (acumulativo), manteniendo usuarios actuales`);
             
             // Obtener datos actuales del revendedor
             const revendedorActual = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
@@ -804,14 +859,15 @@ export class RenovacionService {
             
             console.log(`[Renovacion] Usuarios actuales: ${usuariosActuales} (se mantienen)`);
             
-            // Calcular nueva fecha de vencimiento (fecha actual de expiración + 30 días)
-            // Si la cuenta ya expiró o no tiene fecha, usar la fecha actual
-            const fechaBase = revendedorActual?.expiration_date ? new Date(revendedorActual.expiration_date) : new Date();
-            const fechaVencimiento = new Date(fechaBase);
-            fechaVencimiento.setDate(fechaVencimiento.getDate() + 30);
-            const expirationDate = fechaVencimiento.toISOString().split('T')[0]; // Formato YYYY-MM-DD
-            
-            console.log(`[Renovacion] Fecha actual expiración: ${fechaBase.toISOString().split('T')[0]}, nueva fecha: ${expirationDate}`);
+            // Calcular nueva fecha de vencimiento: suma sobre expiración actual si está vigente,
+            // si ya venció (o no hay fecha) suma desde hoy.
+            const fechaBase = this.getRenovacionBaseDateUTC(revendedorActual?.expiration_date);
+            const fechaVencimiento = this.addDaysUTC(fechaBase, diasAgregar);
+            const expirationDate = this.formatUTCDateOnly(fechaVencimiento);
+
+            console.log(
+              `[Renovacion] Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`
+            );
             
             // Actualizar: cambiar fecha de vencimiento, MANTENER usuarios
             await this.servex.actualizarRevendedor(renovacion.servex_id, {
@@ -837,12 +893,14 @@ export class RenovacionService {
             
             console.log(`[Renovacion] Créditos actuales: ${creditosActuales}, sumando: ${cantidad}, total: ${creditosTotales}`);
             
-            // Calcular nueva fecha de vencimiento (fecha actual + días del plan)
-            const fechaActual = revendedorActual?.expiration_date ? new Date(revendedorActual.expiration_date) : new Date();
-            fechaActual.setDate(fechaActual.getDate() + renovacion.dias_agregados);
-            const expirationDate = fechaActual.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            // Calcular nueva fecha de vencimiento (acumulativo): suma sobre expiración vigente,
+            // si ya venció suma desde hoy.
+            const diasAgregar = Number(renovacion.dias_agregados) || 0;
+            const fechaBase = this.getRenovacionBaseDateUTC(revendedorActual?.expiration_date);
+            const fechaVencimiento = this.addDaysUTC(fechaBase, diasAgregar);
+            const expirationDate = this.formatUTCDateOnly(fechaVencimiento);
             
-            console.log(`[Renovacion] Nueva fecha de vencimiento: ${expirationDate}`);
+            console.log(`[Renovacion] Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`);
             
             // Actualizar: mantener account_type credit, sumar créditos y establecer nueva fecha
             await this.servex.actualizarRevendedor(renovacion.servex_id, {
@@ -898,6 +956,9 @@ export class RenovacionService {
         console.log(`[Renovacion] ✅ ${renovacion.tipo} renovado exitosamente`);
       }
 
+      // Marcar como procesada en Servex luego de un update exitoso
+      this.db.marcarRenovacionProcesadaEnServex(renovacionId);
+
       // Aplicar cupón si corresponde
       if (renovacion.cupon_id && estadoPrevio !== 'aprobado') {
         try {
@@ -924,7 +985,7 @@ export class RenovacionService {
           if (renovacion.datos_nuevos) {
             const datosNuevos = JSON.parse(renovacion.datos_nuevos);
             if (datosNuevos.tipo_renovacion === 'validity') {
-              descripcion = `Renovación revendedor: 30 días, ${datosNuevos.cantidad} usuarios`;
+              descripcion = `Renovación revendedor: ${renovacion.dias_agregados} días, ${datosNuevos.cantidad} usuarios`;
             } else {
               descripcion = `Recarga revendedor: ${renovacion.dias_agregados} días, +${datosNuevos.cantidad} créditos`;
             }

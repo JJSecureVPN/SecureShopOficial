@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlanRevendedor, CompraRevendedorRequest } from "../types";
-import { Clock, Check, AlertCircle, ShoppingBag, Users, Shield, User, Mail } from "lucide-react";
+import { Clock, Check, AlertCircle, ShoppingBag, Users, Shield, User, Mail, Loader2 } from "lucide-react";
 import CuponInput from "../components/CuponInput";
 import { apiService, ValidacionCupon } from "../services/api.service";
 import { mercadoPagoService } from "../services/mercadopago.service";
@@ -21,6 +21,8 @@ const CheckoutRevendedorPage: React.FC = () => {
     null
   );
   const [descuentoAplicado, setDescuentoAplicado] = useState(0);
+  const [mpFallbackVisible, setMpFallbackVisible] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const planId = parseInt(searchParams.get("planId") || "0");
 
@@ -120,6 +122,22 @@ const CheckoutRevendedorPage: React.FC = () => {
     }
   }, [cuponData, plan]);
 
+  const handleFallbackPayment = async () => {
+    setProcessingPayment(true);
+    try {
+      const prefId = await getPreferenceIdForPayment();
+      if (prefId) {
+        // Redirigir a MercadoPago
+        window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${prefId}`;
+      }
+    } catch (err) {
+      console.error("[CheckoutRevendedorPage] Error en pago fallback:", err);
+      // El error ya se muestra en setError
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   // Inicializar MercadoPago y crear botón cuando la página carga
   useEffect(() => {
     const init = async () => {
@@ -135,22 +153,35 @@ const CheckoutRevendedorPage: React.FC = () => {
             "[CheckoutRevendedorPage] Plan disponible, creando botón de MercadoPago..."
           );
 
-          // Crear el botón con getPreferenceIdForPayment como callback
-          await mercadoPagoService.createButton(
-            "wallet_container_revendedor",
-            getPreferenceIdForPayment
-          );
-          console.log("[CheckoutRevendedorPage] ✅ Botón de MercadoPago creado");
+          try {
+            // Crear el botón con getPreferenceIdForPayment como callback
+            await mercadoPagoService.createButton(
+              "wallet_container_revendedor",
+              getPreferenceIdForPayment
+            );
+            console.log("[CheckoutRevendedorPage] ✅ Botón de MercadoPago creado");
+            setMpFallbackVisible(false);
+          } catch (buttonError) {
+            console.error("[CheckoutRevendedorPage] Error creando botón MercadoPago:", buttonError);
+            console.log("[CheckoutRevendedorPage] Mostrando botón fallback...");
+            setMpFallbackVisible(true);
+            setError("Usando método de pago alternativo. Por favor, continúa con el pago.");
+          }
         }
       } catch (error) {
         console.error(
           "[CheckoutRevendedorPage] Error inicializando MercadoPago:",
           error
         );
+        console.log("[CheckoutRevendedorPage] Mostrando botón fallback (init error)...");
+        setMpFallbackVisible(true);
+        setError("Error de conexión. Utilizando método alternativo.");
       }
     };
 
-    init();
+    if (plan) {
+      init();
+    }
   }, [plan, getPreferenceIdForPayment]);
 
   if (!plan) {
@@ -379,8 +410,26 @@ const CheckoutRevendedorPage: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
+                className="space-y-4"
               >
                 <div id="wallet_container_revendedor" className="min-h-[56px]" />
+
+                {mpFallbackVisible && (
+                  <button
+                    onClick={handleFallbackPayment}
+                    disabled={processingPayment}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-zinc-600 disabled:to-zinc-700 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+                  >
+                    {processingPayment ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      "Ir a pagar"
+                    )}
+                  </button>
+                )}
               </motion.div>
 
               {/* Security Badge */}

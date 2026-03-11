@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { apiService } from "../services/api.service";
 import HeroSection from "../sections/HeroSection";
 import AppDownloadSection from "../sections/AppDownloadSection";
-import ImportConfigDemoV2 from "../components/ImportConfigDemoV2"; 
+// ImportConfigDemoV2 component removed
 // InfrastructureFeaturesSection removed
 import InteractiveShowcaseSection from "../sections/InteractiveShowcaseSection";
 import SplitText from "../components/animata/text/split-text";
@@ -53,12 +53,7 @@ const HomePage = ({}: HomePageProps) => {
         {/* Interactive Showcase Section */}
         <InteractiveShowcaseSection />
 
-        {/* Import Config Demo (casi pegada al bloque anterior) */}
-        <div id="section-import" className="-mt-6 sm:-mt-8 lg:-mt-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ImportConfigDemoV2 />
-          </div>
-        </div>
+        {/* Import Config Demo removed */}
 
         {/* Integrations Carousel removed */}
 

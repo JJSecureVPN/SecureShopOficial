@@ -184,6 +184,17 @@ export default function HeroSection() {
   const navigate = useNavigate();
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // only show animations/effects on larger viewports to keep mobile fluid
+  const [showEffects, setShowEffects] = useState(true);
+  useEffect(() => {
+    const update = () => {
+      setShowEffects(window.innerWidth >= 1024); // match Tailwind 'lg' breakpoint
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
   
   // Obtener datos reales de servidores
   const { servers, totalUsers, onlineServers } = useServerStats(9000);
@@ -206,12 +217,12 @@ export default function HeroSection() {
   return (
     <>
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
-      <MouseFollower />
+      {showEffects && <MouseFollower />}
 
       <section id="hero-section" className="relative bg-refine-dark min-h-screen overflow-hidden">
         {/* Animated background */}
-        <AnimatedBackground />
-        <FloatingParticles />
+        {showEffects && <AnimatedBackground />}
+        {showEffects && <FloatingParticles />}
         
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
@@ -244,7 +255,7 @@ export default function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight relative">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight relative font-title">
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-emerald-400 animate-[shimmer_3s_ease-in-out_infinite]">
                     Navega Seguro.
                   </span>
@@ -266,7 +277,7 @@ export default function HeroSection() {
                     text={typingTexts}
                     cursorCharacter="|"
                     as="h2"
-                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight"
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight font-title"
                     typingSpeed={80}
                     deletingSpeed={40}
                     pauseDuration={2000}
@@ -331,7 +342,7 @@ export default function HeroSection() {
                   whileTap={{ scale: 0.97 }}
                   className="relative group"
                 >
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-300" />
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-300" />
                   <RefineButton
                     onClick={goToPlans}
                     variant="primary"

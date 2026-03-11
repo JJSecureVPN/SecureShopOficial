@@ -33,9 +33,9 @@ export const config: AppConfig = {
   },
 
   mercadopago: {
-    accessToken: process.env.MP_ACCESS_TOKEN!,
-    publicKey: process.env.MP_PUBLIC_KEY!,
-    webhookUrl: process.env.MP_WEBHOOK_URL!,
+    accessToken: process.env.MP_ACCESS_TOKEN!.trim(),
+    publicKey: process.env.MP_PUBLIC_KEY!.trim(),
+    webhookUrl: process.env.MP_WEBHOOK_URL!.trim(),
     frontendUrl: "https://shop.jhservices.com.ar",
   },
 

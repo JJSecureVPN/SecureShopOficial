@@ -6,12 +6,14 @@ interface PaymentSectionProps {
   processingPayment: boolean;
   onPaymentButtonClick: () => void;
   pagoConSaldoCompleto?: boolean;
+  mpFallbackVisible?: boolean;
 }
 
 export const PaymentSection = ({ 
   processingPayment, 
   onPaymentButtonClick,
-  pagoConSaldoCompleto = false
+  pagoConSaldoCompleto = false,
+  mpFallbackVisible = false
 }: PaymentSectionProps) => {
   // Si el pago es completo con saldo, mostrar botón especial
   if (pagoConSaldoCompleto) {
@@ -58,21 +60,23 @@ export const PaymentSection = ({
       <div id="mp-wallet-container-unique" className="min-h-[56px]" />
 
       {/* Fallback Button if MercadoPago doesn't load */}
-      <button
-        onClick={onPaymentButtonClick}
-        disabled={processingPayment}
-        className="w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-zinc-600 disabled:to-zinc-700 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-orange-500/20 hidden flex items-center justify-center gap-2"
-        id="fallback-payment-button"
-      >
-        {processingPayment ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            {CHECKOUT_MESSAGES.PAYMENT_PROCESSING}
-          </>
-        ) : (
-          CHECKOUT_MESSAGES.PAYMENT_BUTTON_TEXT
-        )}
-      </button>
+      {mpFallbackVisible && (
+        <button
+          onClick={onPaymentButtonClick}
+          disabled={processingPayment}
+          className="w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-zinc-600 disabled:to-zinc-700 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+          id="fallback-payment-button"
+        >
+          {processingPayment ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {CHECKOUT_MESSAGES.PAYMENT_PROCESSING}
+            </>
+          ) : (
+            CHECKOUT_MESSAGES.PAYMENT_BUTTON_TEXT
+          )}
+        </button>
+      )}
     </motion.div>
   );
 };

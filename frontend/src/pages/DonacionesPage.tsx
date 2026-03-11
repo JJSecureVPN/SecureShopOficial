@@ -1,14 +1,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  HandHeart,
   Loader2,
   ShieldCheck,
-  Sparkles,
   CheckCircle2,
   ExternalLink,
   Info,
   AlertTriangle,
-  ChevronRight,
 } from "lucide-react";
 import Lottie from "lottie-react";
 import { apiService } from "../services/api.service";
@@ -17,11 +14,6 @@ import { useSearchParams } from "react-router-dom";
 import BottomSheet from "../components/BottomSheet";
 import thankYouAnimation from "../assets/lottie/donaciones-thankyou.json";
 
-/**
- * DonacionesPage - Página de donaciones refinada
- * Estilo consistente con CheckoutPage y demás páginas del proyecto
- * Mantiene una estructura enfocada en la conversión
- */
 const DonacionesPage = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
@@ -41,49 +33,22 @@ const DonacionesPage = ({
     donacion: Donacion;
   } | null>(null);
   const [searchParams] = useSearchParams();
-  const [activeSection, setActiveSection] = useState("formulario");
-
-  const donacionesSecciones = useMemo(
-    () => [
-      {
-        id: "formulario",
-        label: "Tu donación",
-        subtitle: "Formulario seguro",
-        icon: <HandHeart className="w-4 h-4" />,
-      },
-      {
-        id: "donde-va",
-        label: "¿Dónde va?",
-        subtitle: "Transparencia total",
-        icon: <ShieldCheck className="w-4 h-4" />,
-      },
-      {
-        id: "beneficios",
-        label: "Beneficios",
-        subtitle: "Para apoyadores",
-        icon: <Sparkles className="w-4 h-4" />,
-      },
-    ],
-    []
-  );
 
   const montoSugerencias = useMemo(() => [2000, 5000, 10000, 20000], []);
-
   const estadoParametro = searchParams.get("status");
+
   const estadoMensaje = useMemo(() => {
     if (!estadoParametro) return null;
-    if (estadoParametro === "pending") {
+    if (estadoParametro === "pending")
       return {
         tipo: "info" as const,
-        texto: "Tu pago está pendiente. Podés reintentar desde tu historial en MercadoPago o generar un nuevo enlace.",
+        texto: "Tu pago está pendiente. Podés reintentar desde tu historial en MercadoPago.",
       };
-    }
-    if (estadoParametro === "error") {
+    if (estadoParametro === "error")
       return {
         tipo: "error" as const,
         texto: "El pago fue cancelado o rechazado. Intentá nuevamente cuando quieras.",
       };
-    }
     return null;
   }, [estadoParametro]);
 
@@ -95,23 +60,21 @@ const DonacionesPage = ({
   const getPreferenceIdForPayment = useCallback(async (): Promise<string> => {
     setError(null);
     setLoading(true);
-
     const montoNumerico = Number(monto);
     if (!Number.isFinite(montoNumerico) || montoNumerico < 500) {
       setError("El monto mínimo es $500");
+      setLoading(false);
       throw new Error("Monto inválido");
     }
-
     const emailLimpio = donanteEmail.trim();
     const nombreLimpio = donanteNombre.trim();
     const mensajeLimpio = mensaje.trim();
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailLimpio)) {
       setError("Email inválido");
+      setLoading(false);
       throw new Error("Email inválido");
     }
-
     try {
       const resultado = await apiService.crearDonacion({
         monto: montoNumerico,
@@ -119,11 +82,9 @@ const DonacionesPage = ({
         donanteNombre: nombreLimpio || undefined,
         mensaje: mensajeLimpio || undefined,
       });
-
       setUltimoResultado(resultado);
       return resultado.preferenceId;
     } catch (err: any) {
-      console.error("[Donaciones] Error obteniendo preferenceId:", err);
       setUltimoResultado(null);
       setError(err?.mensaje || err?.message || "No pudimos crear la donación");
       throw err;
@@ -133,35 +94,20 @@ const DonacionesPage = ({
   }, [donanteEmail, donanteNombre, mensaje, monto]);
 
   useEffect(() => {
-    // No necesitamos inicializar MercadoPago aquí
-    // Solo generamos el link de pago que abre en MercadoPago directamente
-    return () => {
-      // Cleanup
-    };
-  }, []);
-
-  
-
-  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
-  // con transform rompan el comportamiento sticky del header global)
-  useEffect(() => {
-    const headerEl = document.querySelector('header');
+    const headerEl = document.querySelector("header");
     if (!headerEl) return;
-
     const prev = {
-      position: headerEl.style.position || '',
-      top: headerEl.style.top || '',
-      left: headerEl.style.left || '',
-      right: headerEl.style.right || '',
-      zIndex: headerEl.style.zIndex || '',
+      position: headerEl.style.position || "",
+      top: headerEl.style.top || "",
+      left: headerEl.style.left || "",
+      right: headerEl.style.right || "",
+      zIndex: headerEl.style.zIndex || "",
     };
-
-    headerEl.style.position = 'fixed';
-    headerEl.style.top = '0';
-    headerEl.style.left = '0';
-    headerEl.style.right = '0';
-    headerEl.style.zIndex = '10001';
-
+    headerEl.style.position = "fixed";
+    headerEl.style.top = "0";
+    headerEl.style.left = "0";
+    headerEl.style.right = "0";
+    headerEl.style.zIndex = "10001";
     return () => {
       headerEl.style.position = prev.position;
       headerEl.style.top = prev.top;
@@ -171,20 +117,23 @@ const DonacionesPage = ({
     };
   }, []);
 
-  const handlePaymentButtonClick = async () => {
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     try {
       await getPreferenceIdForPayment();
-      
-      // El ultimoResultado ya tiene el linkPago y se mostrará en la UI
-      // El usuario podrá hacer clic en el botón para abrir MercadoPago
-    } catch (error) {
-      console.error("[Donaciones] Error generando link de pago:", error);
-    }
+    // eslint-disable-next-line no-empty
+    } catch {}
   };
 
+  const inputClass =
+    "w-full rounded-xl bg-zinc-900 border border-zinc-800 focus:border-zinc-600 outline-none px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors";
+
   return (
-    <div className="bg-zinc-900 text-zinc-100">
-      {/* Mobile Bottom Sheet Navigation */}
+    <div className="min-h-screen bg-gradient-to-b from-refine-bg to-refine-bg-alt text-zinc-100">
+      {/* Subtle gradient line at top */}
+      <div className="pointer-events-none fixed inset-x-0 top-0 h-px bg-gradient-to-r from-purple-500 to-orange-400 z-50" />
+
+      {/* Mobile Bottom Sheet */}
       <BottomSheet
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
@@ -192,366 +141,291 @@ const DonacionesPage = ({
         subtitle="Secciones"
       >
         <div className="space-y-1">
-          {donacionesSecciones.map((section) => (
+          {["Formulario", "¿Dónde va?", "Beneficios"].map((label) => (
             <button
-              key={section.id}
-              onClick={() => {
-                setActiveSection(section.id);
-                setIsMobileMenuOpen(false);
-                setTimeout(() => {
-                  document.getElementById(`section-${section.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 300);
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                activeSection === section.id
-                  ? "bg-rose-50 text-rose-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              key={label}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full text-left px-4 py-3 rounded-lg text-sm text-zinc-400 hover:bg-zinc-800 transition-colors"
             >
-              {section.icon}
-              {section.label}
+              {label}
             </button>
           ))}
         </div>
       </BottomSheet>
 
-      {/* Main Content */}
-      <main>
-        {/* Hero Header (sticky under global header) */}
-        <div className="w-full bg-zinc-900 sticky top-16 z-40 shadow-sm border-b border-zinc-800">
-          <div className="w-full px-5 sm:px-6 lg:px-8 xl:px-10 py-12 sm:py-16 lg:py-20 xl:py-24">
-            <div className="mb-8 sm:mb-10 lg:mb-12 xl:mb-16 grid gap-6 sm:gap-8 lg:gap-10 xl:gap-12 items-center lg:grid-cols-[1.1fr,0.9fr]">
-              <div className="text-center lg:text-left">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-serif font-normal mb-3 sm:mb-4 lg:mb-5 xl:mb-6 text-zinc-100">
-                  Apoyá a JJSecure VPN
-                </h1>
-                <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-zinc-400 max-w-4xl mx-auto lg:mx-0">
-                  Tu donación nos ayuda a seguir manteniendo servidores estables, mejorar la infraestructura y crear nuevas funciones para toda la comunidad.
-                </p>
+      <main className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-10">
+
+        {/* ── Hero ── */}
+        <section className="pt-32 pb-14 border-b border-purple-500/20">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div className="space-y-6">
+              <p className="text-xs tracking-widest text-zinc-600 uppercase">
+                JJSecure VPN · Donaciones
+              </p>
+              <h1 className="text-3xl sm:text-4xl font-light tracking-tight leading-snug text-zinc-300">
+                Apoyá el crecimiento<br />
+                <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-purple-300 to-orange-300">de la red</span>
+              </h1>
+              <p className="text-sm text-zinc-500 leading-relaxed max-w-md">
+                Tus aportes mantienen la red rápida, estable y privada. Cada donación se invierte directamente en infraestructura y nuevas funcionalidades.
+              </p>
+
+              {estadoMensaje && (
+                <div
+                  className={`flex items-start gap-3 rounded-xl px-4 py-3 border text-sm ${
+                    estadoMensaje.tipo === "error"
+                      ? "bg-red-950/50 border-red-900 text-red-400"
+                      : "bg-purple-950/50 border-purple-900 text-purple-300"
+                  }`}
+                >
+                  {estadoMensaje.tipo === "error" ? (
+                    <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  )}
+                  <span>{estadoMensaje.texto}</span>
+                </div>
+              )}
+
+              {/* Stats */}
+              <div className="flex gap-8 pt-2">
+                {[
+                  { label: "Uptime", value: "99.9%" },
+                  { label: "Nodos activos", value: "12" },
+                  { label: "Usuarios", value: "4.2k+" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <p className="text-xl font-semibold text-white">{stat.value}</p>
+                    <p className="text-xs text-zinc-600 mt-0.5">{stat.label}</p>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-center">
+            </div>
+
+            <div className="flex items-center justify-center lg:justify-end">
+              <div className="w-full max-w-xs opacity-90">
                 <Lottie
                   animationData={thankYouAnimation as unknown as object}
                   loop
                   autoplay
-                  className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl"
+                  className="w-full"
                 />
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 xl:px-10 pt-16 pb-24 md:pb-12">
+        {/* ── Main Grid ── */}
+        <section className="py-14 grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-12 lg:gap-16">
 
-          {/* Status Message */}
-          {estadoMensaje && (
-            <div
-              className={`mb-6 sm:mb-8 lg:mb-10 xl:mb-12 flex items-start gap-3 rounded-lg px-3 sm:px-4 lg:px-5 xl:px-6 py-3 sm:py-4 lg:py-5 xl:py-6 border backdrop-blur-sm ${
-                estadoMensaje.tipo === "error"
-                  ? "bg-rose-900/20 border-rose-800 text-rose-300"
-                  : "bg-blue-900/20 border-blue-800 text-blue-300"
-              }`}
-            >
-              {estadoMensaje.tipo === "error" ? (
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0 text-rose-300" />
-              ) : (
-                <Info className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 mt-0.5 flex-shrink-0 text-blue-300" />
-              )}
-              <span className="text-xs sm:text-sm lg:text-base xl:text-lg text-zinc-200">{estadoMensaje.texto}</span>
-            </div>
-          )}
+          {/* Form */}
+          <div className="rounded-2xl bg-refine-bg-alt border border-white/5 p-6 lg:p-8 shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-8">
 
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 xl:gap-10">
-            {/* Left Column: Form */}
-            <div className="lg:col-span-2 space-y-5 sm:space-y-6 lg:space-y-8 xl:space-y-10">
-              {/* Donation Form */}
-              <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-zinc-800 border border-zinc-700 p-5 sm:p-6 lg:p-8 xl:p-10">
-                <h2 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-zinc-100 uppercase tracking-wider mb-5 sm:mb-6 lg:mb-7 xl:mb-8">
-                  Información de la Donación
-                </h2>
-
-                <form
-                  onSubmit={(event: FormEvent) => {
-                    event.preventDefault();
-                    handlePaymentButtonClick();
-                  }}
-                  className="space-y-5 sm:space-y-6 lg:space-y-8 xl:space-y-10"
-                >
-                  {/* Monto Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
-                      <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100">
-                        Monto de la donación
-                      </label>
-                      <span className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-zinc-400">Mínimo $500</span>
-                    </div>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 text-sm font-medium">
-                        $
-                      </span>
-                      <input
-                        type="number"
-                        min={500}
-                        max={1000000}
-                        step={100}
-                        value={monto}
-                        onChange={(e) => setMonto(Number(e.target.value))}
-                        className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg pl-8 pr-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold transition-colors outline-none text-zinc-100"
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3 sm:mt-4 lg:mt-5 xl:mt-6">
-                      {montoSugerencias.map((valor) => (
-                        <button
-                          key={valor}
-                          type="button"
-                          onClick={() => handleMontoRapido(valor)}
-                          className={`px-3 sm:px-4 lg:px-5 xl:px-6 py-2 sm:py-3 lg:py-4 xl:py-5 rounded-lg border text-[10px] sm:text-xs lg:text-sm xl:text-base font-medium transition-all ${
-                            monto === valor
-                              ? "border-rose-500 bg-rose-800 text-rose-200"
-                              : "border-zinc-700 bg-zinc-800 hover:border-rose-500 text-zinc-200"
-                          }`}
-                        >
-                          ${valor.toLocaleString("es-AR")}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Nombre */}
-                  <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
-                      Nombre (opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={donanteNombre}
-                      onChange={(e) => setDonanteNombre(e.target.value)}
-                      placeholder="Ej: María López"
-                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-zinc-100 placeholder-zinc-500"
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
-                      Email (para confirmación)
-                    </label>
-                    <input
-                      type="email"
-                      value={donanteEmail}
-                      onChange={(e) => setDonanteEmail(e.target.value)}
-                      placeholder="Ej: nombre@correo.com"
-                      required
-                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none text-zinc-100 placeholder-zinc-500"
-                    />
-                  </div>
-
-                  {/* Mensaje */}
-                  <div>
-                    <label className="block text-xs sm:text-sm lg:text-base xl:text-lg font-medium text-zinc-100 mb-2 sm:mb-3 lg:mb-4 xl:mb-5">
-                      Mensaje (opcional)
-                    </label>
-                    <textarea
-                      value={mensaje}
-                      onChange={(e) => setMensaje(e.target.value)}
-                      placeholder="Contanos por qué decidiste apoyar el proyecto"
-                      rows={4}
-                      className="w-full bg-zinc-800 border border-zinc-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors outline-none resize-none text-zinc-100 placeholder-zinc-500"
-                    />
-                  </div>
-
-                  {/* Error Message */}
-                  {error && (
-                    <div className="flex items-start gap-3 rounded-lg bg-rose-900/20 border border-rose-800 p-3 sm:p-4 lg:p-5 xl:p-6">
-                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-rose-300 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-rose-300">{error}</p>
-                    </div>
-                  )}
-
-                  {/* Loading Indicator */}
-                  {loading && (
-                    <div className="flex items-center justify-center gap-2 text-xs sm:text-sm lg:text-base xl:text-lg text-zinc-300 py-1 sm:py-2 lg:py-3 xl:py-4">
-                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 animate-spin" />
-                      Generando link de pago...
-                    </div>
-                  )}
-
-                  {/* Payment Success - Show Link */}
-                  {ultimoResultado && (
-                    <div className="bg-emerald-900/20 border border-emerald-800 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 xl:p-8 space-y-3 sm:space-y-4 lg:space-y-5 xl:space-y-6">
-                      <div className="flex justify-center mb-3 sm:mb-4 lg:mb-5 xl:mb-6">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 border border-emerald-300">
-                          <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20 text-emerald-600" />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-emerald-300 text-xs sm:text-sm lg:text-base xl:text-lg font-medium">
-                        <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6" />
-                        Tu donación está lista para realizarse
-                      </div>
-                      
-                      <a
-                        href={ultimoResultado.linkPago}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors"
-                      >
-                        <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6" />
-                        Ir a MercadoPago
-                      </a>
-
-                      <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-700">
-                        Se abrirá MercadoPago en una nueva ventana donde podrás completar el pago.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Main Payment Button */}
-                  {!ultimoResultado && (
+              {/* Amount */}
+              <div className="space-y-3">
+                <label className="text-xs tracking-widest text-zinc-600 uppercase block">
+                  Monto
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 text-sm select-none">$</span>
+                  <input
+                    type="number"
+                    min={500}
+                    max={1000000}
+                    step={100}
+                    value={monto}
+                    onChange={(e) => setMonto(Number(e.target.value))}
+                    className="w-full rounded-xl bg-zinc-900 border border-zinc-800 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30 outline-none pl-8 pr-4 py-3 text-2xl font-semibold text-white transition-colors"
+                  />
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {montoSugerencias.map((valor) => (
                     <button
-                      type="submit"
-                      className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-4 py-2.5 sm:py-3 lg:py-4 xl:py-5 text-xs sm:text-sm lg:text-base xl:text-lg transition-colors"
-                      disabled={loading}
+                      key={valor}
+                      type="button"
+                      onClick={() => handleMontoRapido(valor)}
+                      className={`rounded-lg border px-4 py-2 text-sm transition-all ${
+                        monto === valor
+                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-600 shadow-md shadow-black/40"
+                          : "bg-transparent text-zinc-500 border-zinc-800 hover:border-purple-600/60 hover:text-white"
+                      }`}
                     >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6 animate-spin" />
-                          Generando link...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 lg:h-5 lg:w-5 xl:h-6 xl:w-6" />
-                          Generar link de pago
-                        </>
-                      )}
+                      ${valor.toLocaleString("es-AR")}
                     </button>
-                  )}
-                </form>
+                  ))}
+                </div>
+                <p className="text-xs text-zinc-700">Monto mínimo $500. Podés editarlo libremente.</p>
               </div>
 
-              {/* Security & Benefits Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 xl:gap-10">
-                {/* What we use donations for */}
-                <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 p-5 sm:p-6 lg:p-8 xl:p-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-emerald-600" />
-                    </div>
-                    <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-gray-900 uppercase tracking-wider">
-                      ¿Dónde usamos las donaciones?
-                    </h3>
-                  </div>
-                  <ul className="space-y-2 text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Infraestructura y servidores con protección anti-DDoS</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Desarrollo de nuevas funciones y mejoras</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Monitoreo 24/7 y soporte premium</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Ensayos con nuevas regiones y nodos</span>
-                    </li>
-                  </ul>
-                </div>
+              <div className="w-full h-px bg-zinc-900" />
 
-                {/* Benefits */}
-                <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 p-5 sm:p-6 lg:p-8 xl:p-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-lg bg-rose-100 border border-rose-300 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-rose-600" />
-                    </div>
-                    <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-gray-900 uppercase tracking-wider">
-                      Beneficios de apoyar
-                    </h3>
-                  </div>
-                  <ul className="space-y-2 text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Acceso prioritario a nuevas betas y pruebas</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Invitaciones a focus group con el equipo</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Reconocimiento en nuestro muro de sponsors</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-rose-600 mt-0.5 flex-shrink-0" />
-                      <span>Sé parte del crecimiento de JJSecure</span>
-                    </li>
-                  </ul>
+              {/* Personal info */}
+              <div className="space-y-3">
+                <label className="text-xs tracking-widest text-zinc-600 uppercase block">
+                  Tus datos
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={donanteNombre}
+                    onChange={(e) => setDonanteNombre(e.target.value)}
+                    placeholder="Nombre (opcional)"
+                    className={inputClass}
+                  />
+                  <input
+                    type="email"
+                    value={donanteEmail}
+                    onChange={(e) => setDonanteEmail(e.target.value)}
+                    placeholder="Email para confirmación"
+                    required
+                    className={inputClass}
+                  />
                 </div>
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  placeholder="Mensaje opcional para el equipo"
+                  rows={3}
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-red-400">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              {/* CTA or result */}
+              {ultimoResultado ? (
+                <div className="rounded-2xl border border-purple-900 bg-purple-950/30 px-5 py-5 space-y-4">
+                  <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Link de pago generado
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                    <a
+                      href={ultimoResultado.linkPago}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium px-5 py-3 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Abrir en MercadoPago
+                    </a>
+                    <span className="text-xs text-zinc-600 font-mono">
+                      ID: {ultimoResultado.donacion.id}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-700">Se abrirá en una nueva pestaña.</p>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium px-8 py-3 text-sm transition-all shadow-md shadow-black/40"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generando link...
+                    </>
+                  ) : (
+                    "Generar link de pago"
+                  )}
+                </button>
+              )}
+            </form>
+          </div>
+
+          {/* ── Sidebar ── */}
+          <div className="space-y-8 lg:border-l lg:border-zinc-900 lg:pl-10 bg-refine-bg-alt rounded-2xl p-6">
+
+            {/* Summary */}
+            <div className="space-y-3">
+              <p className="text-xs tracking-widest text-zinc-600 uppercase">Resumen</p>
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm text-zinc-600">Total</span>
+                <span className="text-3xl font-semibold text-white">
+                  ${monto.toLocaleString("es-AR")}
+                </span>
+              </div>
+              {ultimoResultado && (
+                <p className="text-xs text-zinc-600 font-mono">
+                  ID: {ultimoResultado.donacion.id}
+                </p>
+              )}
+              <div className="flex items-center gap-2 text-xs text-zinc-700">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Procesado por MercadoPago
               </div>
             </div>
 
-            {/* Right Column: Summary */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-5 sm:space-y-6 lg:space-y-8 xl:space-y-10">
-                {/* Donation Summary */}
-                <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-slate-900/90 via-gray-900/90 to-slate-800/90 p-5 sm:p-6 lg:p-8 xl:p-10 text-white">
-                  <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-white uppercase tracking-wider mb-6">
-                    Resumen de donación
-                  </h3>
+            <div className="w-full h-px bg-zinc-900" />
 
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-400">Monto:</span>
-                      <span className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-rose-400">
-                        ${monto.toLocaleString("es-AR")}
-                      </span>
-                    </div>
+            {/* Where it goes */}
+            <div className="space-y-3">
+              <p className="text-xs tracking-widest text-zinc-600 uppercase">¿A dónde va?</p>
+              <ul className="space-y-2.5">
+                {[
+                  "Infraestructura anti-DDoS",
+                  "Nuevos nodos y regiones",
+                  "Monitoreo 24/7 y soporte",
+                  "Investigación y nuevas funciones",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 items-start text-sm text-zinc-500">
+                    <span className="mt-2 w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-                    {ultimoResultado && (
-                      <>
-                        <div className="h-px bg-white/20" />
-                        <div className="space-y-2 bg-white/10 border border-white/20 rounded-lg p-3">
-                          <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-emerald-400 font-medium flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6" />
-                            Donación confirmada
-                          </p>
-                          <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-300">
-                            ID: <span className="text-white font-mono text-[10px] sm:text-xs lg:text-sm xl:text-base">{ultimoResultado.donacion.id}</span>
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+            <div className="w-full h-px bg-zinc-900" />
 
-                {/* Confirmation Message */}
-                {ultimoResultado && (
-                  <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 p-5 sm:p-6 lg:p-8 xl:p-10">
-                    <h3 className="text-xs sm:text-sm lg:text-base xl:text-lg font-semibold text-gray-900 mb-3">¿Preguntas?</h3>
-                    <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-700 leading-relaxed">
-                      Cuando completes el pago te enviaremos un correo a{" "}
-                      <span className="text-gray-900 font-medium">
-                        {ultimoResultado.donacion.donante_email || donanteEmail}
-                      </span>{" "}
-                      con nuestro agradecimiento.
-                    </p>
-                  </div>
-                )}
+            {/* Benefits */}
+            <div className="space-y-3">
+              <p className="text-xs tracking-widest text-zinc-600 uppercase">Beneficios</p>
+              <ul className="space-y-2.5">
+                {[
+                  "Acceso prioritario a betas",
+                  "Invitaciones a focus groups",
+                  "Reconocimiento en sponsors",
+                  "Acelerás nuevas features",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 items-start text-sm text-zinc-500">
+                    <span className="mt-2 w-1 h-1 rounded-full bg-zinc-700 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-                {/* Info Card */}
-                <div className="rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 p-5 sm:p-6 lg:p-8 xl:p-10">
-                  <p className="text-[10px] sm:text-xs lg:text-sm xl:text-base text-gray-700 leading-relaxed">
-                    🔒 <span className="text-gray-900 font-medium">Seguro y privado.</span> Procesado mediante MercadoPago con encriptación end-to-end.
-                  </p>
-                </div>
-              </div>
+            <div className="w-full h-px bg-zinc-900" />
+
+            {/* Steps */}
+            <div className="space-y-3">
+              <p className="text-xs tracking-widest text-zinc-600 uppercase">¿Qué sigue?</p>
+              <ol className="space-y-4">
+                {[
+                  "Elegí el monto y generá el link",
+                  "Pagá en MercadoPago en nueva pestaña",
+                  "Recibí la confirmación en tu email",
+                ].map((step, i) => (
+                  <li key={i} className="flex gap-4 items-start text-sm text-zinc-500">
+                    <span className="text-xs font-medium text-zinc-700 w-5 flex-shrink-0 pt-0.5 tabular-nums">
+                      0{i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -201,6 +201,8 @@ export class DatabaseService {
         mp_payment_id TEXT,
         mp_preference_id TEXT,
         estado TEXT NOT NULL CHECK(estado IN ('pendiente', 'aprobado', 'rechazado', 'cancelado')),
+        servex_procesado INTEGER DEFAULT 0,
+        servex_procesado_en DATETIME,
         cupon_id INTEGER,
         descuento_aplicado REAL DEFAULT 0,
         fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -219,6 +221,22 @@ export class DatabaseService {
 
     try {
       this.db.exec(`ALTER TABLE renovaciones ADD COLUMN descuento_aplicado REAL DEFAULT 0`);
+    } catch (error: any) {
+      if (!error?.message?.includes('duplicate column name')) {
+        throw error;
+      }
+    }
+
+    try {
+      this.db.exec(`ALTER TABLE renovaciones ADD COLUMN servex_procesado INTEGER DEFAULT 0`);
+    } catch (error: any) {
+      if (!error?.message?.includes('duplicate column name')) {
+        throw error;
+      }
+    }
+
+    try {
+      this.db.exec(`ALTER TABLE renovaciones ADD COLUMN servex_procesado_en DATETIME`);
     } catch (error: any) {
       if (!error?.message?.includes('duplicate column name')) {
         throw error;
@@ -1086,6 +1104,18 @@ export class DatabaseService {
     `);
 
     stmt.run(estado, mpPaymentId || null, id);
+  }
+
+  marcarRenovacionProcesadaEnServex(id: number): void {
+    const stmt = this.db.prepare(`
+      UPDATE renovaciones
+      SET servex_procesado = 1,
+          servex_procesado_en = datetime('now'),
+          fecha_actualizacion = datetime('now')
+      WHERE id = ?
+    `);
+
+    stmt.run(id);
   }
 
   /**

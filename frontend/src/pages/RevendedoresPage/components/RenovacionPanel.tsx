@@ -290,11 +290,11 @@ export function RenovacionPanel({
                           </li>
                           <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-orange-400" />
-                            <span>Ciclo mensual: 30 días fijos de validez</span>
+                            <span>Renovación acumulativa: se agregan 30 días a tu vencimiento</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-orange-400" />
-                            <span>Precio justo: Prorrateo según días restantes</span>
+                            <span>Si tu cuenta ya venció, se suma desde hoy</span>
                           </li>
                         </ul>
                       </div>
@@ -419,7 +419,7 @@ export function RenovacionPanel({
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-zinc-400">Duración</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Días a agregar</span>
                       <span className="font-semibold text-white">{diasRenovacion} días</span>
                     </div>
 
@@ -522,7 +522,7 @@ export function RenovacionPanel({
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-zinc-400">Duración</span>
+                      <span className="text-xs sm:text-sm text-zinc-400">Días a agregar</span>
                       <span className="font-semibold text-white">{diasRenovacion} días</span>
                     </div>
 

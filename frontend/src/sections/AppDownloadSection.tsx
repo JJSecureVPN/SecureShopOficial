@@ -13,7 +13,7 @@ export default function AppDownloadSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
         >
-          <h2 className="text-2xl sm:text-[32px] sm:leading-[40px] font-semibold tracking-normal text-white">
+          <h2 className="text-2xl sm:text-[32px] sm:leading-[40px] font-semibold tracking-normal text-white font-title">
             ¡Empieza ahora!
           </h2>
           <p className="text-base font-normal tracking-[-0.004em] text-zinc-300 sm:max-w-[446px]">

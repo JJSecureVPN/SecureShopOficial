@@ -11,7 +11,19 @@ export default function NoticiasPage() {
   const [selected, setSelected] = useState<{ id: string; preview?: Noticia } | null>(null);
 
   return (
-    <div className="bg-zinc-900 text-zinc-100">
+    <>
+      <style>{`
+        /* Force fixed header on Noticias page */
+        header { 
+          position: fixed !important; 
+          top: 0 !important; 
+          left: 0 !important; 
+          right: 0 !important; 
+          z-index: 10001 !important;
+          width: 100% !important;
+        }
+      `}</style>
+      <div className="bg-zinc-900 text-zinc-100 pt-16">
       <section className="min-h-screen bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-20 pb-12">
           <div className="mb-8">
@@ -63,6 +75,7 @@ export default function NoticiasPage() {
           onClose={() => setSelected(null)}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }

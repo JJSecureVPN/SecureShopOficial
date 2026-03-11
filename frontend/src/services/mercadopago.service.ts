@@ -50,27 +50,48 @@ class MercadoPagoService {
 
     try {
       const config = await apiService.obtenerConfigMercadoPago();
+      
+      // Limpiar cualquier whitespace en la publicKey
+      if (config.publicKey) {
+        config.publicKey = config.publicKey.trim();
+      }
 
       if (!window.MercadoPago) {
         throw new Error('SDK de MercadoPago no está cargado');
       }
+      
+      if (!config.publicKey) {
+        throw new Error('PublicKey de MercadoPago está vacía');
+      }
 
       // Crear instancia de MercadoPago con error handling mejorado
       try {
+        console.log('[MercadoPago] Creando instancia con publicKey:', config.publicKey.substring(0, 20) + '...');
         this.mpInstance = new window.MercadoPago(config.publicKey);
         this.initialized = true;
-        console.log('[MercadoPago] Inicializado correctamente');
+        console.log('[MercadoPago] ✅ Inicializado correctamente');
       } catch (initError: any) {
-        // Si el error es solo de telemetría/tracking, ignorarlo
+        console.error('[MercadoPago] Error crítico al crear instancia:', initError?.message);
+        
+        // Si el error es solo de telemetría/tracking, intentar nuevamente
         if (initError?.message?.includes('net::ERR_BLOCKED_BY_CLIENT') || 
             initError?.message?.includes('Could not send event') ||
             initError?.type === 'non_critical') {
-          console.warn('[MercadoPago] ⚠️ Error no-crítico de telemetría, continuando...');
-          this.mpInstance = new window.MercadoPago(config.publicKey);
-          this.initialized = true;
-          console.log('[MercadoPago] Inicializado correctamente (con error de telemetría ignorado)');
+          console.warn('[MercadoPago] ⚠️ Error no-crítico de telemetría, reintentando...');
+          try {
+            this.mpInstance = new window.MercadoPago(config.publicKey);
+            this.initialized = true;
+            console.log('[MercadoPago] ✅ Inicializado correctamente (error de telemetría ignorado)');
+          } catch (retryError: any) {
+            console.error('[MercadoPago] Error al reintentar:', retryError?.message);
+            throw new Error(`MercadoPago initialization failed: ${retryError?.message || 'Unknown error'}`);
+          }
+        } else if (initError?.message?.includes('whitespaces')) {
+          console.error('[MercadoPago] ❌ La publicKey contiene espacios. Revisa la configuración del backend.');
+          throw new Error('PublicKey inválida (contiene espacios en blanco). Por favor, contacta al soporte.');
         } else {
-          throw initError;
+          console.error('[MercadoPago] ❌ Error no-identificado:', initError);
+          throw new Error(`MercadoPago initialization failed: ${initError?.message || 'Unknown error'}`);
         }
       }
     } catch (error) {
@@ -119,6 +140,12 @@ class MercadoPagoService {
 
       console.log(`[MercadoPago] Contenedor ${containerId} encontrado en DOM, limpiando antes de crear...`);
       
+      // Validar que mpInstance está correctamente inicializado
+      if (!this.mpInstance) {
+        console.error(`[MercadoPago] ❌ MercadoPago no está inicializado. Intenta reinicializar...`);
+        throw new Error('MercadoPago no está correctamente inicializado');
+      }
+      
       // 🔴 CRÍTICO: LIMPIAR el contenedor antes de crear el botón
       // Si no limpiamos, MercadoPago va a agregar un nuevo botón en lugar de reemplazar
       containerElement.innerHTML = '';
@@ -126,6 +153,11 @@ class MercadoPagoService {
       console.log(`[MercadoPago] Contenedor limpiado, creando botón...`);
 
       const bricksBuilder = this.mpInstance.bricks();
+      
+      if (!bricksBuilder) {
+        console.error(`[MercadoPago] ❌ No se pudo crear Bricks builder`);
+        throw new Error('Bricks builder no pudo ser creado');
+      }
 
       this.buttonInstance = await bricksBuilder.create('wallet', containerId, {
         initialization: {

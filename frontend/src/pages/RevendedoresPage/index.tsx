@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { BarChart3, RefreshCw, Zap } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { BarChart3, RefreshCw } from "lucide-react";
 import { motion } from 'framer-motion';
 import { PlanRevendedor } from "../../types";
 import { apiService, ValidacionCupon } from "../../services/api.service";
@@ -30,17 +30,12 @@ export interface RevendedoresPageProps {
 export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen }: RevendedoresPageProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
 
-  const initialGroupId = location.pathname.endsWith("/revendedores/creditos")
-    ? "creditos"
-    : location.pathname.endsWith("/revendedores/validez")
-    ? "validez"
-    : undefined;
+  const initialGroupId = "validez";
 
   const [planes, setPlanes] = useState<PlanRevendedor[]>([]);
   const [planesRenovacion, setPlanesRenovacion] = useState<PlanRevendedor[]>([]);
-  const [activeSection, setActiveSection] = useState("creditos");
+  const [activeSection, setActiveSection] = useState("validez");
   const [expandedMenuSections, setExpandedMenuSections] = useState<string[]>([]);
   const [modoSeleccion, setModoSeleccion] = useState<ModoSeleccion>("compra");
 
@@ -57,14 +52,6 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
   const [cuponRenovacion, setCuponRenovacion] = useState<CuponAplicado | null>(null);
   const [descuentoRenovacion, setDescuentoRenovacion] = useState(0);
   const [cuentaDesdeUrl, setCuentaDesdeUrl] = useState<string | null>(null);
-
-  const planesCredit = useMemo(
-    () =>
-      planes
-        .filter((plan) => plan.account_type === "credit")
-        .sort((a, b) => a.max_users - b.max_users),
-    [planes]
-  );
 
   const planesValidity = useMemo(
     () =>
@@ -299,7 +286,7 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
 
   const activarModoCompra = () => {
     setModoSeleccion("compra");
-    setActiveSection("creditos");
+    setActiveSection("validez");
     resetRenovacion();
   };
 
@@ -435,54 +422,11 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
   const groupedPlans: PlanGroup[] = useMemo(
     () => [
       {
-        id: "creditos",
-        title: "Sistema de Créditos",
-        subtitle: "1 crédito = 30 días de servicio",
-        accent: "bg-purple-500/10 border-purple-500/20",
-        accentText: "text-purple-400",
-        icon: <Zap className="w-5 h-5" />,
-        recommended: true,
-        mainDescription:
-          "Diseñado para máxima flexibilidad. 1 conexión = 1 crédito. Así: 30 días = 1 crédito, 60 días = 2 créditos, 90 días = 3 créditos, etc. Las cuentas son independientes de tu suscripción, se mantienen vigentes incluso después de vencer.",
-        shortDescription: "1 conexión = 1 crédito | 30 días = 1 crédito, 60 días = 2 créditos",
-        keyFeatures: [
-          {
-            icon: "zap",
-            title: "1 Conexión = 1 Crédito",
-            description: "Cada crédito = 1 conexión VPN independiente",
-          },
-          {
-            icon: "clock",
-            title: "Costo por Duración",
-            description: "30 días = 1 crédito | 60 días = 2 créditos | 90 días = 3 créditos",
-          },
-          {
-            icon: "users",
-            title: "Cuentas Independientes",
-            description: "Se mantienen vigentes incluso después de vencer tu suscripción",
-          },
-          {
-            icon: "check-circle",
-            title: "Acumula Créditos",
-            description: "Almacena en tu panel y úsalos cuando necesites",
-          },
-        ],
-        useCases: [
-          "Vender planes mensuales estándar (30 días)",
-          "Ofrecer pruebas extendidas personalizadas",
-          "Crear planes anuales (360+ días) para clientes premium",
-          "Adaptarse a preferencias específicas de cada cliente",
-        ],
-        bestFor:
-          "Revendedores que buscan máxima flexibilidad para crear planes personalizados sin limitaciones de duración.",
-        items: planesCredit,
-      },
-      {
         id: "validez",
         title: "Sistema de Validez",
         subtitle: "Suscripción con reutilización automática de cupos",
-        accent: "bg-purple-500/10 border-purple-500/20",
-        accentText: "text-purple-400",
+        accent: "bg-orange-500/10 border-orange-500/20",
+        accentText: "text-orange-400",
         icon: <BarChart3 className="w-5 h-5" />,
         mainDescription:
           "Suscripción mensual renovable con reutilización de cupos. Crea múltiples cuentas dentro del rango de usuarios durante ese mes. Los usuarios están vinculados a tu suscripción: si esta vence, todos los usuarios expiran también. Al contrario de Créditos donde las cuentas son independientes.",
@@ -520,7 +464,7 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
         items: planesValidity,
       },
     ],
-    [planesCredit, planesValidity]
+    [planesValidity]
   );
 
   const revendedorSections: MobileSection[] = useMemo(() => {
@@ -530,8 +474,8 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
         label: "Renovación",
         subtitle: "Renueva tu plan actual",
         icon: (
-          <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <RefreshCw className="w-2.5 h-2.5 text-purple-300" />
+          <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
+            <RefreshCw className="w-2.5 h-2.5 text-orange-300" />
           </div>
         ),
         scrollId: "plan-renovacion",
@@ -569,14 +513,11 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
   group.items.forEach((plan) => {
           sections.push({
             id: `plan-${plan.id}`,
-            label:
-              plan.account_type === "credit"
-                ? `${plan.max_users} créditos`
-                : `${extractUsersFromName(plan.nombre)} usuarios`,
-            subtitle: plan.account_type === "credit" ? "Sistema de créditos" : "30 días",
+            label: `${extractUsersFromName(plan.nombre)} usuarios`,
+            subtitle: "30 días",
             icon: (
-              <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-purple-300" />
+              <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-orange-300" />
               </div>
             ),
             isPlan: true,
@@ -629,13 +570,7 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
     if (modoSeleccion !== "compra") {
       setModoSeleccion("compra");
     }
-    const wasExpanded = expandedMenuSections.includes(section.id);
     section.onToggle?.();
-
-    // Si acabamos de abrir el grupo, navegar a la URL correspondiente para compartir
-    if (!wasExpanded && (section.id === "creditos" || section.id === "validez")) {
-      navigate(`/revendedores/${section.id}`);
-    }
   };
 
   const handleMobilePlan = (section: MobileSection) => {

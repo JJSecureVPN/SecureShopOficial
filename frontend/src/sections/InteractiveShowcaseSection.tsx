@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Shield, Globe2, Lock, Server, UploadCloud } from "lucide-react";
 
 interface Feature {
@@ -6,11 +6,8 @@ interface Feature {
   icon: typeof Shield;
   title: string;
   image: string;
-  description?: string;
-  color: {
-    icon: string;
-    glow: string;
-  };
+  description: string;
+  color: { accent: string; rgb: string };
 }
 
 const features: Feature[] = [
@@ -19,181 +16,536 @@ const features: Feature[] = [
     icon: Server,
     title: "Interfaz Principal",
     image: "/ServerCard.png",
-    description: "Descubre la interfaz intuitiva y moderna de JJSecure VP-N. Conecta y desconecta con un solo clic, selecciona servidores optimizados automáticamente, configura protocolos de seguridad avanzados y accede a estadísticas en tiempo real de tu conexión. Todo diseñado para una experiencia fluida y sin complicaciones.",
-    color: {
-      icon: "text-blue-500",
-      glow: "rgba(59, 130, 246, 0.15)", // blue-500
-    },
+    description:
+      "Conecta y desconecta con un solo clic. Selecciona servidores optimizados automáticamente y accede a estadísticas en tiempo real de tu conexión.",
+    color: { accent: "#6b7fff", rgb: "107,127,255" },
   },
   {
     id: 1,
     icon: Shield,
     title: "Menú Completo",
     image: "/menuitem.png",
-    description: "Descubre todas las opciones disponibles en nuestro menú intuitivo. Gestiona fácilmente el compartir WiFi para extender tu conexión VPN, accede a configuraciones de APN para conexiones móviles optimizadas, y encuentra herramientas básicas pero esenciales para mantener tu conexión segura y estable en todo momento.",
-    color: {
-      icon: "text-emerald-500",
-      glow: "rgba(16, 185, 129, 0.15)", // emerald-500
-    },
+    description:
+      "Gestiona el compartir WiFi, configura APN para conexiones móviles y mantén tu conexión segura y estable en todo momento.",
+    color: { accent: "#34d399", rgb: "52,211,153" },
   },
   {
     id: 2,
     icon: Globe2,
     title: "Servidores Estratégicos",
     image: "/servidores.png",
-    description: "Inicia tu experiencia VPN con nuestros servidores estratégicos de alta velocidad, cuidadosamente seleccionados para ofrecer conexiones óptimas y seguras. Cada servidor está optimizado para máxima velocidad y estabilidad, proporcionando una base sólida para tu navegación privada mientras expandimos continuamente nuestra red global.",
-    color: {
-      icon: "text-purple-500",
-      glow: "rgba(168, 85, 247, 0.15)", // purple-500
-    },
+    description:
+      "Servidores de alta velocidad seleccionados para conexiones óptimas. Red global en expansión continua con estabilidad garantizada.",
+    color: { accent: "#c084fc", rgb: "192,132,252" },
   },
   {
     id: 3,
     icon: Lock,
     title: "Sistema de Logs",
     image: "/logs.png",
-    description: "Mantén el control total de tu actividad con nuestro sistema avanzado de registros y logs detallados. Monitorea conexiones en tiempo real, revisa historial de sesiones, identifica posibles problemas de conectividad y genera reportes de uso para mantener un registro completo de tu navegación segura y privada.",
-    color: {
-      icon: "text-orange-500",
-      glow: "rgba(251, 146, 60, 0.15)", // orange-500
-    },
+    description:
+      "Monitorea conexiones en tiempo real, revisa historial de sesiones e identifica problemas de conectividad con reportes detallados.",
+    color: { accent: "#f97316", rgb: "249,115,22" },
   },
   {
     id: 4,
     icon: UploadCloud,
-    title: "Importar configuración",
+    title: "Importar Configuración",
     image: "/ImportScreen.png",
-    description: "En esta pantalla el usuario puede configurar la app de forma automática pegando un archivo JSON con el servidor y las credenciales ya definidas. Al presionar Continuar, la aplicación analiza el contenido, selecciona el servidor correspondiente y carga el usuario y la contraseña sin necesidad de hacerlo manualmente.",
-    color: {
-      icon: "text-cyan-400",
-      glow: "rgba(34, 211, 238, 0.15)",
-    },
+    description:
+      "Pega un JSON con servidor y credenciales. La app analiza el contenido y configura todo automáticamente sin pasos adicionales.",
+    color: { accent: "#38bdf8", rgb: "56,189,248" },
   },
 ];
 
 export default function InteractiveShowcaseSection() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
+  const [active, setActive] = useState(0);
+  const [prev, setPrev] = useState<number | null>(null);
+  const [dir, setDir] = useState<"next" | "prev">("next");
+  const [animating, setAnimating] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const touchX = useRef<number | null>(null);
+  const progKey = useRef(0);
 
-  // Auto-rotate cuando no hay hover
+  const goTo = (idx: number, d?: "next" | "prev") => {
+    if (animating || idx === active) return;
+    const resolved = d ?? (idx > active ? "next" : "prev");
+    setDir(resolved);
+    setPrev(active);
+    setAnimating(true);
+    setActive(idx);
+    progKey.current++;
+    setTimeout(() => { setPrev(null); setAnimating(false); }, 600);
+  };
+
+  const goNext = () => goTo((active + 1) % features.length, "next");
+  const goPrev = () => goTo((active - 1 + features.length) % features.length, "prev");
+
   useEffect(() => {
-    if (!isHovering) {
-      const interval = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % features.length);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [isHovering]);
+    if (paused) return;
+    const t = setInterval(goNext, 4500);
+    return () => clearInterval(t);
+  }, [paused, active, animating]);
+
+  const feat = features[active];
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-refine-dark">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mt-8 sm:mt-12">
-          <div className="select-none relative h-[752px] sm:h-[874px] md:h-[984px] lg:h-[688px] pt-4 sm:pt-10 lg:pt-20 pb-32 sm:pb-4 lg:pb-0 pl-4 sm:pl-10 bg-zinc-800 rounded-2xl sm:rounded-3xl overflow-hidden">
-            {/* Glow background - cambia según la sección activa, viene desde esquina superior derecha */}
-            <div 
-              className="absolute inset-0 z-0 opacity-100 transition-all duration-700"
-              style={{
-                background: `radial-gradient(circle at 100% 0%, ${features[activeIndex].color.glow}, transparent 60%)`,
-              }}
-            />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
 
-            {/* Content grid */}
-            <div className="relative z-[1] h-full w-full flex flex-col lg:grid lg:grid-cols-12">
-              {/* Left side: Text and buttons */}
-              <div className="pr-6 sm:pr-0 sm:max-w-[540px] md:max-w-[760px] lg:max-w-[435px] lg:col-span-5 lg:mt-16">
-                <h3 className="text-base sm:text-2xl font-normal text-white">
-                  JJSecure VP-N — la app más completa para Internet ilimitado, velocidad y privacidad.
-                </h3>
-                <p className="mt-6 text-sm text-zinc-300">
-                  Controla tu conexión y protege tu privacidad con <strong>JJSecure VP-N</strong>. Conecta con un solo clic, selecciona servidores optimizados y consulta estadísticas en tiempo real para una experiencia segura y confiable.
-                </p>
+        .sc-root { font-family: 'Geist', sans-serif; }
+        .sc-mono { font-family: 'Geist Mono', monospace !important; }
 
-                {/* Feature buttons grid */}
-                <div 
-                  className="mt-4 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6"
-                  onMouseEnter={() => setIsHovering(true)}
-                  onMouseLeave={() => setIsHovering(false)}
+        /* ── Image enter/exit (vertical slide) ── */
+        @keyframes iIn  { from{opacity:0;transform:translateY(32px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes iOut { from{opacity:1;transform:translateY(0) scale(1)}      to{opacity:0;transform:translateY(-24px) scale(.97)} }
+        @keyframes iInP { from{opacity:0;transform:translateY(-32px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes iOutP{ from{opacity:1;transform:translateY(0) scale(1)}       to{opacity:0;transform:translateY(24px) scale(.97)} }
+        .img-in   { animation: iIn   .55s cubic-bezier(.22,1,.36,1) both }
+        .img-out  { animation: iOut  .40s cubic-bezier(.22,1,.36,1) both }
+        .img-in-p { animation: iInP  .55s cubic-bezier(.22,1,.36,1) both }
+        .img-out-p{ animation: iOutP .40s cubic-bezier(.22,1,.36,1) both }
+
+        /* ── Text clip reveal ── */
+        @keyframes clipReveal { from{clip-path:inset(100% 0 0 0)} to{clip-path:inset(0% 0 0 0)} }
+        @keyframes clipRevealD{ from{clip-path:inset(0 0 100% 0)} to{clip-path:inset(0% 0 0 0)} }
+        @keyframes fadeu { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes faded { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+        .title-in   { animation: clipReveal  .5s cubic-bezier(.22,1,.36,1) both }
+        .title-in-p { animation: clipRevealD .5s cubic-bezier(.22,1,.36,1) both }
+        .desc-in    { animation: fadeu .5s .07s cubic-bezier(.22,1,.36,1) both }
+        .desc-in-p  { animation: faded .5s .07s cubic-bezier(.22,1,.36,1) both }
+
+        /* ── Big number ── */
+        @keyframes nIn  { from{opacity:0;transform:translateY(80%)} to{opacity:1;transform:translateY(0)} }
+        @keyframes nInP { from{opacity:0;transform:translateY(-80%)} to{opacity:1;transform:translateY(0)} }
+        .num-in   { animation: nIn  .45s cubic-bezier(.22,1,.36,1) both }
+        .num-in-p { animation: nInP .45s cubic-bezier(.22,1,.36,1) both }
+
+        /* ── Progress ── */
+        @keyframes progFill { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+        .prog { transform-origin:left; animation: progFill 4.5s linear forwards }
+        .prog-pause { animation-play-state:paused }
+
+        /* ── Nav button hover ── */
+        .sc-nav:hover { border-color: #2a2a30 !important; color: #fff !important; }
+        .sc-tab:hover { background: #0f0f14 !important; }
+
+        /* ────── LAYOUT ────── */
+        /* Desktop grid: [80px number] [1fr image] [300px sidebar] */
+        @media (min-width: 1024px) {
+          .sc-grid   { display: grid !important; grid-template-columns: 72px 1fr 300px; gap: 28px; min-height: 560px; }
+          .sc-mobile { display: none !important; }
+        }
+        @media (max-width: 1023px) {
+          .sc-grid   { display: none !important; }
+          .sc-mobile { display: block !important; }
+        }
+      `}</style>
+
+      <section
+        className="sc-root"
+        style={{ padding: "80px 0" }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div style={{ maxWidth: "1160px", margin: "0 auto", padding: "0 24px" }}>
+
+          {/* ── Section header ── */}
+          <div style={{ marginBottom: "56px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+              <div style={{
+                width: "5px", height: "5px", borderRadius: "50%",
+                background: feat.color.accent,
+                boxShadow: `0 0 10px 2px rgba(${feat.color.rgb},.5)`,
+                transition: "background .5s, box-shadow .5s",
+              }} />
+              <span className="sc-mono" style={{ fontSize: "11px", letterSpacing: "0.14em", color: "#333", textTransform: "uppercase" }}>
+                JJSecure VP-N
+              </span>
+            </div>
+            <h2 className="font-title" style={{
+              fontSize: "clamp(26px, 3.6vw, 48px)",
+              fontWeight: 300,
+              color: "#e8e8ea",
+              lineHeight: 1.12,
+              letterSpacing: "-0.025em",
+              margin: 0,
+            }}>
+              Todo lo que necesitas,{" "}
+              <span style={{
+                fontWeight: 600,
+                color: feat.color.accent,
+                transition: "color .5s ease",
+              }}>sin complejidad.</span>
+            </h2>
+          </div>
+
+          {/* ═══════════════════════
+              DESKTOP  ≥ 1024px
+          ═══════════════════════ */}
+          <div className="sc-grid" style={{ display: "none", alignItems: "stretch" }}>
+
+            {/* Col 1: Number + nav */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "4px" }}>
+              {/* Overflow clip for number animation */}
+              <div style={{ overflow: "hidden", height: "clamp(72px,9vw,108px)", display: "flex", alignItems: "flex-start" }}>
+                <div
+                  key={`num-${active}`}
+                  className={`sc-mono ${dir === "next" ? "num-in" : "num-in-p"}`}
+                  style={{
+                    fontSize: "clamp(72px,9vw,108px)",
+                    fontWeight: 500,
+                    color: feat.color.accent,
+                    lineHeight: 1,
+                    letterSpacing: "-0.05em",
+                    transition: "color .5s",
+                  }}
                 >
-                  {features.map((feature, index) => {
-                    const Icon = feature.icon;
-                    const isActive = activeIndex === index;
-                    
-                    return (
-                      <button
-                        key={feature.id}
-                        onMouseEnter={() => setActiveIndex(index)}
-                        onClick={() => setActiveIndex(index)}
-                        className={`appearance-none focus:outline-none cursor-pointer w-full flex items-center justify-start gap-3 pl-3 pr-5 py-3 rounded-lg text-sm sm:text-base transition-all duration-200 ${
-                          isActive ? 'bg-black' : 'bg-zinc-900'
-                        }`}
-                      >
-                        <Icon className={`w-5 h-5 transition-colors duration-200 ${isActive ? feature.color.icon : 'text-zinc-500'}`} />
-                        <span className={isActive ? 'text-white' : 'text-zinc-400'}>
-                          {feature.title}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {String(active + 1).padStart(2, "0")}
+                </div>
+              </div>
+              <div className="sc-mono" style={{ fontSize: "11px", color: "#252528", marginTop: "4px" }}>
+                /{String(features.length).padStart(2, "0")}
+              </div>
+
+              {/* Vertical step pills */}
+              <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "8px", alignItems: "center" }}>
+                {features.map((f, i) => (
+                  <button
+                    key={f.id}
+                    onClick={() => goTo(i)}
+                    title={f.title}
+                    style={{
+                      width: "3px",
+                      height: active === i ? "28px" : "14px",
+                      borderRadius: "2px",
+                      border: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                      background: active === i ? f.color.accent : "#1a1a1e",
+                      boxShadow: active === i ? `0 0 8px rgba(${f.color.rgb},.4)` : "none",
+                      transition: "all .4s cubic-bezier(.22,1,.36,1)",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Prev / Next */}
+              <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                {[{ fn: goPrev, icon: "M7 11L3 7L7 3M11 7H3" }, { fn: goNext, icon: "M7 3L11 7L7 11M3 7H11" }].map((b, bi) => (
+                  <button
+                    key={bi}
+                    onClick={b.fn}
+                    className="sc-nav"
+                    style={{
+                      width: "34px", height: "34px", borderRadius: "8px",
+                      border: "1px solid #18181c",
+                      background: "transparent", cursor: "pointer",
+                      color: "#333",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "border-color .2s, color .2s",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d={b.icon} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Col 2: Image panel */}
+            <div style={{
+              position: "relative",
+              borderRadius: "14px",
+              overflow: "hidden",
+              background: "#0c0c10",
+              border: "1px solid #131316",
+            }}>
+              {/* Glow */}
+              <div style={{
+                position: "absolute", inset: 0, pointerEvents: "none",
+                background: `radial-gradient(ellipse at 65% 15%, rgba(${feat.color.rgb},.09), transparent 60%)`,
+                transition: "background .7s ease",
+              }} />
+              {/* Top line */}
+              <div style={{
+                position: "absolute", top: 0, inset: "0 0 auto 0", height: "1px",
+                background: `linear-gradient(90deg, transparent, rgba(${feat.color.rgb},.45), transparent)`,
+                transition: "background .5s",
+              }} />
+
+              {/* Images */}
+              {features.map((f, i) => {
+                const isAct = i === active;
+                const isPrv = i === prev;
+                let cls = "";
+                if (isAct) cls = dir === "next" ? "img-in" : "img-in-p";
+                else if (isPrv) cls = dir === "next" ? "img-out" : "img-out-p";
+                return (
+                  <img
+                    key={f.id}
+                    src={f.image}
+                    alt={f.title}
+                    className={cls}
+                    style={{
+                      position: "absolute",
+                      inset: "20px",
+                      width: "calc(100% - 40px)",
+                      height: "calc(100% - 40px)",
+                      objectFit: "contain",
+                      opacity: (!isAct && !isPrv) ? 0 : undefined,
+                    }}
+                  />
+                );
+              })}
+
+              {/* Badge */}
+              <div className="sc-mono" style={{
+                position: "absolute", top: "14px", right: "14px",
+                fontSize: "10px", color: "#202025",
+                letterSpacing: "0.08em",
+              }}>
+                {String(active + 1).padStart(2, "0")}/{String(features.length).padStart(2, "0")}
+              </div>
+            </div>
+
+            {/* Col 3: Sidebar — tabs + description */}
+            <div style={{ display: "flex", flexDirection: "column", paddingTop: "4px" }}>
+
+              {/* Tab list */}
+              <nav style={{ display: "flex", flexDirection: "column", gap: "1px", marginBottom: "32px" }}>
+                {features.map((f, i) => {
+                  const isAct = active === i;
+                  const Icon = f.icon;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => goTo(i)}
+                      className="sc-tab"
+                      style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "9px 10px", borderRadius: "7px",
+                        border: "none", cursor: "pointer", textAlign: "left",
+                        background: isAct ? "#0e0e13" : "transparent",
+                        borderLeft: `2px solid ${isAct ? f.color.accent : "transparent"}`,
+                        transition: "all .25s ease",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      <Icon style={{
+                        width: "14px", height: "14px", flexShrink: 0,
+                        color: isAct ? f.color.accent : "#2a2a30",
+                        transition: "color .25s",
+                      }} />
+                      <span style={{
+                        fontSize: "13px",
+                        color: isAct ? "#d4d4d8" : "#3a3a40",
+                        fontWeight: isAct ? 500 : 400,
+                        transition: "color .25s",
+                        letterSpacing: "-0.01em",
+                      }}>
+                        {f.title}
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Divider */}
+              <div style={{ height: "1px", background: "#111", marginBottom: "24px" }} />
+
+              {/* Description */}
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                <div key={`dt-${active}`} className={dir === "next" ? "title-in" : "title-in-p"}>
+                  <h3 style={{
+                    fontSize: "16px", fontWeight: 500, color: "#e0e0e4",
+                    margin: "0 0 10px 0", letterSpacing: "-0.02em", lineHeight: 1.3,
+                  }}>
+                    {feat.title}
+                  </h3>
+                </div>
+                <div key={`dd-${active}`} className={dir === "next" ? "desc-in" : "desc-in-p"}>
+                  <p style={{
+                    fontSize: "13px", color: "#444", lineHeight: 1.75,
+                    margin: 0,
+                  }}>
+                    {feat.description}
+                  </p>
                 </div>
               </div>
 
-              {/* Right side: Images */}
-              <div className="relative h-[300px] sm:h-full mt-4 sm:mt-[72px] lg:mt-0 flex lg:col-start-7 lg:col-end-13 -ml-8">
-                <div className="w-full h-full z-[1] lg:absolute top-0 right-0">
-                  {features.map((feature, index) => {
-                    const isActive = activeIndex === index;
-                    
-                    return (
-                      <img
-                        key={feature.id}
-                        src={feature.image}
-                        alt={`UI de ${feature.title}`}
-                        className={`block object-contain object-center w-full md:w-[874px] lg:w-full ${feature.id === 4 ? 'h-[420px] sm:h-[520px] lg:h-[640px]' : feature.id === 1 ? 'h-[360px] sm:h-[460px] lg:h-[540px]' : 'h-[300px] sm:h-full lg:h-[464px]'} absolute ${feature.id === 4 ? 'top-[-40px] sm:top-[-80px] lg:top-[-120px]' : feature.id === 1 ? 'top-[-20px] sm:top-[-50px] lg:top-[-80px]' : 'top-0'} left-0 right-0 transition-[transform,opacity] duration-500 ease-in-out ${
-                          isActive
-                            ? 'translate-x-0 opacity-100 delay-300'
-                            : 'translate-x-full opacity-0'
-                        }` }
-                        style={{
-                          maskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%)',
-                          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%)',
-                        }}
+              {/* Progress strips */}
+              <div style={{ marginTop: "28px", display: "flex", gap: "5px" }}>
+                {features.map((f, i) => (
+                  <div
+                    key={i}
+                    onClick={() => goTo(i)}
+                    style={{
+                      flex: active === i ? 3 : 1,
+                      height: "2px", borderRadius: "1px",
+                      background: "#111", overflow: "hidden", cursor: "pointer",
+                      transition: "flex .4s cubic-bezier(.22,1,.36,1)",
+                    }}
+                  >
+                    {active === i && (
+                      <div
+                        key={`pr-${active}-${progKey.current}`}
+                        className={`prog ${paused ? "prog-pause" : ""}`}
+                        style={{ height: "100%", background: f.color.accent }}
                       />
-                    );
-                  })}
-                </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                {/* Contenedor inferior con descripción */}
-                {features.map((feature, index) => {
-                  const isActive = activeIndex === index;
-                  
-                  if (!feature.description) return null;
-                  
+          {/* ═══════════════════════
+              MOBILE  < 1024px
+          ═══════════════════════ */}
+          <div className="sc-mobile" style={{ display: "none" }}>
+            <div
+              onTouchStart={e => { touchX.current = e.touches[0].clientX; }}
+              onTouchEnd={e => {
+                if (touchX.current === null) return;
+                const diff = touchX.current - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 40) diff > 0 ? goNext() : goPrev();
+                touchX.current = null;
+              }}
+            >
+              {/* Image card */}
+              <div style={{
+                position: "relative", borderRadius: "14px", overflow: "hidden",
+                background: "#0c0c10", border: "1px solid #131316", height: "300px",
+              }}>
+                <div style={{
+                  position: "absolute", inset: 0, pointerEvents: "none",
+                  background: `radial-gradient(ellipse at 70% 20%, rgba(${feat.color.rgb},.09), transparent 55%)`,
+                  transition: "background .7s",
+                }} />
+                <div style={{
+                  position: "absolute", top: 0, inset: "0 0 auto 0", height: "1px",
+                  background: `linear-gradient(90deg, transparent, rgba(${feat.color.rgb},.45), transparent)`,
+                  transition: "background .5s",
+                }} />
+
+                {features.map((f, i) => {
+                  const isAct = i === active;
+                  const isPrv = i === prev;
+                  let cls = "";
+                  if (isAct) cls = dir === "next" ? "img-in" : "img-in-p";
+                  else if (isPrv) cls = dir === "next" ? "img-out" : "img-out-p";
                   return (
-                    <div
-                      key={`desc-${feature.id}`}
-                      className={`hidden sm:block z-[2] w-full sm:w-[488px] absolute -bottom-28 sm:bottom-[0px] lg:bottom-[12px] left-4 right-4 sm:left-auto sm:right-auto sm:-left-2 lg:-left-20 rounded-xl bg-black p-3 sm:p-4 transition-[transform,opacity] duration-500 ease-in-out ${
-                        isActive
-                          ? 'delay-300 translate-y-0 opacity-100'
-                          : 'translate-y-full opacity-0'
-                      }`}
+                    <img
+                      key={f.id}
+                      src={f.image}
+                      alt={f.title}
+                      className={cls}
                       style={{
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+                        position: "absolute", inset: "16px",
+                        width: "calc(100% - 32px)", height: "calc(100% - 32px)",
+                        objectFit: "contain",
+                        opacity: (!isAct && !isPrv) ? 0 : undefined,
+                      }}
+                    />
+                  );
+                })}
+
+                {/* Dot indicators */}
+                <div style={{
+                  position: "absolute", bottom: "14px", left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex", gap: "5px", alignItems: "center",
+                }}>
+                  {features.map((_, i) => (
+                    <div
+                      key={i}
+                      onClick={() => goTo(i)}
+                      style={{
+                        width: active === i ? "18px" : "4px",
+                        height: "4px", borderRadius: "2px",
+                        background: active === i ? feat.color.accent : "#1e1e22",
+                        transition: "all .35s cubic-bezier(.22,1,.36,1)",
+                        cursor: "pointer",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ marginTop: "10px", height: "1px", background: "#0f0f12", overflow: "hidden" }}>
+                <div
+                  key={`mp-${active}-${progKey.current}`}
+                  className={`prog ${paused ? "prog-pause" : ""}`}
+                  style={{ height: "100%", background: feat.color.accent }}
+                />
+              </div>
+
+              {/* Text */}
+              <div style={{ padding: "22px 0", minHeight: "150px" }}>
+                <div key={`mt-${active}`} className={dir === "next" ? "title-in" : "title-in-p"}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "10px" }}>
+                    {(() => {
+                      const Icon = feat.icon;
+                      return <Icon style={{ width: "15px", height: "15px", color: feat.color.accent, flexShrink: 0, transition: "color .5s" }} />;
+                    })()}
+                    <h4 style={{
+                      fontSize: "17px", fontWeight: 600, color: "#e0e0e4",
+                      margin: 0, letterSpacing: "-0.025em",
+                    }}>
+                      {feat.title}
+                    </h4>
+                  </div>
+                </div>
+                <div key={`md-${active}`} className={dir === "next" ? "desc-in" : "desc-in-p"}>
+                  <p style={{ fontSize: "14px", color: "#4a4a52", lineHeight: 1.72, margin: 0 }}>
+                    {feat.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Chips */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                {features.map((f, i) => {
+                  const isAct = active === i;
+                  const Icon = f.icon;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => goTo(i)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "6px",
+                        padding: "6px 12px", borderRadius: "100px",
+                        border: isAct ? `1px solid rgba(${f.color.rgb},.35)` : "1px solid #141418",
+                        background: isAct ? `rgba(${f.color.rgb},.07)` : "#0d0d10",
+                        color: isAct ? "#c8c8cc" : "#3a3a40",
+                        fontSize: "12px", fontWeight: isAct ? 500 : 400,
+                        cursor: "pointer",
+                        transition: "all .3s ease",
+                        fontFamily: "inherit",
+                        letterSpacing: "-0.01em",
                       }}
                     >
-                      <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
+                      <Icon style={{
+                        width: "11px", height: "11px",
+                        color: isAct ? f.color.accent : "#2a2a30",
+                        transition: "color .3s",
+                        flexShrink: 0,
+                      }} />
+                      {f.title}
+                    </button>
                   );
                 })}
               </div>
             </div>
           </div>
 
-
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

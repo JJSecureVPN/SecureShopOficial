@@ -2,8 +2,6 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import PlanesPage from "./pages/PlanesPage/index";
 import RevendedoresPage from "./pages/RevendedoresPage";
-import RevendedoresCreditosPage from "./pages/RevendedoresPage/CreditosPage";
-import RevendedoresValidezPage from "./pages/RevendedoresPage/ValidezPage";
 import ServersPage from "./pages/ServersPage/index";
 import AboutPage from "./pages/AboutPage/index";
 import SuccessPage from "./pages/SuccessPage";
@@ -86,10 +84,8 @@ const AppContent = () => {
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/planes" element={<PlanesPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/revendedores" element={<RevendedoresPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
-          <Route path="/revendedores/creditos" element={<RevendedoresCreditosPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
-          <Route path="/revendedores/validez" element={<RevendedoresValidezPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/estado" element={<ServersPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
-          <Route path="/sobre-nosotros" element={<AboutPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
+          <Route path="/sobre-nosotros" element={<AboutPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/error" element={<ErrorPage />} />
           <Route path="/donaciones" element={<DonacionesPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />

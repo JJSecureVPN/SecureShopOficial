@@ -24,9 +24,12 @@ export class WebSocketService extends EventEmitter {
   private ws: WebSocket | null = null;
   private stats: Map<string, ServerStats> = new Map();
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private heartbeatTimeout: NodeJS.Timeout | null = null;
   private connectionAttempts: number = 0;
   private maxRetries: number = 5;
   private readonly debugLogging: boolean;
+  private readonly HEARTBEAT_INTERVAL = 30000; // 30 segundos
+  private lastMessageTime: number = Date.now();
 
   // Mapeo de IDs de servidor a nombres que deseas mostrar
   // Este mapeo sobreescribe los nombres que Servex devuelve
@@ -41,6 +44,38 @@ export class WebSocketService extends EventEmitter {
     super();
     this.servexToken = process.env.SERVEX_API_KEY || '';
     this.debugLogging = (process.env.NODE_ENV || 'development') !== 'production';
+  }
+
+  /**
+   * Inicia el heartbeat para detectar desconexiones silenciosas
+   * Si no recibie mensajes en HEARTBEAT_INTERVAL, reconecta automáticamente
+   */
+  private iniciarHeartbeat(): void {
+    if (this.heartbeatTimeout) {
+      clearTimeout(this.heartbeatTimeout);
+    }
+
+    this.heartbeatTimeout = setInterval(() => {
+      const ahora = Date.now();
+      const tiempoSinMensajes = ahora - this.lastMessageTime;
+
+      if (tiempoSinMensajes > this.HEARTBEAT_INTERVAL * 1.5) {
+        console.warn(
+          `[WebSocket] 🔴 Sin mensajes por ${Math.round(tiempoSinMensajes / 1000)}s. Reconectando...`
+        );
+        this.forzarReconexion();
+      }
+    }, this.HEARTBEAT_INTERVAL);
+  }
+
+  /**
+   * Detiene el heartbeat
+   */
+  private detenerHeartbeat(): void {
+    if (this.heartbeatTimeout) {
+      clearTimeout(this.heartbeatTimeout);
+      this.heartbeatTimeout = null;
+    }
   }
 
   /**
@@ -74,11 +109,14 @@ export class WebSocketService extends EventEmitter {
       this.connectionAttempts = 0;
 
       this.ws.on('open', () => {
-        // Log desactivado - servicio funcionando correctamente
+        console.log('[WebSocket] 🟢 Conectado a Servex. Iniciando heartbeat...');
+        this.lastMessageTime = Date.now();
+        this.iniciarHeartbeat();
       });
 
       this.ws.on('message', (data: WebSocket.Data) => {
         try {
+          this.lastMessageTime = Date.now(); // Actualizar timestamp de último mensaje
           const message = JSON.parse(data.toString());
           this.procesarMensaje(message);
         } catch (error) {
@@ -94,6 +132,7 @@ export class WebSocketService extends EventEmitter {
 
       this.ws.on('close', () => {
         console.log('[WebSocket] Desconectado. Intentando reconectar...');
+        this.detenerHeartbeat();
         this.ws = null;
         
         // Reconectar con backoff exponencial
@@ -209,6 +248,9 @@ export class WebSocketService extends EventEmitter {
   async forzarReconexion(): Promise<void> {
     console.log('[WebSocket] Forzando reconexión y limpieza de cache...');
     
+    // Detener heartbeat
+    this.detenerHeartbeat();
+    
     // Cerrar conexión existente
     if (this.ws) {
       this.ws.close();
@@ -241,6 +283,9 @@ export class WebSocketService extends EventEmitter {
    * Desconecta el WebSocket
    */
   desconectar(): void {
+    // Detener heartbeat
+    this.detenerHeartbeat();
+    
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;

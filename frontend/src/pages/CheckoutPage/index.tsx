@@ -27,6 +27,7 @@ const CheckoutPage: React.FC = () => {
   const [descuentoVisual, setDescuentoVisual] = useState(0);
   const [error, setError] = useState<string>("");
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [mpFallbackVisible, setMpFallbackVisible] = useState(false);
   
   // Estados para saldo y referidos
   const [saldoUsado, setSaldoUsado] = useState(0);
@@ -297,25 +298,36 @@ const CheckoutPage: React.FC = () => {
         if (plan) {
           console.log('[CheckoutPage] Plan disponible, creando botón de MercadoPago...');
 
-          // Crear el botón con getPreferenceIdForPayment como callback
-          await mercadoPagoService.createButton(
-            'mp-wallet-container-unique',
-            getPreferenceIdForPayment
-          );
-          console.log('[CheckoutPage] ✅ Botón de MercadoPago creado');
+          try {
+            // Crear el botón con getPreferenceIdForPayment como callback
+            await mercadoPagoService.createButton(
+              'mp-wallet-container-unique',
+              getPreferenceIdForPayment
+            );
+            console.log('[CheckoutPage] ✅ Botón de MercadoPago creado');
+            setMpFallbackVisible(false);
+          } catch (buttonError) {
+            console.error('[CheckoutPage] Error creando botón de MercadoPago:', buttonError);
+            // Mostrar el botón fallback si hay error al crear el botón
+            console.log('[CheckoutPage] Mostrando botón fallback...');
+            setMpFallbackVisible(true);
+            // Mostrar error al usuario
+            setError('Usando método de pago alternativo. Por favor, continúa con el pago.');
+          }
         }
       } catch (error) {
         console.error('[CheckoutPage] Error inicializando MercadoPago:', error);
-        // Mostrar el botón fallback si hay error
-        const fallbackBtn = document.getElementById('fallback-payment-button');
-        if (fallbackBtn) {
-          fallbackBtn.classList.remove('hidden');
-        }
+        // Mostrar el botón fallback si hay error en la inicialización
+        console.log('[CheckoutPage] Mostrando botón fallback (init error)...');
+        setMpFallbackVisible(true);
+        setError('Error de conexión. Utilizando método alternativo.');
       }
     };
 
-    init();
-  }, [plan]);
+    if (plan) {
+      init();
+    }
+  }, [plan, getPreferenceIdForPayment]);
 
   if (!plan) {
     return (
@@ -365,6 +377,7 @@ const CheckoutPage: React.FC = () => {
                 processingPayment={processingPayment}
                 onPaymentButtonClick={handlePaymentButtonClick}
                 pagoConSaldoCompleto={pagoConSaldoCompleto}
+                mpFallbackVisible={mpFallbackVisible}
               />
 
               {/* Security Badge */}
