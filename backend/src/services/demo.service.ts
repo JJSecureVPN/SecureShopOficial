@@ -1,12 +1,16 @@
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+import path from "path";
 import Database from "better-sqlite3";
 import { ServexService } from "./servex.service";
 import { WebSocketService } from "./websocket.service";
 import emailService from "./email.service";
+import { config } from "../config";
 
 export interface Demo {
   id: string;
   email: string;
+  email_normalized?: string;
   user_id?: string;
   ip_address: string;
   cliente_nombre: string;
@@ -45,6 +49,7 @@ export class DemoService {
       CREATE TABLE IF NOT EXISTS demos (
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
+        email_normalized TEXT NOT NULL,
         user_id TEXT,
         ip_address TEXT NOT NULL,
         cliente_nombre TEXT NOT NULL,
@@ -65,14 +70,87 @@ export class DemoService {
       // Columna ya existe, ignorar
     }
 
+    // Agregar columna email_normalized si no existe (migración)
+    try {
+      this.db.exec(`ALTER TABLE demos ADD COLUMN email_normalized TEXT`);
+      console.log('[DemoService] Columna email_normalized agregada a demos');
+    } catch (e) {
+      // Columna ya existe, ignorar
+    }
+
     // Crear índices
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_demos_email ON demos(email);
+      CREATE INDEX IF NOT EXISTS idx_demos_email_normalized ON demos(email_normalized);
       CREATE INDEX IF NOT EXISTS idx_demos_ip ON demos(ip_address);
       CREATE INDEX IF NOT EXISTS idx_demos_estado ON demos(estado);
       CREATE INDEX IF NOT EXISTS idx_demos_expires ON demos(expires_at);
       CREATE INDEX IF NOT EXISTS idx_demos_user_id ON demos(user_id);
     `);
+
+    // Migrar datos existentes para llenar email_normalized si está vacío
+    try {
+      const rows = this.db
+        .prepare(
+          `SELECT id, email FROM demos WHERE email_normalized IS NULL OR email_normalized = ''`
+        )
+        .all() as { id: string; email: string }[];
+
+      const updateStmt = this.db.prepare(
+        `UPDATE demos SET email_normalized = ? WHERE id = ?`
+      );
+
+      for (const row of rows) {
+        updateStmt.run(this.normalizarEmail(row.email), row.id);
+      }
+    } catch (e: any) {
+      console.warn('[DemoService] No se pudo migrar email_normalized:', e.message || e);
+    }
+  }
+
+  /**
+   * Normaliza un email (especialmente Gmail) para evitar aliasing (+, puntos)
+   */
+  private normalizarEmail(email: string): string {
+    const normalized = email.trim().toLowerCase();
+    const parts = normalized.split("@");
+    if (parts.length !== 2) return normalized;
+
+    const [local, domain] = parts;
+    if (domain === "gmail.com" || domain === "googlemail.com") {
+      const withoutPlus = local.split("+")[0];
+      const withoutDots = withoutPlus.replace(/\./g, "");
+      return `${withoutDots}@gmail.com`;
+    }
+
+    return normalized;
+  }
+
+  private getDemoLogFilePath(): string {
+    const logsDir = path.join(__dirname, "../../logs");
+    try {
+      fs.mkdirSync(logsDir, { recursive: true });
+    } catch (e) {
+      // Ignorar errores de carpeta ya existente u otros
+    }
+
+    return path.join(logsDir, "demo-requests.log");
+  }
+
+  private async registrarIntentoDemo(options: {
+    email: string;
+    emailNormalized: string;
+    ipAddress: string;
+    userId?: string;
+    allowed: boolean;
+    reason?: string;
+  }): Promise<void> {
+    const line = `${new Date().toISOString()} | ip=${options.ipAddress} | email=${options.email} | normalized=${options.emailNormalized} | userId=${options.userId || "N/A"} | allowed=${options.allowed} | reason=${options.reason || ""}\n`;
+    try {
+      await fs.promises.appendFile(this.getDemoLogFilePath(), line);
+    } catch (err) {
+      console.error("[DemoService] Error escribiendo log de demos:", err);
+    }
   }
 
   /**
@@ -83,19 +161,44 @@ export class DemoService {
     ipAddress: string
   ): Promise<VerificacionBloqueo> {
     try {
-      // Verificar email
-      const demoEmail = this.db
+      const emailNormalized = this.normalizarEmail(email);
+
+      // 1) Bloqueo temporal: demos activas (no expiradas)
+      const demoEmailActiva = this.db
         .prepare(
           `SELECT * FROM demos 
-         WHERE email = ? 
+         WHERE email_normalized = ? 
          AND estado IN ('pendiente', 'generado', 'enviado')
          AND expires_at > datetime('now')
          LIMIT 1`
         )
-        .get(email) as any;
+        .get(emailNormalized) as any;
 
-      // Verificar IP
-      const demoIP = this.db
+      if (demoEmailActiva) {
+        const expiresAt = new Date(demoEmailActiva.expires_at);
+        const tiempoRestante = Math.ceil(
+          (expiresAt.getTime() - Date.now()) / 1000
+        );
+        const result: VerificacionBloqueo = {
+          bloqueado: true,
+          motivo: `Email bloqueado. Podrás solicitar otra demo en ${Math.ceil(
+            tiempoRestante / 3600
+          )} horas.`,
+          tiempo_restante: tiempoRestante,
+          email_bloqueado: true,
+          ip_bloqueada: false,
+        };
+        await this.registrarIntentoDemo({
+          email,
+          emailNormalized,
+          ipAddress,
+          allowed: false,
+          reason: result.motivo,
+        });
+        return result;
+      }
+
+      const demoIPActiva = this.db
         .prepare(
           `SELECT * FROM demos 
          WHERE ip_address = ? 
@@ -105,28 +208,12 @@ export class DemoService {
         )
         .get(ipAddress) as any;
 
-      if (demoEmail) {
-        const expiresAt = new Date(demoEmail.expires_at);
+      if (demoIPActiva) {
+        const expiresAt = new Date(demoIPActiva.expires_at);
         const tiempoRestante = Math.ceil(
           (expiresAt.getTime() - Date.now()) / 1000
         );
-        return {
-          bloqueado: true,
-          motivo: `Email bloqueado. Podrás solicitar otra demo en ${Math.ceil(
-            tiempoRestante / 3600
-          )} horas.`,
-          tiempo_restante: tiempoRestante,
-          email_bloqueado: true,
-          ip_bloqueada: false,
-        };
-      }
-
-      if (demoIP) {
-        const expiresAt = new Date(demoIP.expires_at);
-        const tiempoRestante = Math.ceil(
-          (expiresAt.getTime() - Date.now()) / 1000
-        );
-        return {
+        const result: VerificacionBloqueo = {
           bloqueado: true,
           motivo: `IP bloqueada. Podrás solicitar otra demo en ${Math.ceil(
             tiempoRestante / 3600
@@ -135,8 +222,80 @@ export class DemoService {
           email_bloqueado: false,
           ip_bloqueada: true,
         };
+        await this.registrarIntentoDemo({
+          email,
+          emailNormalized,
+          ipAddress,
+          allowed: false,
+          reason: result.motivo,
+        });
+        return result;
       }
 
+      // 2) Conteo histórico (ventana configurable) para evitar demos ilimitadas
+      const windowClause =
+        config.demo.windowHours > 0
+          ? `AND created_at >= datetime('now', '-${config.demo.windowHours} hours')`
+          : "";
+
+      const emailCount = this.db
+        .prepare(
+          `SELECT COUNT(*) as total FROM demos WHERE email_normalized = ? ${windowClause}`
+        )
+        .get(emailNormalized) as { total: number };
+
+      if (emailCount.total >= config.demo.maxPerEmail) {
+        const result: VerificacionBloqueo = {
+          bloqueado: true,
+          motivo: `Has alcanzado el límite de ${config.demo.maxPerEmail} demos para este email.`,
+          limite_alcanzado: true,
+          demos_usadas: emailCount.total,
+          demos_maximas: config.demo.maxPerEmail,
+          email_bloqueado: true,
+          ip_bloqueada: false,
+        };
+        await this.registrarIntentoDemo({
+          email,
+          emailNormalized,
+          ipAddress,
+          allowed: false,
+          reason: result.motivo,
+        });
+        return result;
+      }
+
+      const ipCount = this.db
+        .prepare(
+          `SELECT COUNT(*) as total FROM demos WHERE ip_address = ? ${windowClause}`
+        )
+        .get(ipAddress) as { total: number };
+
+      if (ipCount.total >= config.demo.maxPerIp) {
+        const result: VerificacionBloqueo = {
+          bloqueado: true,
+          motivo: `Has alcanzado el límite de ${config.demo.maxPerIp} demos para esta IP.`,
+          limite_alcanzado: true,
+          demos_usadas: ipCount.total,
+          demos_maximas: config.demo.maxPerIp,
+          email_bloqueado: false,
+          ip_bloqueada: true,
+        };
+        await this.registrarIntentoDemo({
+          email,
+          emailNormalized,
+          ipAddress,
+          allowed: false,
+          reason: result.motivo,
+        });
+        return result;
+      }
+
+      await this.registrarIntentoDemo({
+        email,
+        emailNormalized,
+        ipAddress,
+        allowed: true,
+      });
       return { bloqueado: false };
     } catch (error: any) {
       console.error("[DemoService] Error verificando bloqueo:", error.message);
@@ -145,10 +304,10 @@ export class DemoService {
   }
 
   /**
-   * Verifica el límite de demos por usuario (máximo 2 demos de por vida por cuenta)
+   * Verifica el límite de demos por usuario (máximo configurado de por vida por cuenta)
    */
   verificarLimiteUsuario(userId: string): VerificacionBloqueo {
-    const LIMITE_DEMOS = 2;
+    const LIMITE_DEMOS = config.demo.maxPerEmail;
     
     const result = this.db.prepare(`
       SELECT COUNT(*) as total FROM demos 
@@ -179,7 +338,7 @@ export class DemoService {
    * Obtiene el número de demos usadas por un usuario
    */
   obtenerDemosUsadas(userId: string): { usadas: number; maximas: number } {
-    const LIMITE_DEMOS = 2;
+    const LIMITE_DEMOS = config.demo.maxPerEmail;
     
     const result = this.db.prepare(`
       SELECT COUNT(*) as total FROM demos 
@@ -242,15 +401,18 @@ export class DemoService {
         }`
       );
 
-      // 5. Guardar en BD (incluyendo user_id)
+      const emailNormalized = this.normalizarEmail(email);
+
+      // 5. Guardar en BD (incluyendo user_id y email_normalized)
       const stmt = this.db.prepare(
-        `INSERT INTO demos (id, email, user_id, ip_address, cliente_nombre, servex_username, servex_password, estado)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO demos (id, email, email_normalized, user_id, ip_address, cliente_nombre, servex_username, servex_password, estado)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
 
       stmt.run(
         demoId,
         email,
+        emailNormalized,
         userId || null,
         ipAddress,
         nombre,
@@ -291,6 +453,7 @@ export class DemoService {
       const demo: Demo = {
         id: demoId,
         email,
+        email_normalized: emailNormalized,
         ip_address: ipAddress,
         cliente_nombre: nombre,
         servex_username: clienteServex.username,

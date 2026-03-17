@@ -1,42 +1,30 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { motion } from 'framer-motion';
 import { PlanRevendedor } from "../../types";
 import { apiService, ValidacionCupon } from "../../services/api.service";
-import { ModeSelector } from "./components/ModeSelector";
 import CompactHeroControl from "../../components/CompactHeroControl";
+import { ModeSelector } from "./components/ModeSelector";
 import { RenovacionPanel } from "./components/RenovacionPanel";
-import PlanGroupsSection from "./components/PlanGroupsSection";
+import ResellerPlanSelector from "./components/ResellerPlanSelector";
 import { SupportSection } from "./components/SupportSection";
-import { MobileMenu } from "./components/MobileMenu";
 import { DIAS_POR_CREDITOS, EMAIL_REGEX } from "./constants";
 import {
   ModoSeleccion,
   PasoRenovacion,
   PlanGroup,
   RevendedorEncontrado,
-  MobileSection,
 } from "./types";
-import { extractUsersFromName } from "./utils";
 
 type CuponAplicado = NonNullable<ValidacionCupon["cupon"]>;
 
-export interface RevendedoresPageProps {
-  isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (value: boolean) => void;
-}
-
-export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen }: RevendedoresPageProps) {
+export default function RevendedoresPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialGroupId = "validez";
-
   const [planes, setPlanes] = useState<PlanRevendedor[]>([]);
   const [planesRenovacion, setPlanesRenovacion] = useState<PlanRevendedor[]>([]);
-  const [activeSection, setActiveSection] = useState("validez");
-  const [expandedMenuSections, setExpandedMenuSections] = useState<string[]>([]);
   const [modoSeleccion, setModoSeleccion] = useState<ModoSeleccion>("compra");
 
   const [pasoRenovacion, setPasoRenovacion] = useState<PasoRenovacion>("buscar");
@@ -195,6 +183,23 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       }
 
       const info = data as RevendedorEncontrado;
+
+      // Bloquear renovaciones de cuentas del sistema de créditos
+      if (info?.datos?.servex_account_type === "credit") {
+        setRevendedorRenovacion(null);
+        setPasoRenovacion("buscar");
+        setTipoRenovacionSeleccionado("validity");
+        setCantidadSeleccionada(0);
+        setNombreRenovacion("");
+        setEmailRenovacion("");
+        setCuponRenovacion(null);
+        setDescuentoRenovacion(0);
+        setErrorRenovacion(
+          "Esta cuenta pertenece al sistema de Créditos. Las renovaciones por créditos están deshabilitadas."
+        );
+        return;
+      }
+
       setRevendedorRenovacion(info);
       setTipoRenovacionSeleccionado(info.datos.servex_account_type);
       setCuponRenovacion(null);
@@ -220,7 +225,6 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
     if (cuentaParam && cuentaParam !== cuentaDesdeUrl && planesRenovacion.length > 0) {
       setCuentaDesdeUrl(cuentaParam);
       setModoSeleccion("renovacion");
-      setActiveSection("renovacion");
       // Limpiar el parámetro de la URL
       setSearchParams({}, { replace: true });
       // Buscar el revendedor automáticamente
@@ -286,7 +290,6 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
 
   const activarModoCompra = () => {
     setModoSeleccion("compra");
-    setActiveSection("validez");
     resetRenovacion();
   };
 
@@ -295,7 +298,6 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       resetRenovacion();
     }
     setModoSeleccion("renovacion");
-    setActiveSection("renovacion");
   };
 
   const volverABuscarRevendedor = () => {
@@ -334,6 +336,23 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
       }
 
       const info = data as RevendedorEncontrado;
+
+      // Bloquear renovaciones de cuentas del sistema de créditos
+      if (info?.datos?.servex_account_type === "credit") {
+        setRevendedorRenovacion(null);
+        setPasoRenovacion("buscar");
+        setTipoRenovacionSeleccionado("validity");
+        setCantidadSeleccionada(0);
+        setNombreRenovacion("");
+        setEmailRenovacion("");
+        setCuponRenovacion(null);
+        setDescuentoRenovacion(0);
+        setErrorRenovacion(
+          "Esta cuenta pertenece al sistema de Créditos. Las renovaciones por créditos están deshabilitadas."
+        );
+        return;
+      }
+
       setRevendedorRenovacion(info);
       setTipoRenovacionSeleccionado(info.datos.servex_account_type);
       setCuponRenovacion(null);
@@ -467,75 +486,9 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
     [planesValidity]
   );
 
-  const revendedorSections: MobileSection[] = useMemo(() => {
-    const sections: MobileSection[] = [
-      {
-        id: "renovacion",
-        label: "Renovación",
-        subtitle: "Renueva tu plan actual",
-        icon: (
-          <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-            <RefreshCw className="w-2.5 h-2.5 text-orange-300" />
-          </div>
-        ),
-        scrollId: "plan-renovacion",
-      },
-    ];
-
-    groupedPlans.forEach((group) => {
-      const groupId = group.id;
-      const isExpanded = expandedMenuSections.includes(groupId);
-
-      sections.push({
-        id: groupId,
-        label: group.title,
-        subtitle: group.subtitle,
-  icon: group.icon,
-        isGroup: true,
-        isExpanded,
-        onToggle: () => {
-          const wasExpanded = expandedMenuSections.includes(groupId);
-          setExpandedMenuSections((prev) =>
-            prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
-          );
-          setActiveSection(groupId);
-
-          if (!wasExpanded) {
-            setTimeout(() => {
-              const element = document.getElementById(`plan-${groupId}`);
-              element?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }, 100);
-          }
-        },
-      });
-
-      if (isExpanded) {
-  group.items.forEach((plan) => {
-          sections.push({
-            id: `plan-${plan.id}`,
-            label: `${extractUsersFromName(plan.nombre)} usuarios`,
-            subtitle: "30 días",
-            icon: (
-              <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-orange-300" />
-              </div>
-            ),
-            isPlan: true,
-            planId: plan.id,
-            parentGroup: groupId,
-          });
-        });
-      }
-    });
-
-    return sections;
-  }, [groupedPlans, expandedMenuSections]);
-
   const handleConfirmarCompra = (plan: PlanRevendedor) => {
     navigate(`/checkout-revendedor?planId=${plan.id}`);
   };
-
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
   // con transform rompan el comportamiento sticky del header global)
@@ -566,91 +519,37 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
     };
   }, []);
 
-  const handleMobileGroup = (section: MobileSection) => {
-    if (modoSeleccion !== "compra") {
-      setModoSeleccion("compra");
-    }
-    section.onToggle?.();
-  };
-
-  const handleMobilePlan = (section: MobileSection) => {
-    if (modoSeleccion !== "compra") {
-      setModoSeleccion("compra");
-    }
-
-    if (section.planId) {
-      setActiveSection(section.id);
-      const element = document.getElementById(`plan-${section.planId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-
-    closeMobileMenu();
-  };
-
-  const handleMobileSection = (section: MobileSection) => {
-    if (section.id === "renovacion") {
-      activarModoRenovacion();
-      setTimeout(() => {
-        if (section.scrollId) {
-          document.getElementById(section.scrollId)?.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 0);
-    } else {
-      if (modoSeleccion !== "compra") {
-        setModoSeleccion("compra");
-      }
-      setActiveSection(section.id);
-      setTimeout(() => {
-        const element = document.getElementById(`plan-${section.id}`);
-        if (element) {
-          const headerOffset = 120;
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-        }
-      }, 0);
-    }
-
-    closeMobileMenu();
-  };
-
   return (
     <div className="bg-refine-dark text-zinc-100">
-      <main className="flex flex-col">
+      <main>
 
         <section id="planes-section" className="relative pt-20 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 bg-refine-dark">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="w-full">
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="md:hidden"
-            >
-              <ModeSelector
-                mode={modoSeleccion}
-                onSelectCompra={activarModoCompra}
-                onSelectRenovacion={activarModoRenovacion}
-              />
-            </motion.div>
-
-            {/* Desktop hero compact */}
+            {/* keep hero controls outside the scrolling .w-full so transforms don't leak */}
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="hidden md:block mt-12 mb-10"
+              className="mt-12 mb-10"
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <CompactHeroControl
-                  value={modoSeleccion}
-                  onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
-                />
+                <div className="lg:hidden">
+                  <ModeSelector
+                    mode={modoSeleccion}
+                    onSelectCompra={activarModoCompra}
+                    onSelectRenovacion={activarModoRenovacion}
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <CompactHeroControl
+                    value={modoSeleccion}
+                    onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                  />
+                </div>
               </div>
             </motion.div>
+
+            <div className="w-full">
 
             {modoSeleccion === "renovacion" && (
               <RenovacionPanel
@@ -687,12 +586,14 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
               />
             )}
 
-            {modoSeleccion === "compra" && (
-              <PlanGroupsSection
-                groups={groupedPlans}
-                onConfirmarCompra={handleConfirmarCompra}
-                initialGroupId={initialGroupId}
-              />
+            {modoSeleccion === "compra" && groupedPlans.length > 0 && (
+              <div className="pb-28 lg:pb-0">
+                <ResellerPlanSelector
+                  plans={planesValidity}
+                  groupData={groupedPlans[0]}
+                  onConfirmarCompra={handleConfirmarCompra}
+                />
+              </div>
             )}
             </div>
           </div>
@@ -700,16 +601,6 @@ export default function RevendedoresPage({ isMobileMenuOpen, setIsMobileMenuOpen
 
         <SupportSection />
       </main>
-
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={closeMobileMenu}
-        sections={revendedorSections}
-        activeSection={activeSection}
-        onSelectGroup={handleMobileGroup}
-        onSelectPlan={handleMobilePlan}
-        onSelectSection={handleMobileSection}
-      />
     </div>
   );
 }

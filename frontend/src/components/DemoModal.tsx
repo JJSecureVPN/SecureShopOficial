@@ -105,6 +105,13 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
           email_enviado: true,
           demos_restantes: response.data?.demos_restantes
         });
+        // Actualizar el contador de demos en la UI
+        setDemosInfo(prev => prev ? {
+          ...prev,
+          demos_usadas: prev.demos_usadas + 1,
+          demos_disponibles: Math.max(0, prev.demos_disponibles - 1),
+          puede_solicitar: Math.max(0, prev.demos_disponibles - 1) > 0
+        } : null);
         setNombre("");
 
         // Auto-cerrar después de 30 segundos

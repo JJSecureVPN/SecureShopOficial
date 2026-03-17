@@ -83,7 +83,7 @@ const AppContent = () => {
           <Route path="/checkout-revendedor" element={<CheckoutRevendedorPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/planes" element={<PlanesPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
-          <Route path="/revendedores" element={<RevendedoresPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
+          <Route path="/revendedores" element={<RevendedoresPage />} />
           <Route path="/estado" element={<ServersPage isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />} />
           <Route path="/sobre-nosotros" element={<AboutPage />} />
           <Route path="/success" element={<SuccessPage />} />

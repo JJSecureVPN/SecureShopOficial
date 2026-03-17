@@ -1,100 +1,6 @@
 import { Activity, Globe2, Zap, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Floating particles effect - only on left side
-const FloatingParticles = () => {
-  const particles = Array.from({ length: 15 });
-  
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 lg:w-1/2">
-        {particles.map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-emerald-400/20 rounded-full"
-            initial={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth / 2 : 400),
-              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-            }}
-            animate={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth / 2 : 400),
-              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 8 + 8,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Animated connecting lines - only on left side
-const ConnectingLines = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 lg:w-1/2">
-        <svg className="w-full h-full opacity-20">
-          <motion.line
-            x1="10%"
-            y1="20%"
-            x2="40%"
-            y2="80%"
-            stroke="url(#gradient1)"
-            strokeWidth="1"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: [0, 0.5, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.line
-            x1="30%"
-            y1="10%"
-            x2="45%"
-            y2="60%"
-            stroke="url(#gradient2)"
-            strokeWidth="1"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: [0, 0.5, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-          <motion.line
-            x1="5%"
-            y1="50%"
-            x2="35%"
-            y2="30%"
-            stroke="url(#gradient3)"
-            strokeWidth="1"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: [0, 0.5, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          />
-          <defs>
-            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0" />
-              <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0" />
-              <stop offset="50%" stopColor="#fb923c" stopOpacity="1" />
-              <stop offset="100%" stopColor="#fb923c" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
-              <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
-              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-    </div>
-  );
-};
-
 // Subtle grid pattern - only on left side
 const GridPattern = () => {
   return (
@@ -158,8 +64,6 @@ export function ServersHero() {
     >
       {/* Background effects - only on left side to avoid video overlap */}
       <GridPattern />
-      <ConnectingLines />
-      <FloatingParticles />
 
 
 

@@ -472,6 +472,14 @@ export interface AppConfig {
     windowMs: number;
     max: number;
   };
+  demo: {
+    maxPerIp: number;
+    maxPerEmail: number;
+    windowHours: number;
+  };
+  turnstile: {
+    secretKey: string;
+  };
   logLevel: string;
   renovaciones: RenovacionAutoRetryConfig;
 }

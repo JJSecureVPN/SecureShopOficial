@@ -30,6 +30,7 @@ import { RealtimeService } from "./services/realtime.service";
 import { crearRutasRealtime } from "./routes/realtime.routes";
 import { crearRutasSponsors } from "./routes/sponsors.routes";
 import { crearRutasActiveSessions } from "./routes/active-sessions.routes";
+import authRoutes from "./routes/auth.routes";
 import { DonacionesService } from "./services/donaciones.service";
 import { SponsorsService } from "./services/sponsors.service";
 import {
@@ -381,6 +382,9 @@ class Server {
 
     // Rutas de la API - Noticias
     this.app.use("/api/noticias", noticiasRouter);
+
+    // Rutas de autenticación (Turnstile)
+    this.app.use("/api/auth", authRoutes);
 
     // Rutas de Centro de Ayuda / Tutoriales
     this.app.use("/api/help-center", crearRutasHelpCenter(this.supabaseService));

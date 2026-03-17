@@ -9,6 +9,33 @@ import {
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, Profile, PurchaseHistory } from '../lib/supabase';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+/** Vincula compras realizadas como invitado al usuario que acaba de iniciar sesión */
+async function vincularComprasInvitado(userId: string, email: string): Promise<void> {
+  try {
+    const url = API_BASE.endsWith('/api')
+      ? `${API_BASE}/compras/vincular`
+      : `${API_BASE}/api/compras/vincular`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, email }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.data?.vinculadas > 0) {
+        console.log(`[Auth] ✅ ${data.data.vinculadas} compra(s) de invitado vinculadas a la cuenta`);
+      }
+    }
+  } catch (e) {
+    // No bloqueamos el login si esto falla
+    console.warn('[Auth] No se pudieron vincular compras de invitado:', e);
+  }
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -131,8 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log('🔄 Auth state changed:', _event);
+      async (event, session) => {
+        console.log('🔄 Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -143,6 +170,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Cargar datos en background sin bloquear
           fetchProfile(session.user.id).catch(console.error);
           fetchPurchaseHistory(session.user.id).catch(console.error);
+
+          // Al iniciar sesión o registrarse, vincular compras realizadas como invitado
+          if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+            vincularComprasInvitado(session.user.id, session.user.email || '')
+              .then(() => fetchPurchaseHistory(session.user!.id))
+              .catch(console.error);
+          }
         } else {
           setProfile(null);
           setPurchaseHistory([]);
@@ -198,6 +232,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setPurchaseHistory([]);
+    window.location.href = '/';
   };
 
   // Actualizar perfil

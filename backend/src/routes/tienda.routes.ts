@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { TiendaService } from "../services/tienda.service";
 import { WebSocketService } from "../services/websocket.service";
 import { configService } from "../services/config.service";
+import { supabaseService } from "../services/supabase.service";
 import { ApiResponse, CrearPagoInput } from "../types";
 
 export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSocketService): Router {
@@ -954,6 +955,42 @@ export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSoc
       res.status(500).json({
         success: false,
         error: error.message || "Error reenviando email",
+      } as ApiResponse);
+    }
+  });
+
+  /**
+   * POST /api/compras/vincular
+   * Vincula compras realizadas como invitado (sin cuenta) al usuario que acaba de iniciar sesión.
+   * Se llama desde el frontend justo después del login o registro.
+   * Body: { user_id: string, email: string }
+   */
+  router.post("/compras/vincular", async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { user_id, email } = req.body;
+
+      if (!user_id || !email) {
+        res.status(400).json({
+          success: false,
+          error: "user_id y email son requeridos",
+        } as ApiResponse);
+        return;
+      }
+
+      const linked = await supabaseService.linkPurchasesByEmail(user_id, email);
+
+      res.json({
+        success: true,
+        message: linked > 0
+          ? `${linked} compra(s) vinculadas a tu cuenta`
+          : "Sin compras pendientes por vincular",
+        data: { vinculadas: linked },
+      } as ApiResponse);
+    } catch (error: any) {
+      console.error("[API] Error vinculando compras:", error.message);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Error vinculando compras",
       } as ApiResponse);
     }
   });

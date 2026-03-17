@@ -50,7 +50,16 @@ export const config: AppConfig = {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || "900000", 10), // 15 minutos
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || "500", 10), // 500 solicitudes por ventana
   },
+  demo: {
+    maxPerIp: parseInt(process.env.DEMO_MAX_PER_IP || "2", 10),
+    maxPerEmail: parseInt(process.env.DEMO_MAX_PER_EMAIL || "2", 10),
+    // Ventana en horas para contar demos (ej: 720 = 30 días). Convertir a 0 para contar todas las demos.
+    windowHours: parseInt(process.env.DEMO_WINDOW_HOURS || "720", 10),
+  },
 
+  turnstile: {
+    secretKey: process.env.TURNSTILE_SECRET_KEY || "",
+  },
   logLevel: process.env.LOG_LEVEL || "info",
   renovaciones: {
     enabled: (process.env.RENOVACIONES_AUTORETRY_ENABLED || "true").toLowerCase() !== "false",

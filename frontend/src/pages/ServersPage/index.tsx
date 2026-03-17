@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { BarChart3, Users } from "lucide-react";
-import { ServerStats } from "./components/ServerStats";
 import { LatestUsers } from "./components/LatestUsers";
 import { ServersHero } from "./components/ServersHero";
 import BottomSheet from "../../components/BottomSheet";
 import type { ServersPageProps } from "./types";
-import { ServerGlobalSummary } from "./components/ServerGlobalSummary";
+import { ServerDashboard } from "./components/ServerDashboard";
 
 const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps) => {
   const [activeSection, setActiveSection] = useState("server-stats");
@@ -98,18 +96,9 @@ const ServersPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: ServersPageProps
         {/* Content Container - starts where video ends */}
         <div className="bg-zinc-900">
           <div className="max-w-7xl mx-auto">
-            {/* Global Summary - Stats Cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <ServerGlobalSummary />
-            </motion.div>
-
-            {/* Server Stats Section */}
+            {/* Dashboard unificado: Resumen global + estadísticas por servidor */}
             <div id="section-server-stats">
-              <ServerStats />
+              <ServerDashboard />
             </div>
           </div>
         </div>

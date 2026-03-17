@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Shield } from "lucide-react";
 import SegmentedControl from "../../components/SegmentedControl";
 import CompactHeroControl from "../../components/CompactHeroControl";
 import { motion } from "framer-motion";
 import DemoModal from "../../components/DemoModal";
-import { RefineButton } from "../../components/RefineButton";
-import { CardTitle, BodyText, SmallText } from "../../components/Typography";
+import { BodyText } from "../../components/Typography";
 import { Plan } from "../../types";
+import PlanSlider from "./components/PlanSlider";
+import StickyLayout from "../../components/StickyLayout";
+import StepCard from "../../components/StepCard";
+import SummaryPanel from "../../components/SummaryPanel";
 import { apiService } from "../../services/api.service";
 import type { ValidacionCupon } from "../../services/api.service";
 import { useServerStats } from "../../hooks/useServerStats";
@@ -354,12 +356,10 @@ export default function PlanesPage({ }: PlanesPageProps) {
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
 
       <main>
-        {/* Hero eliminado - iniciamos directamente la sección de planes */}
-
         {/* Plans Section */}
         <section className="relative py-12 sm:py-16 lg:py-20 bg-refine-dark">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Tabs Compra / Renovación (moved from Hero) */}
+            {/* Tabs Compra / Renovación — mobile */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -377,7 +377,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
                 />
               </div>
             </motion.div>
-            {/* Desktop hero compact (above the three-column layout) */}
+            {/* Desktop hero compact */}
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -390,174 +390,75 @@ export default function PlanesPage({ }: PlanesPageProps) {
                   onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
                 />
               </div>
-            </motion.div>            <div className="w-full">
+            </motion.div>
+
+            <div className="w-full">
             {modoSeleccion === "compra" && (
-              <div className="space-y-16">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="grid gap-10 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px]"
-                >
-                  <div className="space-y-6">
-                    {/* Selector de días */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.1 }}
-                      className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-zinc-900/50 border border-zinc-700 shadow-sm hover:shadow-lg hover:border-zinc-600 transition-all"
-                    >
-                      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 mb-3">
-                            Paso 1
-                          </span>
-                          <CardTitle as="h3" className="text-xl sm:text-2xl text-white">
-                            Duración del plan
-                          </CardTitle>
-                          <BodyText className="text-sm mt-1 text-zinc-400">Define cuántos días necesitas conexión segura.</BodyText>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {diasDisponibles.map((dias) => (
-                          <button
-                            key={dias}
-                            onClick={() => setDiasSeleccionados(dias)}
-                            className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                              diasSeleccionados === dias
-                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                : 'border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-orange-500/30 hover:bg-zinc-800'
-                            }`}
-                          >
-                            {dias} días
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Selector de dispositivos */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.2 }}
-                      className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-zinc-900/50 border border-zinc-700 shadow-sm hover:shadow-lg hover:border-zinc-600 transition-all"
-                    >
-                      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 mb-3">
-                            Paso 2
-                          </span>
-                          <CardTitle as="h3" className="text-xl sm:text-2xl text-white">
-                            Dispositivos simultáneos
-                          </CardTitle>
-                          <BodyText className="text-sm mt-1 text-zinc-400">Cambia la cantidad cuando quieras añadir más conexiones.</BodyText>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {dispositivosDisponibles.map((dispositivos) => (
-                          <button
-                            key={dispositivos}
-                            onClick={() => setDispositivosSeleccionados(dispositivos)}
-                            className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                              dispositivosSeleccionados === dispositivos
-                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                : 'border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-orange-500/30 hover:bg-zinc-800'
-                            }`}
-                          >
-                            {dispositivos} {dispositivos === 1 ? "dispositivo" : "dispositivos"}
-                          </button>
-                        ))}
-                      </div>
-                      <BodyText className="mt-4 text-sm text-zinc-400">
-                        ¿Necesitas más conexiones? Podemos armar planes especiales para equipos o revendedores.
-                      </BodyText>
-                    </motion.div>
-                  </div>
-
-                  {/* Resumen del plan - Sidebar */}
-                  <motion.aside
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-gradient-to-br from-zinc-900 via-zinc-900/90 to-zinc-800 border border-zinc-700 shadow-lg sm:fixed sm:right-4 sm:top-24 sm:w-[360px] md:sm:w-[420px] sm:z-50 lg:static lg:sticky lg:top-24 lg:self-start lg:w-[420px]"
-                  >
-                    <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] bg-indigo-600 text-white mb-6">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span>Tu selección</span>
-                    </div>
-
-                    <div className="space-y-2 mb-6">
-                      <CardTitle as="h3" className="text-2xl sm:text-3xl text-white">
-                        {planSeleccionado ? `${planSeleccionado.dias} días` : "Elige tu combinación"}
-                      </CardTitle>
-                      <BodyText className="text-sm sm:text-base text-zinc-400">
-                        {planSeleccionado
+              <div className="space-y-16 pb-28 lg:pb-0">
+                <StickyLayout
+                  aside={
+                    <SummaryPanel
+                      badgeText="Resumen"
+                      accent="indigo"
+                      title={planSeleccionado ? `${planSeleccionado.dias} días` : "Tu selección"}
+                      subtitle={
+                        planSeleccionado
                           ? `Protección para ${planSeleccionado.connection_limit} ${
                               planSeleccionado.connection_limit === 1 ? "dispositivo" : "dispositivos"
-                            } con velocidad ilimitada.`
-                          : "Primero selecciona duración y dispositivos para ver el detalle completo."}
-                      </BodyText>
-                    </div>
+                            } simultáneos con velocidad ilimitada.`
+                          : "Ajusta la duración y dispositivos para ver los detalles del plan."
+                      }
+                      hasSelection={!!planSeleccionado}
+                      priceLabel="Pago único"
+                      price={planSeleccionado ? `$${planSeleccionado.precio}` : ""}
+                      unitLabel="Valor equivalente"
+                      unitValue={planSeleccionado ? `$${precioPorDiaPlan}/día` : undefined}
+                      benefits={[
+                        "Servidores premium en +15 países",
+                        "Cambio de ubicaciones sin límites",
+                        "Soporte humano 24/7",
+                      ]}
+                      ctaLabel="Continuar al pago"
+                      onCtaClick={() => planSeleccionado && navigate(`/checkout?planId=${planSeleccionado.id}`)}
+                      secondaryLabel="Ver demo rápida"
+                      onSecondaryClick={() => setIsDemoOpen(true)}
+                    />
+                  }
+                >
+                  {/* Selector de días */}
+                  <StepCard
+                    label="Paso 1"
+                    title="Duración del plan"
+                    subtitle="Desliza para elegir cuántos días necesitas conexión segura."
+                    accent="indigo"
+                    delay={0.1}
+                  >
+                    <PlanSlider
+                      options={diasDisponibles}
+                      value={diasSeleccionados}
+                      onChange={setDiasSeleccionados}
+                    />
+                  </StepCard>
 
-                    {planSeleccionado ? (
-                      <div className="space-y-6">
-                        <div className="rounded-xl p-4 sm:p-5 lg:p-6 bg-zinc-800/50 backdrop-blur-sm border border-zinc-700 flex flex-wrap items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm text-zinc-500">Pago único</p>
-                            <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-orange-500">${planSeleccionado.precio}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs uppercase text-zinc-500">Equivale a</p>
-                            <p className="text-lg sm:text-xl font-semibold text-orange-400">${precioPorDiaPlan}/día</p>
-                          </div>
-                        </div>
-
-                        <ul className="space-y-3 text-sm text-zinc-300">
-                          <li className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-orange-500" />
-                            Servidores premium en más de 15 países
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-orange-500" />
-                            Cambio ilimitado de ubicaciones
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-orange-500" />
-                            Soporte humano 24/7 en español
-                          </li>
-                        </ul>
-
-                        <div className="space-y-3">
-                          <RefineButton
-                            onClick={() => planSeleccionado && navigate(`/checkout?planId=${planSeleccionado.id}`)}
-                            variant="primary"
-                            className="w-full"
-                          >
-                            Continuar al pago
-                          </RefineButton>
-                          <RefineButton
-                            onClick={() => setIsDemoOpen(true)}
-                            variant="secondary"
-                            className="w-full"
-                          >
-                            Ver demo en vivo
-                          </RefineButton>
-                        </div>
-
-                        <SmallText as="p" className="text-xs text-zinc-500 text-center">
-                          Pago seguro con Mercado Pago, tarjetas internacionales o criptomonedas.
-                        </SmallText>
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border-2 border-dashed border-zinc-700 p-5 sm:p-6 text-sm text-zinc-500 bg-zinc-800/30 text-center">
-                        <Shield className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
-                        Te mostraremos aquí el resumen con precio y beneficios cuando elijas una combinación.
-                      </div>
-                    )}
-                  </motion.aside>
-                </motion.div>
-
-                {/* 'Planes populares' eliminado */}
+                  {/* Selector de dispositivos */}
+                  <StepCard
+                    label="Paso 2"
+                    title="Dispositivos simultáneos"
+                    subtitle="Selecciona cuántos equipos quieres proteger al mismo tiempo."
+                    accent="indigo"
+                    delay={0.2}
+                  >
+                    <PlanSlider
+                      options={dispositivosDisponibles}
+                      value={dispositivosSeleccionados}
+                      onChange={setDispositivosSeleccionados}
+                      unit="dispositivos"
+                    />
+                    <BodyText className="mt-5 text-sm text-zinc-500">
+                      ¿Necesitas más conexiones? Podemos armar planes especiales para equipos o revendedores.
+                    </BodyText>
+                  </StepCard>
+                </StickyLayout>
               </div>
             )}
 

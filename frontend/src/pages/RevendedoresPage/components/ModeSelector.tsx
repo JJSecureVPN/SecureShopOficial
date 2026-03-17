@@ -16,17 +16,14 @@ export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeS
       transition={{ duration: 0.4 }}
       className="space-y-4 sm:space-y-6"
     >
-      {/* Segmented control */}
       <SegmentedControl
         value={mode}
-        onChange={(v) => (v === 'compra' ? onSelectCompra() : onSelectRenovacion())}
+        onChange={(v) => (v === "compra" ? onSelectCompra() : onSelectRenovacion())}
         descriptions={{
-          compra: 'Crea una cuenta de acceso al Secure Panel para gestionar clientes y ventas.',
-          renovacion: 'Renueva el acceso al Secure Panel y conserva permisos y reportes.'
+          compra: "Crea una cuenta de acceso al Secure Panel para gestionar clientes y ventas.",
+          renovacion: "Renueva el acceso al Secure Panel y conserva permisos y reportes.",
         }}
       />
-
-
     </motion.div>
   );
 }

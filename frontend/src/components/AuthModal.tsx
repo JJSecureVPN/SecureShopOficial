@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthModalProps {
@@ -18,6 +19,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<any>(null);
+
+  const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
+  const API_BASE = import.meta.env.VITE_API_URL || '';
 
   const { signIn, signUp, signInWithGoogle } = useAuth();
 
@@ -40,6 +46,33 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           onClose();
         }
       } else {
+        // Verificar Turnstile antes de registrar
+        if (SITE_KEY && !turnstileToken) {
+          setError('Completa la verificación de seguridad');
+          setLoading(false);
+          return;
+        }
+        if (SITE_KEY && turnstileToken) {
+          try {
+            const res = await fetch(`${API_BASE}/api/auth/verify-turnstile`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: turnstileToken }),
+            });
+            const data = await res.json();
+            if (!data.success) {
+              setError(data.error || 'Verificación de seguridad fallida');
+              setTurnstileToken(null);
+              turnstileRef.current?.reset();
+              setLoading(false);
+              return;
+            }
+          } catch {
+            setError('Error verificando seguridad. Intenta de nuevo.');
+            setLoading(false);
+            return;
+          }
+        }
         const { error } = await signUp(email, password, nombre);
         if (error) {
           if (error.message.includes('already registered')) {
@@ -71,6 +104,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     setMode(mode === 'login' ? 'register' : 'login');
     setError(null);
     setSuccess(null);
+    setTurnstileToken(null);
   };
 
   return (
@@ -199,10 +233,24 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 </div>
               </div>
 
+              {/* Turnstile - login y registro */}
+              {SITE_KEY && (
+                <div className="flex justify-center">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={SITE_KEY}
+                    onSuccess={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => setTurnstileToken(null)}
+                    options={{ theme: 'light', language: 'es' }}
+                  />
+                </div>
+              )}
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (!!SITE_KEY && !turnstileToken)}
                 className="w-full py-3 bg-[#6D4AFF] text-white font-semibold rounded-lg hover:bg-[#5B3FD9] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25"
               >
                 {loading ? (
@@ -231,7 +279,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="w-full py-3 bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all flex items-center justify-center gap-3"
+                disabled={!!SITE_KEY && !turnstileToken}
+                className="w-full py-3 bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path

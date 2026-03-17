@@ -6,7 +6,8 @@ export interface SupabaseConfig {
 }
 
 export interface PurchaseHistoryRecord {
-  user_id: string;
+  user_id?: string | null;
+  email?: string | null;
   tipo: 'plan' | 'renovacion' | 'revendedor';
   plan_nombre: string;
   monto: number;
@@ -188,12 +189,14 @@ export class SupabaseService {
   }
 
   /**
-   * Guarda una compra en el historial del usuario
-   * Busca al usuario por email y, si existe, guarda la compra
+   * Guarda una compra en el historial.
+   * - Si el cliente tiene cuenta en Supabase: guarda con user_id.
+   * - Si NO tiene cuenta: guarda con user_id = null y email para
+   *   vincularse automáticamente cuando se registre (via trigger SQL).
    */
   async savePurchaseToHistory(
     email: string,
-    purchase: Omit<PurchaseHistoryRecord, 'user_id'>
+    purchase: Omit<PurchaseHistoryRecord, 'user_id' | 'email'>
   ): Promise<string | null> {
     if (!this.client || !this.enabled) {
       console.log('[Supabase] Servicio no habilitado, omitiendo guardado de historial');
@@ -204,18 +207,15 @@ export class SupabaseService {
       // Buscar usuario por email
       const user = await this.findUserByEmail(email);
 
-      if (!user) {
-        console.log(`[Supabase] Usuario con email ${email} no encontrado. La compra no se guardará en historial hasta que se registre.`);
-        return null;
-      }
+      const record: Record<string, unknown> = {
+        ...purchase,
+        email: email.toLowerCase(),
+        user_id: user ? user.id : null,
+      };
 
-      // Guardar en historial
       const { data, error } = await this.client
         .from('purchase_history')
-        .insert({
-          user_id: user.id,
-          ...purchase,
-        })
+        .insert(record)
         .select('id')
         .single();
 
@@ -224,11 +224,48 @@ export class SupabaseService {
         return null;
       }
 
-      console.log(`[Supabase] Compra guardada en historial para usuario ${email}, ID: ${data.id}`);
+      if (user) {
+        console.log(`[Supabase] ✅ Compra guardada en historial para usuario registrado ${email}, ID: ${data.id}`);
+      } else {
+        console.log(`[Supabase] ✅ Compra guardada SIN cuenta (invitado) para ${email}, ID: ${data.id}. Se vinculará al registrarse.`);
+      }
+
       return data.id;
     } catch (error) {
       console.error('[Supabase] Error guardando compra:', error);
       return null;
+    }
+  }
+
+  /**
+   * Vincula compras sin user_id (invitado) al usuario que acaba de iniciar sesión.
+   * Se llama desde el frontend justo después del login / registro.
+   * Retorna la cantidad de compras vinculadas.
+   */
+  async linkPurchasesByEmail(userId: string, email: string): Promise<number> {
+    if (!this.client || !this.enabled) return 0;
+
+    try {
+      const { data, error } = await this.client
+        .from('purchase_history')
+        .update({ user_id: userId })
+        .is('user_id', null)
+        .eq('email', email.toLowerCase())
+        .select('id');
+
+      if (error) {
+        console.error('[Supabase] Error vinculando compras pendientes:', error);
+        return 0;
+      }
+
+      const linked = data?.length ?? 0;
+      if (linked > 0) {
+        console.log(`[Supabase] ✅ ${linked} compra(s) de invitado vinculadas al usuario ${email}`);
+      }
+      return linked;
+    } catch (error) {
+      console.error('[Supabase] Error vinculando compras:', error);
+      return 0;
     }
   }
 
