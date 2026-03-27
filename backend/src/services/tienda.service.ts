@@ -408,11 +408,25 @@ export class TiendaService {
     console.log(`[Tienda] Usando categoría activa: ${categoria.name} (ID: ${categoria.id})`);
 
     // 3. Crear cliente en Servex
+    // Verificar si la oferta 2x1 está activa (solo para planes VPN)
+    let connectionLimit = plan.connection_limit;
+    let es2x1 = false;
+    try {
+      const configPromo = await planesSupabaseService.obtenerPromocionesConfig();
+      if (configPromo?.vpn_2x1_activa) {
+        console.log(`[Tienda] 🎁 OFERTA 2X1 ACTIVA: Duplicando dispositivos de ${connectionLimit} a ${connectionLimit * 2}`);
+        connectionLimit = connectionLimit * 2;
+        es2x1 = true;
+      }
+    } catch (err) {
+      console.error("[Tienda] Error verificando oferta 2x1:", err);
+    }
+
     const clienteData: ClienteServex = {
       username,
       password,
       category_id: categoria.id,
-      connection_limit: plan.connection_limit,
+      connection_limit: connectionLimit,
       duration: plan.dias,
       type: "user",
       observation: `Cliente: ${pago.cliente_nombre} - Email: ${pago.cliente_email} - Plan: ${plan.nombre}`,
@@ -443,6 +457,8 @@ export class TiendaService {
         expiracion: expiracionFormateada,
         servidores: this.wsService.obtenerEstadisticas().map((s: any) => `${s.serverName} (${s.location})`),
         referido: referidoInfo || undefined,
+        dispositivos: connectionLimit,
+        en_oferta_2x1: es2x1,
       });
       console.log("[Tienda] ✅ Email enviado a:", pago.cliente_email);
     } catch (emailError: any) {
@@ -455,7 +471,7 @@ export class TiendaService {
         clienteNombre: pago.cliente_nombre,
         clienteEmail: pago.cliente_email,
         monto: pago.monto,
-        descripcion: `Plan: ${plan.nombre} (${plan.connection_limit} conexiones, ${plan.dias} días) - Pagado con SALDO`,
+        descripcion: `Plan: ${plan.nombre} (${connectionLimit} conexiones, ${plan.dias} días)${es2x1 ? ' 🎁 OFERTA 2X1' : ''} - Pagado con SALDO`,
         username: clienteCreado.username,
         referido: referidoInfo || undefined,
       });
@@ -547,11 +563,25 @@ export class TiendaService {
       );
 
       // 4. Crear cliente en Servex
+      // Verificar si la oferta 2x1 está activa (solo para planes VPN)
+      let connectionLimit = plan.connection_limit;
+      let es2x1 = false;
+      try {
+        const configPromo = await planesSupabaseService.obtenerPromocionesConfig();
+        if (configPromo?.vpn_2x1_activa) {
+          console.log(`[Tienda] 🎁 OFERTA 2X1 ACTIVA: Duplicando dispositivos de ${connectionLimit} a ${connectionLimit * 2}`);
+          connectionLimit = connectionLimit * 2;
+          es2x1 = true;
+        }
+      } catch (err) {
+        console.error("[Tienda] Error verificando oferta 2x1:", err);
+      }
+
       const clienteData: ClienteServex = {
         username,
         password,
         category_id: categoria.id,
-        connection_limit: plan.connection_limit,
+        connection_limit: connectionLimit,
         duration: plan.dias,
         type: "user",
         observation: `Cliente: ${pago.cliente_nombre} - Email: ${pago.cliente_email} - Plan: ${plan.nombre}`,
@@ -614,6 +644,8 @@ export class TiendaService {
           ).toLocaleDateString("es-AR"),
           servidores: this.wsService.obtenerEstadisticas().map((s: any) => `${s.serverName} (${s.location})`),
           cupon: cuponInfo || undefined,
+          dispositivos: connectionLimit,
+          en_oferta_2x1: es2x1,
         });
         console.log("[Tienda] ✅ Email enviado a:", pago.cliente_email);
       } catch (emailError: any) {
@@ -627,7 +659,7 @@ export class TiendaService {
           clienteNombre: pago.cliente_nombre,
           clienteEmail: pago.cliente_email,
           monto: pago.monto,
-          descripcion: `Plan: ${plan.nombre} (${plan.connection_limit} conexiones, ${plan.dias} días)`,
+          descripcion: `Plan: ${plan.nombre} (${connectionLimit} conexiones, ${plan.dias} días)${es2x1 ? ' 🎁 OFERTA 2X1' : ''}`,
           username: clienteCreado.username,
           cupon: cuponInfo || undefined,
         });

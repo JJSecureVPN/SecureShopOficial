@@ -15,6 +15,8 @@ interface CredencialesCliente {
   servidores: string[];
   cupon?: InformacionCupon;
   referido?: InformacionReferido;
+  dispositivos?: number;
+  en_oferta_2x1?: boolean;
 }
 
 interface CredencialesRevendedor {
@@ -226,6 +228,17 @@ class EmailService {
 
             ${cuponSection}
             ${referidoSection}
+
+            ${credenciales.en_oferta_2x1 ? `
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 16px 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <div style="font-size: 18px; font-weight: bold; color: #ffffff; margin-bottom: 4px;">🎉 ¡OFERTA 2x1 APLICADA!</div>
+              <div style="font-size: 14px; color: #e9d5ff;">Tu plan incluye <strong style="color: #fff;">${credenciales.dispositivos || 2} dispositivos</strong> por el precio de ${(credenciales.dispositivos || 2) / 2}</div>
+            </div>
+            ` : (credenciales.dispositivos ? `
+            <div style="background: #f0f0f0; padding: 12px 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <span style="font-weight: bold; color: #667eea;">📱 Dispositivos:</span> ${credenciales.dispositivos} conexiones simultáneas
+            </div>
+            ` : '')}
 
             <div class="servers">
               <h3>🌍 Servidores Disponibles:</h3>

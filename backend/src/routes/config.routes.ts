@@ -299,6 +299,9 @@ router.get("/promo-status", async (req: Request, res: Response) => {
         descuento_porcentaje: config?.vpn_descuento_porcentaje || 20,
         solo_nuevos: false,
         solo_renovaciones: false,
+        vpn_2x1_activa: config?.vpn_2x1_activa || false,
+        vpn_2x1_activada_en: config?.vpn_2x1_activada_en || null,
+        vpn_2x1_duracion_horas: config?.vpn_2x1_duracion_horas || 24,
       },
     });
   } catch (error) {
@@ -633,6 +636,65 @@ router.get("/mercadopago", (_req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: "Error al obtener configuración de MercadoPago",
+      detalles: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * GET /api/config/2x1-status
+ * Retorna el estado simplificado de la oferta 2x1 para integraciones externas
+ */
+router.get("/2x1-status", async (_req: Request, res: Response) => {
+  try {
+    const config = await planesSupabaseService.obtenerPromocionesConfig();
+    return res.status(200).json({
+      active: config?.vpn_2x1_activa || false,
+    });
+  } catch (error) {
+    return res.status(500).json({ active: false });
+  }
+});
+
+/**
+ * POST /api/config/activar-2x1
+ * Activa la oferta 2x1 para planes VPN
+ */
+router.post("/activar-2x1", async (req: Request, res: Response) => {
+  try {
+    const { duracion_horas, auto_desactivar } = req.body;
+    await planesSupabaseService.activar2x1VPN(
+      duracion_horas ? parseInt(duracion_horas) : 24,
+      auto_desactivar !== undefined ? auto_desactivar === true : true
+    );
+    return res.status(200).json({
+      success: true,
+      mensaje: "Oferta 2x1 para planes VPN activada",
+    });
+  } catch (error) {
+    console.error("Error activando 2x1:", error);
+    return res.status(500).json({
+      error: "Error al activar la oferta 2x1",
+      detalles: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * POST /api/config/desactivar-2x1
+ * Desactiva la oferta 2x1 para planes VPN
+ */
+router.post("/desactivar-2x1", async (_req: Request, res: Response) => {
+  try {
+    await planesSupabaseService.desactivar2x1VPN();
+    return res.status(200).json({
+      success: true,
+      mensaje: "Oferta 2x1 para planes VPN desactivada",
+    });
+  } catch (error) {
+    console.error("Error desactivando 2x1:", error);
+    return res.status(500).json({
+      error: "Error al desactivar la oferta 2x1",
       detalles: error instanceof Error ? error.message : "Unknown error",
     });
   }

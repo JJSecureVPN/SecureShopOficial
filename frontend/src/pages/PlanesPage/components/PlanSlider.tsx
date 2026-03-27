@@ -7,6 +7,7 @@ interface PlanSliderProps {
   onChange: (value: number) => void;
   formatLabel?: (value: number) => string;
   unit?: string;
+  is2x1?: boolean;
 }
 
 export default function PlanSlider({
@@ -15,13 +16,26 @@ export default function PlanSlider({
   onChange,
   formatLabel,
   unit = "días",
+  is2x1 = false,
 }: PlanSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const sorted = useMemo(() => [...options].sort((a, b) => a - b), [options]);
 
-  const activeIndex = sorted.indexOf(value);
+  // Si el valor actual no está en las opciones, buscamos el más cercano
+  useEffect(() => {
+    if (sorted.length > 0 && !sorted.includes(value)) {
+      // Buscar el valor más cercano o el primero por defecto
+      const closest = sorted.reduce((prev, curr) => {
+        return Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev;
+      });
+      onChange(closest);
+    }
+  }, [sorted, value, onChange]);
+
+  const rawIndex = sorted.indexOf(value);
+  const activeIndex = rawIndex === -1 ? 0 : rawIndex;
   const count = sorted.length;
   const progress = count <= 1 ? 0 : (activeIndex / (count - 1)) * 100;
 
@@ -108,7 +122,20 @@ export default function PlanSlider({
                   }}
                   className="font-mono text-[11px] sm:text-xs transition-all duration-300 pointer-events-none whitespace-nowrap"
                 >
-                  {label(opt)}
+                  <div className="flex flex-col items-center">
+                    {isActive && is2x1 && unit === "dispositivos" && (
+                      <motion.span
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[9px] font-bold text-purple-400 mb-0.5 leading-none"
+                      >
+                        OFERTA 2x1
+                      </motion.span>
+                    )}
+                    <span className={isActive ? "text-indigo-300" : ""}>
+                      {label(opt)}
+                    </span>
+                  </div>
                 </motion.span>
               </div>
             );

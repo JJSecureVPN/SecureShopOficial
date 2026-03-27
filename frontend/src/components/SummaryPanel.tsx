@@ -80,6 +80,8 @@ interface SummaryPanelProps {
   emptyState?: ReactNode;
   /** Whether the summary has a valid selection to display */
   hasSelection?: boolean;
+  /** Whether the 2x1 offer is active */
+  is2x1?: boolean;
 
   /** Extra content rendered below the price area (e.g. CuponInput) */
   children?: ReactNode;
@@ -110,6 +112,7 @@ export default function SummaryPanel({
   onSecondaryClick,
   emptyState,
   hasSelection = true,
+  is2x1 = false,
   children,
 }: SummaryPanelProps) {
   const dot = dotColorMap[accent];
@@ -136,6 +139,19 @@ export default function SummaryPanel({
           <Sparkles className="h-3.5 w-3.5" />
           <span>{badgeText}</span>
         </div>
+
+        {is2x1 && (
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-6 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30"
+          >
+            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
+              ¡Oferta 2x1 Activa! (Doble dispositivos)
+            </span>
+          </motion.div>
+        )}
 
         {hasSelection ? (
           <>

@@ -9,6 +9,7 @@ export interface Plan {
   avatarUrl?: string;
   fecha_creacion?: string;
   popular?: boolean;
+  en_oferta_2x1?: boolean;
 }
 
 export interface PlanRevendedor {

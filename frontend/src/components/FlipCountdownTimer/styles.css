@@ -1,9 +1,13 @@
 .flip-clock-wrapper {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 .flip-clock-wrapper > div {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .flip-clock-wrapper ul {
@@ -236,12 +240,13 @@
 }
 
 .flip-clock-wrapper .semicolon {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 6px;
-  height: 100%;
-  position: relative;
-  top: 21px;
-  vertical-align: top;
+  height: 42px;
+  gap: 4px;
 }
 
 .flip-clock-wrapper .semicolon > span {
@@ -250,9 +255,80 @@
   height: 6px;
   background: #323434;
   border-radius: 50%;
-  margin-bottom: 6px;
 }
 
 .flip-clock-wrapper .semicolon > span:last-child {
   margin-bottom: 0px;
+}
+
+/* ===== RESPONSIVE: Tablets y móviles grandes ===== */
+@media (max-width: 600px) {
+  .flip-clock-wrapper ul {
+    width: 18px;
+    height: 28px;
+    font-size: 22px;
+    line-height: 26px;
+    margin: 1px;
+    border-radius: 2px;
+  }
+
+  .flip-clock-wrapper ul li a div {
+    font-size: 22px;
+  }
+
+  .flip-clock-wrapper .inn {
+    font-size: 20px;
+  }
+
+  .flip-clock-wrapper .up:after {
+    top: 13px;
+    height: 1px;
+  }
+
+  .flip-clock-wrapper .semicolon {
+    width: 4px;
+    height: 28px;
+    gap: 3px;
+  }
+
+  .flip-clock-wrapper .semicolon > span {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* ===== RESPONSIVE: Móviles pequeños ===== */
+@media (max-width: 400px) {
+  .flip-clock-wrapper ul {
+    width: 14px;
+    height: 22px;
+    font-size: 18px;
+    line-height: 20px;
+    margin: 1px;
+    border-radius: 2px;
+  }
+
+  .flip-clock-wrapper ul li a div {
+    font-size: 18px;
+  }
+
+  .flip-clock-wrapper .inn {
+    font-size: 16px;
+  }
+
+  .flip-clock-wrapper .up:after {
+    top: 10px;
+    height: 1px;
+  }
+
+  .flip-clock-wrapper .semicolon {
+    width: 3px;
+    height: 22px;
+    gap: 2px;
+  }
+
+  .flip-clock-wrapper .semicolon > span {
+    width: 3px;
+    height: 3px;
+  }
 }

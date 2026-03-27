@@ -119,6 +119,11 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
   const [discountPercentageRevendedores, setDiscountPercentageRevendedores] = useState("20");
   const [promoScopeRevendedores, setPromoScopeRevendedores] = useState<"todos" | "solo_nuevos" | "solo_renovaciones">("todos");
 
+  // Estado oferta 2x1
+  const [is2x1Active, setIs2x1Active] = useState(false);
+  const [durationInput2x1, setDurationInput2x1] = useState("24");
+  const [autoDesactivar2x1, setAutoDesactivar2x1] = useState(true);
+
   // Estado compartido de promociones
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -152,8 +157,20 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
         apiService.obtenerConfigHeroRevendedores().catch(() => null),
       ]);
 
-      setPromoConfigPlanes(planesConfig);
-      setPromoConfigRevendedores(revendedoresConfig);
+      // obtenerPromoStatus() ya devuelve promo_config directamente (desenvuelto)
+      setPromoConfigPlanes(planesConfig || null);
+      setPromoConfigRevendedores(revendedoresConfig || null);
+      
+      // Cargar estado 2x1 (planesConfig YA es el objeto promo_config)
+      if (planesConfig) {
+        setIs2x1Active(planesConfig.vpn_2x1_activa || false);
+        setDurationInput2x1(planesConfig.vpn_2x1_duracion_horas?.toString() || "24");
+        setAutoDesactivar2x1(planesConfig.vpn_2x1_auto_desactivar ?? true);
+      } else {
+        setIs2x1Active(false);
+        setDurationInput2x1("24");
+        setAutoDesactivar2x1(true);
+      }
       
       // Determinar el scope basado en la config actual
       if (planesConfig?.solo_nuevos) {
@@ -472,6 +489,32 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
     }
   };
 
+  const handleToggle2x1 = async () => {
+    try {
+      setIsSavingPromo(true);
+      setPromoSuccess(null);
+      setPromoError(null);
+
+      if (is2x1Active) {
+        await apiService.desactivar2x1();
+        setIs2x1Active(false);
+        setPromoSuccess("Oferta 2x1 desactivada");
+      } else {
+        await apiService.activar2x1(parseInt(durationInput2x1), autoDesactivar2x1);
+        setIs2x1Active(true);
+        setPromoSuccess("Oferta 2x1 activada correccamente");
+      }
+      
+      // Recargar config para sincronizar
+      await loadPromoConfigs();
+    } catch (error) {
+      console.error("Error al gestionar oferta 2x1:", error);
+      setPromoError("Error al cambiar estado de oferta 2x1");
+    } finally {
+      setIsSavingPromo(false);
+    }
+  };
+
   // Handlers para sponsors
   const handleCreateSponsor = async (payload: CrearSponsorPayload) => {
     try {
@@ -647,6 +690,12 @@ export default function AdminToolsPage({ }: AdminToolsPageProps) {
               onSetHeroPromoPlanes={setHeroPromoPlanes}
               onSetHeroPromoRevendedores={setHeroPromoRevendedores}
               onGuardarTextoHero={handleGuardarTextoHero}
+              is2x1Active={is2x1Active}
+              onToggle2x1={handleToggle2x1}
+              durationInput2x1={durationInput2x1}
+              onSetDurationInput2x1={setDurationInput2x1}
+              autoDesactivar2x1={autoDesactivar2x1}
+              onSetAutoDesactivar2x1={setAutoDesactivar2x1}
             />
           </div>
         );

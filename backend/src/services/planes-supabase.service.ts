@@ -42,6 +42,10 @@ export interface PromocionesConfig {
   vpn_activada_en: string | null;
   vpn_duracion_horas: number;
   vpn_auto_desactivar: boolean;
+  vpn_2x1_activa: boolean;
+  vpn_2x1_activada_en: string | null;
+  vpn_2x1_duracion_horas: number;
+  vpn_2x1_auto_desactivar: boolean;
   // Revendedores
   revendedor_activa: boolean;
   revendedor_descuento_porcentaje: number;
@@ -142,7 +146,7 @@ class PlanesSupabaseService {
   /**
    * Obtiene un plan VPN por ID CON precio efectivo (promociones aplicadas)
    */
-  async obtenerPlanVPNConPrecio(id: number): Promise<(PlanVPN & { precio_efectivo: number; en_promocion: boolean; precio_original: number }) | null> {
+  async obtenerPlanVPNConPrecio(id: number): Promise<(PlanVPN & { precio_efectivo: number; en_promocion: boolean; precio_original: number; connection_limit: number; en_oferta_2x1: boolean }) | null> {
     const [plan, config] = await Promise.all([
       this.obtenerPlanVPN(id),
       this.obtenerPromocionesConfig(),
@@ -166,12 +170,22 @@ class PlanesSupabaseService {
 
     console.log(`[PlanesSupabase] Plan ${id}: precio_original=${precioOriginal}, precio_efectivo=${precioEfectivo}, en_promocion=${enPromocion}`);
 
+    let connectionLimit = plan.dispositivos;
+    let enOferta2x1 = false;
+
+    if (config?.vpn_2x1_activa) {
+      connectionLimit = plan.dispositivos * 2;
+      enOferta2x1 = true;
+    }
+
     return {
       ...plan,
       precio: precioEfectivo, // ⚡ Sobrescribimos con precio efectivo
       precio_original: precioOriginal,
       precio_efectivo: precioEfectivo,
       en_promocion: enPromocion,
+      connection_limit: connectionLimit,
+      en_oferta_2x1: enOferta2x1,
     };
   }
 
@@ -402,6 +416,35 @@ class PlanesSupabaseService {
       .single();
 
     if (error) {
+      // Si el error es por columna inexistente (posiblemente vpn_2x1_activada_en), reintentar solo con campos básicos
+      // PostgREST error code '42703' es 'undefined_column' en PostgreSQL
+      // Pero a veces viene en el mensaje de error directamente
+      if (error.message.includes("column") || error.code === "42703") {
+        console.warn("[PlanesSupabase] Error de columna detectado, intentando actualización mínima...");
+        
+        // Extraer solo los campos que sabemos que existen desde la migración 023 o previos
+        const minimalUpdates: any = {};
+        if (updates.vpn_activa !== undefined) minimalUpdates.vpn_activa = updates.vpn_activa;
+        if (updates.vpn_2x1_activa !== undefined) minimalUpdates.vpn_2x1_activa = updates.vpn_2x1_activa;
+        if (updates.vpn_descuento_porcentaje !== undefined) minimalUpdates.vpn_descuento_porcentaje = updates.vpn_descuento_porcentaje;
+        if (updates.revendedor_activa !== undefined) minimalUpdates.revendedor_activa = updates.revendedor_activa;
+        
+        const { data: retryData, error: retryError } = await this.client
+          .from("promociones_config")
+          .update(minimalUpdates)
+          .eq("id", "global")
+          .select()
+          .single();
+
+        if (!retryError) {
+          console.log("[PlanesSupabase] Actualización mínima exitosa");
+          return retryData;
+        }
+        
+        console.error("[PlanesSupabase] Error incluso en actualización mínima:", retryError);
+        throw new Error(`Error fatal al actualizar promociones: ${retryError.message}`);
+      }
+
       console.error("[PlanesSupabase] Error al actualizar promociones:", error);
       throw new Error(`Error al actualizar promociones: ${error.message}`);
     }
@@ -430,6 +473,30 @@ class PlanesSupabaseService {
     }
 
     return this.actualizarPromocionesConfig(updates);
+  }
+
+  /**
+   * Activa la oferta 2x1 para planes VPN
+   */
+  async activar2x1VPN(
+    duracionHoras: number = 24,
+    autoDesactivar: boolean = true
+  ): Promise<PromocionesConfig> {
+    return this.actualizarPromocionesConfig({
+      vpn_2x1_activa: true,
+      vpn_2x1_activada_en: new Date().toISOString(),
+      vpn_2x1_duracion_horas: duracionHoras,
+      vpn_2x1_auto_desactivar: autoDesactivar,
+    });
+  }
+
+  /**
+   * Desactiva la oferta 2x1 para planes VPN
+   */
+  async desactivar2x1VPN(): Promise<PromocionesConfig> {
+    return this.actualizarPromocionesConfig({
+      vpn_2x1_activa: false,
+    });
   }
 
   /**
@@ -560,13 +627,22 @@ class PlanesSupabaseService {
         enPromocion = true;
       }
 
+      let connectionLimit = plan.dispositivos;
+      let enOferta2x1 = false;
+
+      if (config?.vpn_2x1_activa) {
+        connectionLimit = plan.dispositivos * 2;
+        enOferta2x1 = true;
+      }
+
       return {
         ...plan,
-        connection_limit: plan.dispositivos, // Compatibilidad con frontend
+        connection_limit: connectionLimit, // Compatibilidad con frontend (posiblemente duplicado)
         precio: precioEfectivo, // ⚡ Sobrescribimos precio con el efectivo
         precio_original: precioOriginal, // Guardamos el original por si se necesita
         precio_efectivo: precioEfectivo,
         en_promocion: enPromocion,
+        en_oferta_2x1: enOferta2x1,
       };
     });
   }

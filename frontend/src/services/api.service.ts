@@ -661,6 +661,31 @@ class ApiService {
     return response.data.data || response.data;
   }
 
+  /**
+   * Activa la oferta 2x1 para planes VPN
+   */
+  async activar2x1(duracion_horas?: number, auto_desactivar?: boolean): Promise<any> {
+    const response = await this.client.post<ApiResponse<any>>("/config/activar-2x1", {
+      duracion_horas,
+      auto_desactivar
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || "Error activando oferta 2x1");
+    }
+    return response.data;
+  }
+
+  /**
+   * Desactiva la oferta 2x1 para planes VPN
+   */
+  async desactivar2x1(): Promise<any> {
+    const response = await this.client.post<ApiResponse<any>>("/config/desactivar-2x1");
+    if (!response.data.success) {
+      throw new Error(response.data.error || "Error desactivando oferta 2x1");
+    }
+    return response.data;
+  }
+
   async obtenerSponsors(): Promise<Sponsor[]> {
     const response = await this.client.get<ApiResponse<Sponsor[]>>(
       "/sponsors"

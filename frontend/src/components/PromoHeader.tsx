@@ -29,6 +29,13 @@ const THEME_AMBAS: PromoTheme = {
   accentText: "#110723",
 };
 
+const THEME_2X1: PromoTheme = {
+  // Púrpura brillante
+  accent: "#c084fc",
+  accentDark: "#a855f7",
+  accentText: "#ffffff",
+};
+
 function hexToRgba(hex: string, alpha: number) {
   const normalized = hex.replace("#", "");
   const full = normalized.length === 3
@@ -45,6 +52,9 @@ interface PromoConfig {
   activa: boolean;
   activada_en: string | null;
   duracion_horas: number;
+  vpn_2x1_activa?: boolean;
+  vpn_2x1_activada_en?: string | null;
+  vpn_2x1_duracion_horas?: number;
 }
 
 interface PromoHeaderProps {
@@ -73,13 +83,18 @@ export function PromoHeader({
 
   // Función para calcular tiempo restante
   const calcularTiempoRestante = (config: PromoConfig) => {
-    if (!config.activa || !config.activada_en) {
+    // Si es una promo 2x1 pura (sin descuento activo), usar sus campos de tiempo
+    const is2x1Timer = (config.vpn_2x1_activa && !config.activa);
+    const activadaEnRaw = is2x1Timer ? config.vpn_2x1_activada_en : config.activada_en;
+    const duracionHoras = is2x1Timer ? (config.vpn_2x1_duracion_horas || 24) : config.duracion_horas;
+
+    if ((!config.activa && !config.vpn_2x1_activa) || !activadaEnRaw) {
       return 0;
     }
 
     const ahora = new Date();
-    const activadaEn = new Date(config.activada_en);
-    const duracionMs = config.duracion_horas * 60 * 60 * 1000;
+    const activadaEn = new Date(activadaEnRaw);
+    const duracionMs = duracionHoras * 60 * 60 * 1000;
     const expiracion = activadaEn.getTime() + duracionMs;
     const tiempoRestanteMs = expiracion - ahora.getTime();
 
@@ -90,8 +105,9 @@ export function PromoHeader({
     return Math.floor(tiempoRestanteMs / 1000);
   };
 
-  const endpointPlanes = "/api/config/promo-status";
-  const endpointRevendedores = "/api/config/promo-status-revendedores";
+  const endpointBase = import.meta.env.VITE_API_URL || "/api";
+  const endpointPlanes = `${endpointBase}/config/promo-status`;
+  const endpointRevendedores = `${endpointBase}/config/promo-status-revendedores`;
 
   // Cargar promo config desde el endpoint correcto
   useEffect(() => {
@@ -121,7 +137,7 @@ export function PromoHeader({
 
         if (tipo === "planes") {
           // En /planes: preferir planes, pero mostrar revendedores si planes no está activa
-          if (planesCfg?.activa) {
+          if (planesCfg?.activa || planesCfg?.vpn_2x1_activa) {
             mostradaTipo = "planes";
             mostradaCfg = planesCfg;
           } else if (revCfg?.activa) {
@@ -133,7 +149,7 @@ export function PromoHeader({
           if (revCfg?.activa) {
             mostradaTipo = "revendedores";
             mostradaCfg = revCfg;
-          } else if (planesCfg?.activa) {
+          } else if (planesCfg?.activa || planesCfg?.vpn_2x1_activa) {
             mostradaTipo = "planes";
             mostradaCfg = planesCfg;
           }
@@ -142,7 +158,7 @@ export function PromoHeader({
           if (revCfg?.activa) {
             mostradaTipo = "revendedores";
             mostradaCfg = revCfg;
-          } else if (planesCfg?.activa) {
+          } else if (planesCfg?.activa || planesCfg?.vpn_2x1_activa) {
             mostradaTipo = "planes";
             mostradaCfg = planesCfg;
           }
@@ -181,15 +197,21 @@ export function PromoHeader({
     }
   };
 
-  // No renderizar si la promo está desactivada
-  if (!promo_config?.activa) {
+  // No renderizar si tanto el descuento como el 2x1 están desactivados
+  if (!promo_config?.activa && !promo_config?.vpn_2x1_activa) {
     return null;
   }
 
   const ambasActivas = Boolean(promoPlanes?.activa) && Boolean(promoRevendedores?.activa);
-  const theme: PromoTheme = ambasActivas
+  
+  let theme: PromoTheme = ambasActivas
     ? THEME_AMBAS
     : (promoMostradaTipo === "revendedores" ? THEME_REVENDEDORES : THEME_PLANES);
+    
+  // Si hay 2x1 activo y no es promo de revendedores, usar el tema púrpura
+  if (promo_config?.vpn_2x1_activa && promoMostradaTipo !== "revendedores") {
+    theme = THEME_2X1;
+  }
 
   return (
     <>
@@ -261,7 +283,7 @@ export function PromoHeader({
                 display: window.innerWidth < 380 ? 'none' : 'block',
               }}
             >
-              Oferta
+              {promo_config?.vpn_2x1_activa ? 'OFERTA 2X1 ACTIVA' : 'Oferta'}
             </span>
           </div>
 

@@ -26,6 +26,7 @@ import {
   puedeProcesarRenovacion,
 } from "./utils";
 import { CuentaRenovacion, ModoSeleccion, PasoRenovacion, PlanesPageProps } from "./types";
+import { PromoBanner2x1 } from "../../components/PromoBanner2x1";
 export type { PlanesPageProps } from "./types";
 
 // eslint-disable-next-line no-empty-pattern
@@ -219,6 +220,8 @@ export default function PlanesPage({ }: PlanesPageProps) {
     () => puedeProcesarRenovacion(pasoRenovacion, cuentaRenovacion, nombreRenovacion, emailRenovacion),
     [pasoRenovacion, cuentaRenovacion, nombreRenovacion, emailRenovacion]
   );
+
+  const is2x1Global = useMemo(() => planes.some(p => p.en_oferta_2x1), [planes]);
 
   // Removed planesDestacados — feature 'Planes populares' disabled per request
 
@@ -422,6 +425,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
                       onCtaClick={() => planSeleccionado && navigate(`/checkout?planId=${planSeleccionado.id}`)}
                       secondaryLabel="Ver demo rápida"
                       onSecondaryClick={() => setIsDemoOpen(true)}
+                      is2x1={planSeleccionado?.en_oferta_2x1}
                     />
                   }
                 >
@@ -448,11 +452,14 @@ export default function PlanesPage({ }: PlanesPageProps) {
                     accent="indigo"
                     delay={0.2}
                   >
+                    {is2x1Global && <PromoBanner2x1 />}
+                    
                     <PlanSlider
                       options={dispositivosDisponibles}
                       value={dispositivosSeleccionados}
                       onChange={setDispositivosSeleccionados}
                       unit="dispositivos"
+                      is2x1={is2x1Global}
                     />
                     <BodyText className="mt-5 text-sm text-zinc-500">
                       ¿Necesitas más conexiones? Podemos armar planes especiales para equipos o revendedores.
