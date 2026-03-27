@@ -271,7 +271,7 @@ export class TiendaService {
           tipo: 'plan',
           servexUsername: cuentaVPN.username,
           servexPassword: cuentaVPN.password,
-          servexExpiracion: undefined, // No tenemos la fecha exacta aquí
+          servexExpiracion: cuentaVPN.expiracion, // Fecha ISO de expiración desde Servex
           servexConnectionLimit: plan.connection_limit,
           mpPaymentId: undefined,
         });
@@ -394,7 +394,7 @@ export class TiendaService {
       saldoUsado?: number;
       metodoPago: 'mercadopago' | 'saldo' | 'mixto';
     } | null
-  ): Promise<{ username: string; password: string; expiracion: string; categoria: string }> {
+  ): Promise<{ username: string; password: string; expiracion: string; expiracionFormateada: string; categoria: string }> {
     // 1. Generar credenciales usando el nombre del cliente
     const { username, password } = this.servex.generarCredenciales(pago.cliente_nombre);
     console.log(`[Tienda] Username generado: ${username} para cliente: ${pago.cliente_nombre}`);
@@ -465,10 +465,13 @@ export class TiendaService {
     }
 
     // Retornar las credenciales para mostrar en el frontend
+    // Nota: expiracion almacena el ISO para poder filtrarlo en el frontend,
+    // mientras que expiracionFormateada se usa para mostrar en el email.
     return {
       username: clienteCreado.username,
       password: clienteCreado.password,
-      expiracion: expiracionFormateada,
+      expiracion: clienteCreado.expiration_date,
+      expiracionFormateada,
       categoria: categoria.name,
     };
   }

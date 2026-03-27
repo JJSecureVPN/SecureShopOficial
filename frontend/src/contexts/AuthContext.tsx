@@ -136,6 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (session?.user) {
           console.log('👤 Cargando perfil e historial...');
+
+          // Vincular compras realizadas como invitado (antes de loguearse) a esta cuenta.
+          // Esto asegura que el usuario vea todas sus suscripciones, no solo la última.
+          await vincularComprasInvitado(session.user.id, session.user.email || '');
+
           await Promise.all([
             fetchProfile(session.user.id),
             fetchPurchaseHistory(session.user.id)

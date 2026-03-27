@@ -5,6 +5,7 @@ import { MercadoPagoService } from "./mercadopago.service";
 import emailService from "./email.service";
 import { cuponesSupabaseService } from "./cupones-supabase.service";
 import { planesSupabaseService } from "./planes-supabase.service";
+import { supabaseService } from "./supabase.service";
 import {
   PlanRevendedor,
   PagoRevendedor,
@@ -519,6 +520,27 @@ export class TiendaRevendedoresService {
           emailError.message
         );
         // No lanzamos error, la venta ya está procesada
+      }
+
+      // Sincronizar con Supabase (historial de usuario)
+      try {
+        await supabaseService.syncApprovedPurchase({
+          email: pago.cliente_email,
+          planNombre: `Revendedor: ${plan.nombre}`,
+          monto: pago.monto,
+          tipo: "revendedor",
+          servexUsername: revendedorCreado.username,
+          servexPassword: password,
+          servexExpiracion: expiracionFinal || undefined,
+          servexConnectionLimit: revendedorCreado.max_users,
+          mpPaymentId: mpPaymentId,
+        });
+      } catch (supabaseError: any) {
+        console.error(
+          "[TiendaRevendedores] ⚠️ Error sincronizando con Supabase:",
+          supabaseError.message
+        );
+        // No bloqueamos la venta por error al sincronizar con Supabase
       }
     } catch (error: any) {
       console.error(

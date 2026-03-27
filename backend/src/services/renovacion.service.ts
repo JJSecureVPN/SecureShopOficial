@@ -1009,12 +1009,29 @@ export class RenovacionService {
 
       // Sincronizar con Supabase (historial de usuario)
       try {
+        // Intentar obtener fecha de expiración desde Servex para que la suscripción aparezca como activa
+        let servexExpiracion: string | undefined = undefined;
+        try {
+          if (renovacion.servex_username) {
+            if (renovacion.tipo === 'cliente') {
+              const clienteActualizado = await this.servex.buscarClientePorUsername(renovacion.servex_username);
+              servexExpiracion = clienteActualizado?.expiration_date;
+            } else {
+              const revendedorActualizado = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
+              servexExpiracion = revendedorActualizado?.expiration_date;
+            }
+          }
+        } catch (servexError: any) {
+          console.warn('[Renovacion] No se pudo obtener expiración de Servex para sincronizar con Supabase:', servexError?.message || servexError);
+        }
+
         await supabaseService.syncApprovedPurchase({
           email: renovacion.cliente_email,
           planNombre: renovacion.operacion === 'upgrade' ? `Upgrade: ${renovacion.dias_agregados} días` : `Renovación: ${renovacion.dias_agregados} días`,
           monto: renovacion.monto,
           tipo: 'renovacion',
           servexUsername: renovacion.servex_username,
+          servexExpiracion,
           mpPaymentId: mpPaymentId || undefined,
         });
       } catch (supabaseError: any) {
