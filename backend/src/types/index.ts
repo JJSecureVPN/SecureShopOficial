@@ -227,6 +227,7 @@ export interface CrearPagoRevendedorInput {
   clienteEmail: string;
   clienteNombre: string;
   codigoCupon?: string;
+  maxUsers?: number; // Nueva opción para cantidades personalizadas
 }
 
 export interface PagoRevendedorRow {

@@ -6,9 +6,10 @@ type ModeSelectorProps = {
   mode: ModoSeleccion;
   onSelectCompra: () => void;
   onSelectRenovacion: () => void;
+  onSelectExpansion: () => void;
 };
 
-export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeSelectorProps) {
+export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion, onSelectExpansion }: ModeSelectorProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,10 +19,15 @@ export function ModeSelector({ mode, onSelectCompra, onSelectRenovacion }: ModeS
     >
       <SegmentedControl
         value={mode}
-        onChange={(v) => (v === "compra" ? onSelectCompra() : onSelectRenovacion())}
+        onChange={(v) => {
+          if (v === "compra") onSelectCompra();
+          else if (v === "renovacion") onSelectRenovacion();
+          else onSelectExpansion();
+        }}
         descriptions={{
           compra: "Crea una cuenta de acceso al Secure Panel para gestionar clientes y ventas.",
           renovacion: "Renueva el acceso al Secure Panel y conserva permisos y reportes.",
+          expansion: "Aumenta la capacidad de usuarios de tu cuenta actual de forma inmediata.",
         }}
       />
     </motion.div>

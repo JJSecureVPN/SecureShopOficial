@@ -46,23 +46,65 @@ const CheckoutRevendedorContainer: React.FC = () => {
   }, []);
 
   const planId = parseInt(searchParams.get("planId") || "0");
+  const maxUsersFromUrl = parseInt(searchParams.get("maxUsers") || "0");
 
   useEffect(() => {
     const loadPlan = async () => {
       try {
         const planes = await apiService.obtenerPlanesRevendedores();
-        const foundPlan = planes.find((item) => item.id === planId);
+        let foundPlan = planes.find((item) => item.id === planId);
+
+        if (!foundPlan && planId === 0 && maxUsersFromUrl > 0) {
+          // Lógica de cálculo de precio dinámico (coincidente con el backend y el selector)
+          const calculatePrice = (users: number): number | null => {
+            const pExact = planes.find((p) => p.max_users === users);
+            if (pExact) return pExact.precio;
+
+            if (users > 100) {
+              const p100 = planes.find((p) => p.max_users === 100);
+              if (!p100) return null;
+              const subPrice = calculatePrice(users - 100);
+              return subPrice ? p100.precio + subPrice : null;
+            }
+
+            const smaller = planes
+              .filter((p) => p.max_users < users)
+              .sort((a, b) => b.max_users - a.max_users);
+            if (smaller.length > 0) {
+              const base = smaller[0];
+              const subPrice = calculatePrice(users - base.max_users);
+              return subPrice ? base.precio + subPrice : null;
+            }
+            return null;
+          };
+
+          const calculatedPrice = calculatePrice(maxUsersFromUrl);
+          if (calculatedPrice !== null) {
+            foundPlan = {
+              id: 0,
+              nombre: `Plan Personalizado ${maxUsersFromUrl} usuarios`,
+              descripcion: `${maxUsersFromUrl} cupos mensuales reutilizables`,
+              precio: calculatedPrice,
+              max_users: maxUsersFromUrl,
+              account_type: "validity",
+              dias: 30,
+              activo: true,
+            };
+          }
+        }
+
         if (foundPlan) setPlan(foundPlan);
         else navigate("/revendedores");
-      } catch {
+      } catch (error) {
+        console.error("Error loading plan in checkout:", error);
         navigate("/revendedores");
       }
     };
 
-    if (planId > 0) {
+    if (planId > 0 || maxUsersFromUrl > 0) {
       void loadPlan();
     }
-  }, [planId, navigate]);
+  }, [planId, maxUsersFromUrl, navigate]);
 
   const handleCuponValidado = (descuento: number, cupon: ValidacionCupon["cupon"]) => {
     setCuponData(cupon);
@@ -105,6 +147,7 @@ const CheckoutRevendedorContainer: React.FC = () => {
         clienteNombre: nombre,
         clienteEmail: email,
         codigoCupon: cuponData?.codigo,
+        maxUsers: plan.id === 0 ? plan.max_users : undefined,
       };
 
       const response = await apiService.comprarPlanRevendedor(compraData);

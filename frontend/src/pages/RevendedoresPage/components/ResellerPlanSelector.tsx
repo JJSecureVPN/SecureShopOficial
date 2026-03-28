@@ -58,10 +58,17 @@ export default function ResellerPlanSelector({
     top: number;
   } | null>(null);
 
-  const userOptions = useMemo(
-    () => [...new Set(plans.map((p) => p.max_users))].sort((a, b) => a - b),
-    [plans]
-  );
+  const userOptions = useMemo(() => {
+    // Generar opciones de 10 en 10 hasta 100
+    const baseOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+    
+    // Combinar con planes de la DB por si hay alguno ad-hoc
+    const dbOptions = plans.map((p) => p.max_users);
+
+    return [...new Set([...baseOptions, ...dbOptions])].sort(
+      (a, b) => a - b
+    );
+  }, [plans]);
 
   const [selectedUsers, setSelectedUsers] = useState<number>(5);
 
@@ -71,10 +78,50 @@ export default function ResellerPlanSelector({
     }
   }, [userOptions]);
 
-  const selectedPlan = useMemo(
-    () => plans.find((p) => p.max_users === selectedUsers) ?? null,
-    [plans, selectedUsers]
-  );
+  const selectedPlan = useMemo((): PlanRevendedor | null => {
+    const exactPlan = plans.find((p) => p.max_users === selectedUsers);
+    if (exactPlan) return exactPlan;
+
+    // Lógica de cálculo de precio dinámico (coincidente con el backend)
+    const calculatePrice = (users: number): number | null => {
+      const pExact = plans.find((p) => p.max_users === users);
+      if (pExact) return pExact.precio;
+
+      if (users > 100) {
+        const p100 = plans.find((p) => p.max_users === 100);
+        if (!p100) return null;
+        const subPrice = calculatePrice(users - 100);
+        return subPrice ? p100.precio + subPrice : null;
+      }
+
+      const smaller = plans
+        .filter((p) => p.max_users < users)
+        .sort((a, b) => b.max_users - a.max_users);
+      if (smaller.length > 0) {
+        const base = smaller[0];
+        const subPrice = calculatePrice(users - base.max_users);
+        return subPrice ? base.precio + subPrice : null;
+      }
+      return null;
+    };
+
+    const calculatedPrice = calculatePrice(selectedUsers);
+    if (calculatedPrice !== null) {
+      // Simular un plan para la UI
+      return {
+        id: 0, // 0 indica plan dinámico
+        nombre: `Plan Personalizado ${selectedUsers} usuarios`,
+        descripcion: `${selectedUsers} cupos mensuales reutilizables`,
+        precio: calculatedPrice,
+        max_users: selectedUsers,
+        account_type: "validity",
+        dias: 30,
+        activo: true,
+      };
+    }
+
+    return null;
+  }, [plans, selectedUsers]);
 
   const unitPrice =
     selectedPlan && selectedPlan.max_users > 0

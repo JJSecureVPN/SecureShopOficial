@@ -23,7 +23,8 @@ export class RenovacionService {
       return null;
     }
 
-    const match = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/.exec(dateStr);
+    // Extraer la parte de fecha (YYYY-MM-DD), permitiendo que tenga tiempo después (ISO format)
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr.trim());
     if (!match) {
       return null;
     }
@@ -58,8 +59,17 @@ export class RenovacionService {
     const today = this.utcTodayStart();
     const expiration = this.parseYYYYMMDDToUTC(expirationDateStr);
 
-    if (expiration && expiration.getTime() >= today.getTime()) {
-      return expiration;
+    console.log(`[Renovacion] 🕒 getRenovacionBaseDateUTC: Recibido="${expirationDateStr}", Hoy="${this.formatUTCDateOnly(today)}"`);
+
+    if (expiration) {
+      console.log(`[Renovacion] 📅 Fecha expiración parseada: ${this.formatUTCDateOnly(expiration)}`);
+      if (expiration.getTime() >= today.getTime()) {
+        console.log(`[Renovacion] 📈 Renovación CUMULATIVA desde: ${this.formatUTCDateOnly(expiration)}`);
+        return expiration;
+      }
+      console.log(`[Renovacion] ⏳ La expiración está en el pasado, renovando desde HOY`);
+    } else {
+      console.log(`[Renovacion] ❓ No se pudo parsear la fecha o no existe, renovando desde HOY`);
     }
 
     return today;
@@ -526,8 +536,10 @@ export class RenovacionService {
     cuponId?: number;
     descuentoAplicado?: number;
     planId?: number;
+    operacion?: 'renovacion' | 'expansion';
   }): Promise<{ renovacion: any; linkPago: string; descuentoAplicado?: number; cuponAplicado?: any }> {
-    console.log(`[Renovacion] 🚀 Iniciando procesamiento de renovación de revendedor: ${input.busqueda} (${input.dias} días, tipo: ${input.tipoRenovacion})`);
+    const operacion = input.operacion || 'renovacion';
+    console.log(`[Renovacion] 🚀 Iniciando procesamiento de ${operacion} de revendedor: ${input.busqueda} (${input.dias} días, tipo: ${input.tipoRenovacion})`);
     console.log('[Renovacion] Input recibido:', JSON.stringify(input, null, 2));
     const resultado = await this.buscarCliente(input.busqueda, false);
     
@@ -553,9 +565,12 @@ export class RenovacionService {
     let cantidad = input.cantidadSeleccionada || 5;
     
     // Para renovaciones de validity, usar la cantidad de usuarios actuales del revendedor
-    if (tipoRenovacion === 'validity' && revendedorExistente.max_users) {
+    // Para expansiones, respetar la cantidad target (cantidadSeleccionada)
+    if (operacion === 'renovacion' && tipoRenovacion === 'validity' && revendedorExistente.max_users) {
       cantidad = revendedorExistente.max_users;
       console.log(`[Renovacion] 📊 Validity: Usando usuarios actuales del revendedor: ${cantidad}`);
+    } else if (operacion === 'expansion') {
+      console.log(`[Renovacion] 📊 Expansión: Usando cantidad target: ${cantidad} (actuales: ${revendedorExistente.max_users || 0})`);
     }
     
     console.log(`[Renovacion] 🔍 Buscando plan con: tipo=${tipoRenovacion}, cantidad=${cantidad}`);
@@ -731,7 +746,7 @@ export class RenovacionService {
       tipo: 'revendedor',
       servex_id: revendedorExistente.servex_revendedor_id,
       servex_username: revendedorExistente.servex_username,
-      operacion: 'renovacion',
+      operacion: operacion,
       dias_agregados: input.dias,
       datos_nuevos: JSON.stringify(datosNuevos),
       monto: montoCalculado,
@@ -744,12 +759,14 @@ export class RenovacionService {
     });
 
     const renovacionId = renovacion.id;
-    console.log('[Renovacion] Renovación de revendedor creada:', renovacionId);
+    console.log(`[Renovacion] ${operacion} de revendedor creada:`, renovacionId);
 
     // 6. Crear preferencia en MercadoPago
-    const descripcion = tipoRenovacion === 'validity' 
-      ? `Renovación ${input.dias} días - ${cantidad} usuarios - ${revendedorExistente.servex_username}`
-      : `Recarga ${cantidad} créditos - ${revendedorExistente.servex_username}`;
+    const descripcion = operacion === 'expansion'
+      ? `Expansión +${cantidad - (revendedorExistente.max_users || 0)} usuarios (${revendedorExistente.max_users || 0}→${cantidad}) - ${revendedorExistente.servex_username}`
+      : tipoRenovacion === 'validity'
+        ? `Renovación ${input.dias} días - ${cantidad} usuarios - ${revendedorExistente.servex_username}`
+        : `Recarga ${cantidad} créditos - ${revendedorExistente.servex_username}`;
 
     try {
       const { id: preferenceId, initPoint } = await this.mercadopago.crearPreferencia(
@@ -848,16 +865,44 @@ export class RenovacionService {
           console.log(`[Renovacion] Procesando ${tipoRenovacion} para revendedor: ${cantidad}`);
           console.log(`[Renovacion] servex_id: ${renovacion.servex_id}, dias_agregados: ${renovacion.dias_agregados}`);
 
-          if (tipoRenovacion === 'validity') {
+          if (renovacion.operacion === 'expansion') {
+            // Expansión: SOLO actualizar usuarios y MANTENER fecha de vencimiento
+            console.log(`[Renovacion] 🚀 Expansión: Actualizando a ${cantidad} usuarios, manteniendo fecha de vencimiento`);
+            
+            // Obtener datos actuales del revendedor para obtener su fecha de vencimiento actual
+            const revendedorActual = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
+            const currentExpiration = revendedorActual?.expiration_date;
+            
+            // Normalizar a YYYY-MM-DD si viene en formato ISO
+            const expirationDate = currentExpiration 
+              ? this.formatUTCDateOnly(new Date(currentExpiration)) 
+              : this.formatUTCDateOnly(new Date());
+            
+            console.log(`[Renovacion] 📅 Expansión: Manteniendo fecha ${expirationDate} para ${renovacion.servex_username}`);
+            
+            // Actualizar: cambiar usuarios, mantener fecha y tipo
+            await this.servex.actualizarRevendedor(renovacion.servex_id, {
+              max_users: cantidad,
+              account_type: 'validity',
+              expiration_date: expirationDate
+            }, renovacion.servex_username);
+
+            this.db.actualizarDatosRevendedorPorServexId({
+              servexId: renovacion.servex_id,
+              maxUsers: cantidad,
+              expiracion: expirationDate,
+              accountType: 'validity'
+            });
+          } else if (tipoRenovacion === 'validity') {
             // Renovación de validez: MANTENER usuarios actuales y AGREGAR días (acumulativo)
             const diasAgregar = Number(renovacion.dias_agregados) || 30;
-            console.log(`[Renovacion] Validity: Agregando ${diasAgregar} días (acumulativo), manteniendo usuarios actuales`);
+            console.log(`[Renovacion] ⏳ Validity: Agregando ${diasAgregar} días (acumulativo), manteniendo usuarios actuales`);
             
             // Obtener datos actuales del revendedor
             const revendedorActual = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
             const usuariosActuales = revendedorActual?.max_users || 0;
             
-            console.log(`[Renovacion] Usuarios actuales: ${usuariosActuales} (se mantienen)`);
+            console.log(`[Renovacion] 👥 Usuarios actuales: ${usuariosActuales} (se mantienen)`);
             
             // Calcular nueva fecha de vencimiento: suma sobre expiración actual si está vigente,
             // si ya venció (o no hay fecha) suma desde hoy.
@@ -866,7 +911,7 @@ export class RenovacionService {
             const expirationDate = this.formatUTCDateOnly(fechaVencimiento);
 
             console.log(
-              `[Renovacion] Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`
+              `[Renovacion] 📅 Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`
             );
             
             // Actualizar: cambiar fecha de vencimiento, MANTENER usuarios
@@ -884,14 +929,14 @@ export class RenovacionService {
             });
           } else if (tipoRenovacion === 'credit') {
             // Recarga de créditos: Agregar días según plan + SUMAR créditos
-            console.log(`[Renovacion] Credit: Agregando ${renovacion.dias_agregados} días y sumando ${cantidad} créditos`);
+            console.log(`[Renovacion] 💳 Credit: Agregando ${renovacion.dias_agregados} días y sumando ${cantidad} créditos`);
             
             // Obtener datos actuales del revendedor
             const revendedorActual = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
             const creditosActuales = revendedorActual?.max_users || 0;
             const creditosTotales = creditosActuales + cantidad;
             
-            console.log(`[Renovacion] Créditos actuales: ${creditosActuales}, sumando: ${cantidad}, total: ${creditosTotales}`);
+            console.log(`[Renovacion] 👥 Créditos actuales: ${creditosActuales}, sumando: ${cantidad}, total: ${creditosTotales}`);
             
             // Calcular nueva fecha de vencimiento (acumulativo): suma sobre expiración vigente,
             // si ya venció suma desde hoy.
@@ -900,7 +945,7 @@ export class RenovacionService {
             const fechaVencimiento = this.addDaysUTC(fechaBase, diasAgregar);
             const expirationDate = this.formatUTCDateOnly(fechaVencimiento);
             
-            console.log(`[Renovacion] Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`);
+            console.log(`[Renovacion] 📅 Base expiración: ${this.formatUTCDateOnly(fechaBase)}, nueva fecha: ${expirationDate}`);
             
             // Actualizar: mantener account_type credit, sumar créditos y establecer nueva fecha
             await this.servex.actualizarRevendedor(renovacion.servex_id, {
@@ -1044,6 +1089,8 @@ export class RenovacionService {
         // Obtener la nueva fecha de expiración
         let nuevaExpiracion = '';
         let detallesExtra = '';
+        let infoAgregada = renovacion.dias_agregados;
+        let operacionEmail = renovacion.operacion;
         
         if (renovacion.tipo === 'cliente') {
           const clienteActualizado = await this.servex.buscarClientePorUsername(renovacion.servex_username);
@@ -1065,7 +1112,11 @@ export class RenovacionService {
           }
           if (renovacion.datos_nuevos) {
             const datosNuevos = JSON.parse(renovacion.datos_nuevos);
-            if (datosNuevos.tipo_renovacion === 'validity') {
+            if (renovacion.operacion === 'expansion') {
+              infoAgregada = datosNuevos.cantidad; // Total usuarios para el email
+              detallesExtra = `Upgrade a ${datosNuevos.cantidad} usuarios`;
+              operacionEmail = 'expansion';
+            } else if (datosNuevos.tipo_renovacion === 'validity') {
               detallesExtra = `${datosNuevos.cantidad} usuarios máx`;
             } else if (datosNuevos.tipo_renovacion === 'credit') {
               detallesExtra = `+${datosNuevos.cantidad} créditos`;
@@ -1076,13 +1127,13 @@ export class RenovacionService {
         await emailService.enviarConfirmacionRenovacion(renovacion.cliente_email, {
           tipo: renovacion.tipo,
           username: renovacion.servex_username,
-          diasAgregados: renovacion.dias_agregados,
+          diasAgregados: infoAgregada,
           nuevaExpiracion: nuevaExpiracion || 'Ver en panel',
           monto: renovacion.monto,
-          operacion: renovacion.operacion || (renovacion.datos_nuevos ? JSON.parse(renovacion.datos_nuevos).tipo_renovacion : undefined),
+          operacion: operacionEmail || (renovacion.datos_nuevos ? JSON.parse(renovacion.datos_nuevos).tipo_renovacion : undefined),
           detallesExtra: detallesExtra || undefined,
         });
-        console.log(`[Renovacion] ✅ Email de confirmación enviado a ${renovacion.cliente_email}`);
+        console.log(`[Renovacion] ✅ Email de confirmación (${operacionEmail}) enviado a ${renovacion.cliente_email}`);
       } catch (emailClienteError: any) {
         console.error('[Renovacion] ⚠️ Error enviando email de confirmación al cliente:', emailClienteError.message);
         // No lanzamos error, la renovación ya está procesada

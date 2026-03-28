@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { PlanRevendedor } from "../../types";
 
-export type ModoSeleccion = "compra" | "renovacion";
+export type ModoSeleccion = "compra" | "renovacion" | "expansion";
 export type PasoRenovacion = "buscar" | "configurar";
 
 export interface RevendedorRenovacionDatos {

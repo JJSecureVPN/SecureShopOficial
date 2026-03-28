@@ -106,14 +106,17 @@ export function crearRutasRenovacion(renovacionService: RenovacionService): Rout
         cuponId,
         descuentoAplicado,
         planId,
+        operacion,
       } = req.body;
 
       // Validaciones
       if (!busqueda || typeof busqueda !== 'string') {
         return res.status(400).json({ error: 'El campo "busqueda" es requerido' });
       }
-      if (!dias || typeof dias !== 'number' || dias <= 0) {
-        return res.status(400).json({ error: 'El campo "dias" debe ser un número mayor a 0' });
+      
+      const isExpansion = operacion === 'expansion';
+      if (!isExpansion && (!dias || typeof dias !== 'number' || dias <= 0)) {
+        return res.status(400).json({ error: 'El campo "dias" debe ser un número mayor a 0 para renovaciones' });
       }
       if (!clienteEmail || typeof clienteEmail !== 'string') {
         return res.status(400).json({ error: 'El campo "clienteEmail" es requerido' });
@@ -172,6 +175,7 @@ export function crearRutasRenovacion(renovacionService: RenovacionService): Rout
         cuponId: parsedCuponId,
         descuentoAplicado: parsedDescuento,
         planId: parsedPlanId,
+        operacion: operacion as 'renovacion' | 'expansion',
       });
 
       return res.json(resultado);

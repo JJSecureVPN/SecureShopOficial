@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, RefreshCw, Sparkles, Clock, ArrowRight, Check } from 'lucide-react';
 
-type Mode = 'compra' | 'renovacion';
+type Mode = 'compra' | 'renovacion' | 'expansion';
 
 interface Tab {
   value: Mode;
@@ -38,6 +38,15 @@ const tabs: Tab[] = [
     description: 'Mantén todos tus datos, configuraciones y preferencias. Perfecto para usuarios existentes que desean continuar sin interrupciones.',
     badge: '',
     features: ['Mantén tu historial', 'Sin reconfiguraciones', 'Proceso inmediato']
+  },
+  {
+    value: 'expansion',
+    label: 'Expandir Usuarios',
+    icon: Sparkles,
+    subtitle: 'Aumenta tus cupos',
+    description: 'Agrega más usuarios a tu suscripción actual de forma inmediata. El costo se prorratea por los días que te quedan.',
+    badge: 'Nuevo',
+    features: ['Más usuarios', 'Prorrateo justo', 'Sin cambiar fecha']
   }
 ];
 
@@ -75,7 +84,7 @@ const CompactHeroControl: React.FC<CompactHeroControlProps> = ({
 
       {/* Selector de Cards Horizontal */}
       <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="grid md:grid-cols-3 gap-4 mb-6">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
             const isActive = value === tab.value;
@@ -218,10 +227,10 @@ const CompactHeroControl: React.FC<CompactHeroControlProps> = ({
                     <Clock className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-white">
-                        {value === 'compra' ? '2 min' : 'Instantáneo'}
+                      {value === 'compra' ? '2 min' : 'Instantáneo'}
                       </p>
                       <p className="text-xs text-zinc-500">
-                        {value === 'compra' ? 'Setup' : 'Activación'}
+                        {value === 'compra' ? 'Setup' : value === 'renovacion' ? 'Activación' : 'Expansión'}
                       </p>
                     </div>
                   </div>

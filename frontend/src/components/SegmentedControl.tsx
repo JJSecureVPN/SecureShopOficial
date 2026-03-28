@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, RefreshCw, Sparkles, Clock } from 'lucide-react';
 
-type Mode = 'compra' | 'renovacion';
+type Mode = 'compra' | 'renovacion' | 'expansion';
 
 interface Tab {
   value: Mode;
@@ -34,6 +34,13 @@ const tabs: Tab[] = [
     icon: RefreshCw,
     description: 'Extiende tu suscripción actual y mantén todos tus datos y configuraciones',
     badge: ''
+  },
+  {
+    value: 'expansion',
+    label: 'Expandir usuarios',
+    icon: Sparkles,
+    description: 'Aumenta el límite de usuarios de tu cuenta de forma inmediata',
+    badge: ''
   }
 ];
 
@@ -56,28 +63,9 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
     <div className={`space-y-4 ${className}`}>
       {/* Control principal */}
       <div className="relative mx-auto max-w-2xl">
-        <div className="relative rounded-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 border border-zinc-700/50 p-1.5 shadow-xl backdrop-blur-sm">
-          {/* Indicador animado con gradiente */}
-          <motion.div
-            className="absolute top-1.5 bottom-1.5 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 rounded-xl shadow-lg"
-            animate={{
-              left: activeIndex === 0 ? 6 : 'calc(50% + 6px)',
-              right: activeIndex === 0 ? 'calc(50% + 6px)' : 6
-            }}
-            transition={{ 
-              type: 'spring', 
-              stiffness: 380, 
-              damping: 32,
-              mass: 0.8
-            }}
-            style={{ width: 'calc(50% - 12px)' }}
-          >
-            {/* Brillo interno */}
-            <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-white/20 rounded-xl" />
-          </motion.div>
-
+        <div className="relative rounded-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 border border-zinc-700/50 p-1.5 shadow-xl backdrop-blur-sm overflow-hidden">
           {/* Tabs */}
-          <div className="relative z-10 flex items-stretch gap-1">
+          <div className="relative z-10 flex flex-col sm:flex-row items-stretch gap-1">
             {finalTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = value === tab.value;
@@ -99,27 +87,44 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                   aria-pressed={isActive}
                   aria-label={`${tab.label}: ${tab.description}`}
                 >
-                  {/* Badge */}
-                  {tab.badge && (
-                    <AnimatePresence>
-                      {isActive && (
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0, opacity: 0 }}
-                          className="absolute -top-1 -right-1"
-                        >
-                          <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
-                            <Sparkles className="w-3 h-3" />
-                            {tab.badge}
-                          </span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  {/* Indicador de fondo animado (layoutId) */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="segmented-indicator"
+                      className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 rounded-xl shadow-lg"
+                      transition={{ 
+                        type: 'spring', 
+                        stiffness: 380, 
+                        damping: 32,
+                        mass: 0.8
+                      }}
+                    >
+                      {/* Brillo interno */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-white/20 rounded-xl" />
+                    </motion.div>
                   )}
 
-                  {/* Contenido del tab */}
-                  <div className="flex items-center justify-center gap-2.5">
+                  {/* Badge */}
+                  <div className="relative z-20 flex items-center justify-center gap-2.5">
+                    {tab.badge && (
+                      <AnimatePresence>
+                        {isActive && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className="absolute -top-6 -right-2"
+                          >
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+                              <Sparkles className="w-3 h-3" />
+                              {tab.badge}
+                            </span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    )}
+
+                    {/* Contenido del tab */}
                     <Icon 
                       className={`w-5 h-5 transition-transform ${
                         isActive ? 'scale-110' : 'scale-100'
@@ -179,7 +184,9 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                     <span className="text-xs text-zinc-500">
                       {value === 'compra' 
                         ? 'Configuración en 2 minutos' 
-                        : 'Proceso instantáneo'
+                        : value === 'renovacion'
+                        ? 'Proceso instantáneo'
+                        : 'Actualización inmediata'
                       }
                     </span>
                   </div>

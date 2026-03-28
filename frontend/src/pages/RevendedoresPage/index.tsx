@@ -40,6 +40,8 @@ export default function RevendedoresPage() {
   const [cuponRenovacion, setCuponRenovacion] = useState<CuponAplicado | null>(null);
   const [descuentoRenovacion, setDescuentoRenovacion] = useState(0);
   const [cuentaDesdeUrl, setCuentaDesdeUrl] = useState<string | null>(null);
+  const [operacionRenovacionSeleccionada, setOperacionRenovacionSeleccionada] = useState<"renovacion" | "expansion">("renovacion");
+  const [cantidadBaseRevendedor, setCantidadBaseRevendedor] = useState<number>(0);
 
   const planesValidity = useMemo(
     () =>
@@ -133,9 +135,49 @@ export default function RevendedoresPage() {
     tipoRenovacionSeleccionado,
     cantidadSeleccionada,
     revendedorRenovacion,
+    operacionRenovacionSeleccionada,
+    cantidadBaseRevendedor
   ]);
 
-  const precioRenovacion = planSeleccionado ? Math.round(planSeleccionado.precio) : 0;
+  // Helper para calcular días restantes
+  const diasRestantes = useMemo(() => {
+    if (!revendedorRenovacion?.datos.expiration_date) return 30;
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const expirationDate = new Date(revendedorRenovacion.datos.expiration_date);
+    const diffTime = expirationDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  }, [revendedorRenovacion?.datos.expiration_date]);
+
+  // Cálculo del precio final de la operación (Renovación vs Expansión)
+  const precioRenovacion = useMemo(() => {
+    if (!planSeleccionado || !revendedorRenovacion) return 0;
+    
+    if (operacionRenovacionSeleccionada === "expansion" && tipoRenovacionSeleccionado === "validity") {
+      const usuariosAAgregar = cantidadSeleccionada - cantidadBaseRevendedor;
+      if (usuariosAAgregar <= 0) return 0;
+
+      // Buscar el plan para la cantidad de usuarios AGREGADOS
+      const planAdicional = planesValidityRenovacion.find(p => p.max_users === usuariosAAgregar);
+      let precioPlanAdicional = planAdicional?.precio;
+      
+      if (!precioPlanAdicional) {
+        // Fallback: calcular proporcionalmente
+        const plan10 = planesValidityRenovacion.find(p => p.max_users === 10);
+        if (plan10) {
+          precioPlanAdicional = (plan10.precio / 10) * usuariosAAgregar;
+        } else {
+          precioPlanAdicional = (planSeleccionado.precio / planSeleccionado.max_users) * usuariosAAgregar;
+        }
+      }
+
+      const diasCalculo = Math.min(30, Math.max(1, diasRestantes));
+      return Math.round((precioPlanAdicional / 30) * diasCalculo);
+    }
+
+    return Math.round(planSeleccionado.precio);
+  }, [planSeleccionado, operacionRenovacionSeleccionada, tipoRenovacionSeleccionado, cantidadSeleccionada, cantidadBaseRevendedor, diasRestantes, planesValidityRenovacion, revendedorRenovacion]);
 
   const diasRenovacion = useMemo(() => {
     if (planSeleccionado?.dias && planSeleccionado.dias > 0) {
@@ -208,6 +250,8 @@ export default function RevendedoresPage() {
       // Para renovaciones, SIEMPRE usar los usuarios actuales del revendedor
       // El backend calculará el precio proporcionalmente si no hay plan exacto
       setCantidadSeleccionada(info.datos.max_users);
+      setCantidadBaseRevendedor(info.datos.max_users);
+      setOperacionRenovacionSeleccionada("renovacion");
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
       setEmailRenovacion(info.datos.cliente_email || "");
@@ -260,9 +304,10 @@ export default function RevendedoresPage() {
     // No buscar planes coincidentes, el backend calculará el precio
     const usuariosActuales = revendedorRenovacion.datos.max_users;
     
-    if (cantidadSeleccionada !== usuariosActuales) {
+    if (cantidadSeleccionada !== usuariosActuales && operacionRenovacionSeleccionada === "renovacion") {
       setCantidadSeleccionada(usuariosActuales);
     }
+    setCantidadBaseRevendedor(usuariosActuales);
   }, [
     revendedorRenovacion,
     tipoRenovacionSeleccionado,
@@ -281,11 +326,13 @@ export default function RevendedoresPage() {
     setRevendedorRenovacion(null);
     setTipoRenovacionSeleccionado("validity");
     setCantidadSeleccionada(0);
+    setCantidadBaseRevendedor(0);
     setNombreRenovacion("");
     setEmailRenovacion("");
     setProcesandoRenovacion(false);
     setCuponRenovacion(null);
     setDescuentoRenovacion(0);
+    const initialOp = modoSeleccion === "expansion" ? "expansion" : "renovacion"; setOperacionRenovacionSeleccionada(initialOp);
   };
 
   const activarModoCompra = () => {
@@ -298,6 +345,15 @@ export default function RevendedoresPage() {
       resetRenovacion();
     }
     setModoSeleccion("renovacion");
+    setOperacionRenovacionSeleccionada("renovacion");
+  };
+
+  const activarModoExpansion = () => {
+    if (modoSeleccion !== "expansion") {
+      resetRenovacion();
+    }
+    setModoSeleccion("expansion");
+    setOperacionRenovacionSeleccionada("expansion");
   };
 
   const volverABuscarRevendedor = () => {
@@ -361,6 +417,8 @@ export default function RevendedoresPage() {
       // Para renovaciones, SIEMPRE usar los usuarios actuales del revendedor
       // El backend calculará el precio proporcionalmente si no hay plan exacto
       setCantidadSeleccionada(info.datos.max_users);
+      setCantidadBaseRevendedor(info.datos.max_users);
+      const initialOp = modoSeleccion === "expansion" ? "expansion" : "renovacion"; setOperacionRenovacionSeleccionada(initialOp);
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
       setEmailRenovacion(info.datos.cliente_email || "");
@@ -411,6 +469,7 @@ export default function RevendedoresPage() {
       tipoRenovacion: tipoRenovacionSeleccionado,
       cantidadSeleccionada: cantidadSeleccionada.toString(),
       precioOriginal: precioRenovacion.toString(),
+      operacion: operacionRenovacionSeleccionada,
     });
 
     if (planSeleccionado?.id) {
@@ -487,7 +546,7 @@ export default function RevendedoresPage() {
   );
 
   const handleConfirmarCompra = (plan: PlanRevendedor) => {
-    navigate(`/checkout-revendedor?planId=${plan.id}`);
+    navigate(`/checkout-revendedor?planId=${plan.id}&maxUsers=${plan.max_users}`);
   };
 
   // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
@@ -538,12 +597,17 @@ export default function RevendedoresPage() {
                     mode={modoSeleccion}
                     onSelectCompra={activarModoCompra}
                     onSelectRenovacion={activarModoRenovacion}
+                    onSelectExpansion={activarModoExpansion}
                   />
                 </div>
                 <div className="hidden lg:block">
                   <CompactHeroControl
                     value={modoSeleccion}
-                    onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                    onChange={(v) => {
+                      if (v === 'compra') activarModoCompra();
+                      else if (v === 'renovacion') activarModoRenovacion();
+                      else activarModoExpansion();
+                    }}
                   />
                 </div>
               </div>
@@ -551,7 +615,7 @@ export default function RevendedoresPage() {
 
             <div className="w-full">
 
-            {modoSeleccion === "renovacion" && (
+            {(modoSeleccion === "renovacion" || modoSeleccion === "expansion") && (
               <RenovacionPanel
                 pasoRenovacion={pasoRenovacion}
                 busqueda={busquedaRenovacion}
@@ -561,7 +625,6 @@ export default function RevendedoresPage() {
                 error={errorRenovacion}
                 revendedor={revendedorRenovacion}
                 tipoSeleccionado={tipoRenovacionSeleccionado}
-                onTipoChange={setTipoRenovacionSeleccionado}
                 cantidadSeleccionada={cantidadSeleccionada}
                 onCantidadChange={setCantidadSeleccionada}
                 nombre={nombreRenovacion}
@@ -574,7 +637,6 @@ export default function RevendedoresPage() {
                 precioRenovacion={precioRenovacion}
                 precioFinal={precioFinalRenovacion}
                 planesCredit={planesCreditRenovacion}
-                planesValidity={planesValidityRenovacion}
                 onVerPlanes={activarModoCompra}
                 onVolverBuscar={volverABuscarRevendedor}
                 onProcesar={procesarRenovacion}
@@ -583,6 +645,9 @@ export default function RevendedoresPage() {
                 descuentoAplicado={descuentoRenovacion}
                 onCuponValidado={manejarCuponValidado}
                 onCuponRemovido={manejarCuponRemovido}
+                operacionSeleccionada={operacionRenovacionSeleccionada}
+                cantidadBase={cantidadBaseRevendedor}
+                diasRestantes={diasRestantes}
               />
             )}
 

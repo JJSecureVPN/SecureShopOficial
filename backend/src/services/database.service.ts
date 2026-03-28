@@ -814,11 +814,13 @@ export class DatabaseService {
     cliente_nombre: string;
     cupon_id?: number;
     descuento_aplicado?: number;
+    servex_max_users?: number;
+    servex_account_type?: string;
   }): PagoRevendedor {
     const stmt = this.db.prepare(`
       INSERT INTO pagos_revendedores 
-      (id, plan_revendedor_id, monto, estado, metodo_pago, cliente_email, cliente_nombre, cupon_id, descuento_aplicado)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, plan_revendedor_id, monto, estado, metodo_pago, cliente_email, cliente_nombre, cupon_id, descuento_aplicado, servex_max_users, servex_account_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -830,7 +832,9 @@ export class DatabaseService {
       data.cliente_email,
       data.cliente_nombre,
       data.cupon_id || null,
-      data.descuento_aplicado || 0
+      data.descuento_aplicado || 0,
+      data.servex_max_users || null,
+      data.servex_account_type || null
     );
 
     const pago = this.obtenerPagoRevendedorPorId(data.id);
@@ -1025,7 +1029,7 @@ export class DatabaseService {
     tipo: "cliente" | "revendedor";
     servex_id: number;
     servex_username: string;
-    operacion: "renovacion" | "upgrade";
+    operacion: "renovacion" | "upgrade" | "expansion";
     dias_agregados?: number;
     datos_anteriores?: string;
     datos_nuevos?: string;

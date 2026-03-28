@@ -122,24 +122,83 @@ export class TiendaRevendedoresService {
   }
 
   /**
+   * Calcula el precio de forma dinámica para cantidades grandes o personalizadas
+   * Lógica: Price(100) + Price(Quantity - 100)
+   */
+  async calcularPrecioDinamico(
+    maxUsers: number,
+    accountType: "validity" | "credit" = "validity"
+  ): Promise<{ precio: number; plan: PlanRevendedor }> {
+    const planes = await this.obtenerPlanesRevendedoresAsync();
+    const planesTipo = planes.filter((p) => p.account_type === accountType);
+
+    // Intentar encontrar plan exacto primero
+    const exactPlan = planesTipo.find((p) => p.max_users === maxUsers);
+    if (exactPlan) {
+      return { precio: exactPlan.precio, plan: exactPlan };
+    }
+
+    // Si es > 100, aplicar lógica de suma: Plan(100) + resto
+    if (maxUsers > 100) {
+      const plan100 = planesTipo.find((p) => p.max_users === 100);
+      if (!plan100) {
+        throw new Error(`No se encontró un plan base de 100 para el sistema de ${accountType === 'credit' ? 'créditos' : 'validez'}.`);
+      }
+
+      const resto = maxUsers - 100;
+      const { precio: precioResto } = await this.calcularPrecioDinamico(resto, accountType);
+      
+      return { 
+        precio: plan100.precio + precioResto, 
+        plan: { ...plan100, max_users: maxUsers, nombre: `Plan Personalizado ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}` } 
+      };
+    }
+
+    // Si es < 100 y no hay plan exacto, buscar el más grande disponible que sea menor y sumar el resto
+    // Esto permite que si tienen 10, 20, 30... funcione para cualquier múltiplo de 10
+    const planesMenores = planesTipo
+      .filter((p) => p.max_users < maxUsers)
+      .sort((a, b) => b.max_users - a.max_users);
+
+    if (planesMenores.length > 0) {
+      const planBase = planesMenores[0];
+      const resto = maxUsers - planBase.max_users;
+      const { precio: precioResto } = await this.calcularPrecioDinamico(resto, accountType);
+      
+      return { 
+        precio: planBase.precio + precioResto, 
+        plan: { ...planBase, max_users: maxUsers, nombre: `Plan Personalizado ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}` } 
+      };
+    }
+
+    throw new Error(`No se pudo calcular el precio para ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}. No hay planes base suficientes.`);
+  }
+
+  /**
    * Procesa una nueva compra de plan de revendedor
    */
   async procesarCompra(input: CrearPagoRevendedorInput): Promise<{
     pago: PagoRevendedor;
     linkPago: string;
   }> {
-    // 1. Validar que el plan existe (desde Supabase)
-    let plan = await this.obtenerPlanPorId(input.planRevendedorId);
-    if (!plan) {
-      throw new Error("Plan de revendedor no encontrado");
-    }
+    let plan: PlanRevendedor | null = null;
+    let precioFinal = 0;
 
-    if (!plan.activo) {
-      throw new Error("Plan no disponible");
+    // 1. Obtener el plan (exacto o dinámico)
+    if (input.planRevendedorId > 0) {
+      plan = await this.obtenerPlanPorId(input.planRevendedorId);
+      if (!plan) throw new Error("Plan de revendedor no encontrado");
+      if (!plan.activo) throw new Error("Plan no disponible");
+      precioFinal = plan.precio;
+    } else if (input.maxUsers && input.maxUsers > 0) {
+      // Cálculo dinámico para planes personalizados o > 100
+      const resultado = await this.calcularPrecioDinamico(input.maxUsers);
+      plan = resultado.plan;
+      precioFinal = resultado.precio;
+      console.log(`[TiendaRevendedores] 🧮 Cálculo dinámico para ${input.maxUsers} usuarios: $${precioFinal}`);
+    } else {
+      throw new Error("Debe proporcionar un planId o una cantidad de usuarios (maxUsers)");
     }
-
-    // 2. El precio ya viene con promociones desde Supabase
-    let precioFinal = plan.precio;
     let descuentoAplicado = 0;
     let cuponId: number | undefined;
 
@@ -183,7 +242,7 @@ export class TiendaRevendedoresService {
     const pagoId = uuidv4();
     const pago = this.db.crearPagoRevendedor({
       id: pagoId,
-      plan_revendedor_id: plan!.id,
+      plan_revendedor_id: plan!.id || 0, // 0 para planes dinámicos
       monto: precioFinal,
       estado: "pendiente",
       metodo_pago: "mercadopago",
@@ -191,6 +250,8 @@ export class TiendaRevendedoresService {
       cliente_nombre: input.clienteNombre,
       cupon_id: cuponId,
       descuento_aplicado: descuentoAplicado,
+      servex_max_users: plan!.max_users, // Guardamos la cantidad solicitada
+      servex_account_type: plan!.account_type,
     });
 
     console.log("[TiendaRevendedores] Pago creado:", pagoId);

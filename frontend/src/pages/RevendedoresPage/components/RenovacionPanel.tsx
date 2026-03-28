@@ -1,8 +1,6 @@
 import {
   AlertCircle,
-  Calendar,
   CheckCircle,
-  CreditCard,
   Loader2,
   Mail,
   Search,
@@ -29,7 +27,6 @@ type RenovacionPanelProps = {
   error: string;
   revendedor: RevendedorEncontrado | null;
   tipoSeleccionado: "validity" | "credit";
-  onTipoChange: (value: "validity" | "credit") => void;
   cantidadSeleccionada: number;
   onCantidadChange: (value: number) => void;
   nombre: string;
@@ -42,7 +39,6 @@ type RenovacionPanelProps = {
   precioRenovacion: number;
   precioFinal: number;
   planesCredit: PlanRevendedor[];
-  planesValidity: PlanRevendedor[];
   onVerPlanes: () => void;
   onVolverBuscar: () => void;
   onProcesar: () => void;
@@ -51,6 +47,9 @@ type RenovacionPanelProps = {
   descuentoAplicado: number;
   onCuponValidado: (descuento: number, cupon: CuponAplicado) => void;
   onCuponRemovido: () => void;
+  operacionSeleccionada: "renovacion" | "expansion";
+  cantidadBase: number;
+  diasRestantes: number;
 };
 
 export function RenovacionPanel({
@@ -62,7 +61,6 @@ export function RenovacionPanel({
   error,
   revendedor,
   tipoSeleccionado,
-  onTipoChange,
   cantidadSeleccionada,
   onCantidadChange,
   nombre,
@@ -75,7 +73,6 @@ export function RenovacionPanel({
   precioRenovacion,
   precioFinal,
   planesCredit,
-  planesValidity,
   onVolverBuscar,
   onProcesar,
   planSeleccionado,
@@ -83,6 +80,9 @@ export function RenovacionPanel({
   descuentoAplicado,
   onCuponValidado,
   onCuponRemovido,
+  operacionSeleccionada,
+  cantidadBase,
+  diasRestantes,
 }: RenovacionPanelProps) {
   const tipoActual = revendedor?.datos.servex_account_type;
   const hayDescuento = descuentoAplicado > 0;
@@ -98,6 +98,9 @@ export function RenovacionPanel({
   const precioPorUnidad = Math.round(
     precioRenovacion / Math.max(cantidadSeleccionada || 1, 1)
   );
+
+  const esExpansion = operacionSeleccionada === "expansion";
+  const usuariosAAgregar = cantidadSeleccionada - cantidadBase;
 
   return (
     <div className="space-y-8">
@@ -161,20 +164,25 @@ export function RenovacionPanel({
         <StickyLayout
           aside={
             <SummaryPanel
-              badgeText="Resumen de renovacion"
+              badgeText={esExpansion ? "Resumen de expansión" : "Resumen de renovacion"}
               accent="indigo"
-              title={`${diasRenovacion} dias`}
+              title={esExpansion ? `${usuariosAAgregar} usuarios` : `${diasRenovacion} dias`}
               subtitle={
-                tipoSeleccionado === "credit"
+                esExpansion
+                  ? `Agregando ${usuariosAAgregar} usuarios adicionales a tu cuenta.`
+                  : tipoSeleccionado === "credit"
                   ? `${cantidadSeleccionada} creditos para mantener tu panel activo.`
                   : `${cantidadSeleccionada} usuarios en tu plan de validez mensual.`
               }
               priceLabel="Total a pagar"
               price={`$${precioFinal.toLocaleString("es-AR")}`}
-              unitLabel="Precio por unidad"
-              unitValue={`$${precioPorUnidad.toLocaleString("es-AR")}/${
-                tipoSeleccionado === "credit" ? "credito" : "usuario"
-              }`}
+              unitLabel={esExpansion ? "Costo proporcional" : "Precio por unidad"}
+              unitValue={esExpansion 
+                ? `$${precioFinal.toLocaleString("es-AR")} por ${diasRestantes} días`
+                : `$${precioPorUnidad.toLocaleString("es-AR")}/${
+                  tipoSeleccionado === "credit" ? "credito" : "usuario"
+                }`
+              }
               priceBreakdown={
                 hayDescuento
                   ? ([
@@ -188,15 +196,19 @@ export function RenovacionPanel({
                   : undefined
               }
               benefits={[
-                `Renovacion de ${diasRenovacion} dias acumulativos`,
-                tipoSeleccionado === "credit"
+                esExpansion 
+                  ? `Expansión inmediata de ${usuariosAAgregar} usuarios`
+                  : `Renovacion de ${diasRenovacion} dias acumulativos`,
+                esExpansion
+                  ? `Misma fecha de vencimiento: ${fechaExpiracion?.toLocaleDateString("es-AR")}`
+                  : tipoSeleccionado === "credit"
                   ? "Proceso por creditos habilitado"
                   : "Renovacion sobre tu plan de validez",
                 "Pago seguro con Mercado Pago",
               ]}
               ctaLabel="Continuar al pago"
               onCtaClick={onProcesar}
-              ctaDisabled={!puedeProcesar || procesando || precioFinal <= 0}
+              ctaDisabled={!puedeProcesar || procesando || precioFinal <= 0 || (esExpansion && usuariosAAgregar <= 0)}
               ctaLoading={procesando}
               ctaLoadingLabel="Procesando..."
               secondaryLabel="Buscar otra cuenta"
@@ -224,59 +236,11 @@ export function RenovacionPanel({
             </div>
           </div>
 
-          <StepCard
-            label="Paso 2"
-            title="Sistema de renovacion"
-            subtitle="Tu cuenta solo permite renovar en su sistema actual."
-            accent="indigo"
-            delay={0.1}
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => tipoActual === "validity" && onTipoChange("validity")}
-                disabled={tipoActual !== "validity"}
-                className={`group p-4 rounded-xl border-2 transition-all text-left ${
-                  tipoActual !== "validity"
-                    ? "border-zinc-700/40 bg-zinc-800/40 cursor-not-allowed opacity-50"
-                    : tipoSeleccionado === "validity"
-                    ? "border-indigo-500 bg-indigo-500/20"
-                    : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
-                }`}
-              >
-                <Calendar
-                  className={`w-5 h-5 mb-2 ${
-                    tipoSeleccionado === "validity" ? "text-indigo-400" : "text-zinc-400 group-hover:text-indigo-400"
-                  }`}
-                />
-                <p className="text-sm font-semibold text-white">Validez</p>
-                <p className="text-xs text-zinc-400 mt-1">Dias de acceso</p>
-              </button>
 
-              <button
-                onClick={() => tipoActual === "credit" && onTipoChange("credit")}
-                disabled={tipoActual !== "credit"}
-                className={`group p-4 rounded-xl border-2 transition-all text-left ${
-                  tipoActual !== "credit"
-                    ? "border-zinc-700/40 bg-zinc-800/40 cursor-not-allowed opacity-50"
-                    : tipoSeleccionado === "credit"
-                    ? "border-indigo-500 bg-indigo-500/20"
-                    : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
-                }`}
-              >
-                <CreditCard
-                  className={`w-5 h-5 mb-2 ${
-                    tipoSeleccionado === "credit" ? "text-indigo-400" : "text-zinc-400 group-hover:text-indigo-400"
-                  }`}
-                />
-                <p className="text-sm font-semibold text-white">Creditos</p>
-                <p className="text-xs text-zinc-400 mt-1">Mas creditos</p>
-              </button>
-            </div>
-          </StepCard>
 
           {tipoSeleccionado === "credit" ? (
             <StepCard
-              label="Paso 3"
+              label="Paso 1"
               title="Cantidad de creditos"
               subtitle="Desliza para definir cuantos creditos deseas renovar."
               accent="indigo"
@@ -289,9 +253,38 @@ export function RenovacionPanel({
                 unit="creditos"
               />
             </StepCard>
+          ) : esExpansion ? (
+            <StepCard
+              label="Paso 1"
+              title="Cantidad de usuarios a agregar"
+              subtitle={`Elige cuántos usuarios adicionales necesitas. Se cobrará proporcional a los ${diasRestantes} días restantes.`}
+              accent="indigo"
+              delay={0.2}
+            >
+              <PlanSlider
+                options={[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                value={usuariosAAgregar}
+                onChange={(val) => onCantidadChange(cantidadBase + val)}
+                unit="usuarios extra"
+              />
+              <div className="mt-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Usuarios actuales</span>
+                  <span className="text-white font-medium">{cantidadBase}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Usuarios finales</span>
+                  <span className="text-indigo-400 font-bold">{cantidadSeleccionada}</span>
+                </div>
+                <div className="pt-2 border-t border-zinc-800 flex justify-between text-sm">
+                  <span className="text-zinc-400">Días restantes</span>
+                  <span className="text-white font-medium">{diasRestantes} días</span>
+                </div>
+              </div>
+            </StepCard>
           ) : (
             <StepCard
-              label="Paso 3"
+              label="Paso 1"
               title="Renovacion por validez"
               subtitle="Se mantiene tu plan actual y se agregan dias de forma acumulativa."
               accent="indigo"
@@ -300,13 +293,13 @@ export function RenovacionPanel({
               <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-4 space-y-2">
                 <p className="text-sm text-zinc-300">Usuarios actuales: <span className="text-white font-semibold">{cantidadSeleccionada}</span></p>
                 <p className="text-sm text-zinc-300">Duracion base: <span className="text-white font-semibold">{diasRenovacion} dias</span></p>
-                <p className="text-xs text-zinc-500">Planes de validez disponibles: {planesValidity.length}</p>
+                <p className="text-xs text-zinc-500">Mismo plan, más tiempo.</p>
               </div>
             </StepCard>
           )}
 
           <StepCard
-            label={`Paso ${tipoSeleccionado === "credit" ? "4" : "4"}`}
+            label="Paso 2"
             title="Informacion de contacto"
             accent="indigo"
             delay={0.3}
@@ -336,7 +329,7 @@ export function RenovacionPanel({
           </StepCard>
 
           <StepCard
-            label="Paso 5"
+            label="Paso 3"
             title="Codigo de descuento"
             subtitle="Opcional"
             accent="indigo"

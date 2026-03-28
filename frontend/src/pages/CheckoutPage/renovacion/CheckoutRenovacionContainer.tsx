@@ -41,6 +41,8 @@ const CheckoutRenovacionContainer: React.FC = () => {
   const cuponId = cuponIdParam ? parseInt(cuponIdParam, 10) : undefined;
   const planIdParam = searchParams.get("planId");
   const planId = planIdParam ? parseInt(planIdParam, 10) : undefined;
+  const operacion = (searchParams.get("operacion") || "renovacion") as "renovacion" | "expansion";
+  const currentMaxUsers = parseInt(searchParams.get("maxUsers") || "0", 10);
   const precioOriginal = parseInt(precioOriginalParam || "0", 10);
   const precioBase = precioOriginal > 0 ? precioOriginal : precio;
   const descuentoInicial = parseInt(descuentoParam || "0", 10);
@@ -58,7 +60,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
   const connectionActual = connectionActualParam || connectionDestino || 1;
   const hayCambioDispositivos =
     tipo === "cliente" && connectionDestino > 0 && connectionDestino !== connectionActual;
-  const datosInvalidos = !busqueda || dias <= 0 || precio <= 0;
+  const datosInvalidos = !busqueda || precio <= 0 || (operacion !== "expansion" && dias <= 0);
   const hayDescuento = descuentoFinal > 0;
 
   useEffect(() => {
@@ -105,11 +107,18 @@ const CheckoutRenovacionContainer: React.FC = () => {
   }, [precioBase, dias]);
 
   const tituloResumen = planNombre || username || "Renovación";
+  const usuariosAAgregar =
+    operacion === "expansion" && cantidadSeleccionada && currentMaxUsers
+      ? cantidadSeleccionada - currentMaxUsers
+      : 0;
+
   const subtituloResumen =
     tipo === "revendedor"
-      ? cantidadSeleccionada
-        ? `${cantidadSeleccionada} ${tipoRenovacion === "credit" ? "créditos" : "cupos"}`
-        : `Renovación ${tipoRenovacion}`
+      ? operacion === "expansion" && usuariosAAgregar > 0
+        ? `Expansión de +${usuariosAAgregar} cupos (${currentMaxUsers} → ${cantidadSeleccionada})`
+        : cantidadSeleccionada
+          ? `${cantidadSeleccionada} ${tipoRenovacion === "credit" ? "créditos" : "cupos"}`
+          : `Renovación ${tipoRenovacion}`
       : hayCambioDispositivos
         ? `Upgrade a ${connectionDestino} dispositivos`
         : `${connectionActual} dispositivo${connectionActual > 1 ? "s" : ""}`;
@@ -151,6 +160,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
               cuponId,
               descuentoAplicado: hayDescuento ? descuentoFinal : undefined,
               planId,
+              operacion,
             })
           : await apiService.procesarRenovacionCliente({
               ...basePayload,
@@ -315,6 +325,9 @@ const CheckoutRenovacionContainer: React.FC = () => {
       onToggleMobileSummary={() => setMobileSummaryOpen((value) => !value)}
       onFallbackPayment={handleFallbackPayment}
       onBack={() => navigate(-1)}
+      operacion={operacion}
+      currentMaxUsers={currentMaxUsers}
+      usuariosAAgregar={usuariosAAgregar}
     />
   );
 };

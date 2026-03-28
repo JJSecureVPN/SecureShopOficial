@@ -87,6 +87,7 @@ export interface CompraRevendedorRequest {
   clienteEmail: string;
   clienteNombre: string;
   codigoCupon?: string;
+  maxUsers?: number; // Para planes dinámicos o > 100
 }
 
 export interface CompraResponse {
@@ -290,7 +291,9 @@ export interface RenovacionRevendedorRequest {
   cuponId?: number;
   descuentoAplicado?: number;
   planId?: number;
+  operacion?: "renovacion" | "expansion";
 }
+
 
 export interface RenovacionResponse {
   renovacion: {

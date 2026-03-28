@@ -1049,7 +1049,9 @@ class EmailService {
     const tipoTexto = esCliente ? 'Cliente VPN' : 'Revendedor';
     
     let tituloOperacion = 'Renovación exitosa';
-    if (datos.operacion === 'upgrade') {
+    if (datos.operacion === 'expansion') {
+      tituloOperacion = 'Expansión de cupos exitosa';
+    } else if (datos.operacion === 'upgrade') {
       tituloOperacion = 'Upgrade exitoso';
     } else if (datos.operacion === 'validity') {
       tituloOperacion = 'Renovación de validez exitosa';
@@ -1084,27 +1086,41 @@ class EmailService {
           </div>
           <div class="content">
             <div class="success-box">
-              <p class="success-text">✅ Tu ${datos.tipo === 'cliente' ? 'cuenta' : 'panel de revendedor'} ha sido renovado exitosamente</p>
+              <p class="success-text">✅ Tu ${datos.tipo === 'cliente' ? 'cuenta' : 'panel de revendedor'} ha sido ${datos.operacion === 'expansion' ? 'expandido' : 'renovado'} exitosamente</p>
             </div>
             
             <div class="info-box">
-              <h3>📋 Detalles de la renovación:</h3>
+              <h3>📋 Detalles de la operación:</h3>
               <div class="info-item">
                 <span class="info-label">👤 Usuario:</span>
                 <span class="info-value">${datos.username}</span>
               </div>
-              <div class="info-item">
-                <span class="info-label">📅 Días agregados:</span>
-                <span class="info-value">${datos.diasAgregados} días</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">⏰ Nueva expiración:</span>
-                <span class="info-value">${datos.nuevaExpiracion}</span>
-              </div>
+              
+              ${datos.operacion === 'expansion' ? `
+                <div class="info-item">
+                  <span class="info-label">🚀 Total de cupos:</span>
+                  <span class="info-value">${datos.diasAgregados} usuarios</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">📅 Vencimiento:</span>
+                  <span class="info-value">Mantenido (${datos.nuevaExpiracion})</span>
+                </div>
+              ` : `
+                <div class="info-item">
+                  <span class="info-label">📅 Días agregados:</span>
+                  <span class="info-value">${datos.diasAgregados} días</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">⏰ Nueva expiración:</span>
+                  <span class="info-value">${datos.nuevaExpiracion}</span>
+                </div>
+              `}
+              
               <div class="info-item">
                 <span class="info-label">💰 Monto pagado:</span>
                 <span class="info-value">$${datos.monto.toLocaleString('es-AR')}</span>
               </div>
+              
               ${datos.detallesExtra ? `
               <div class="info-item">
                 <span class="info-label">ℹ️ Detalles:</span>
@@ -1124,9 +1140,14 @@ class EmailService {
 
             <p><strong>💡 Recuerda:</strong></p>
             <ul>
-              <li>Tu cuenta se renovará automáticamente desde la fecha actual</li>
+              ${datos.operacion === 'expansion' ? `
+                <li>Tu límite de usuarios se ha actualizado de inmediato</li>
+                <li>La fecha de vencimiento de tu cuenta no ha cambiado</li>
+              ` : `
+                <li>Tu suscripción se ha extendido a partir de la fecha de vencimiento previa</li>
+              `}
               <li>Si tienes dudas, contáctanos por WhatsApp</li>
-              <li>Guarda este email como comprobante de tu renovación</li>
+              <li>Guarda este email como comprobante de tu operación</li>
             </ul>
 
             <p style="text-align: center;">

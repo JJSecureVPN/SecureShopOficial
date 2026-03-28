@@ -44,6 +44,9 @@ interface CheckoutRenovacionViewProps {
   precioPorDiaBase: number;
   tituloResumen: string;
   subtituloResumen: string;
+  operacion?: "renovacion" | "expansion";
+  currentMaxUsers?: number;
+  usuariosAAgregar?: number;
   onNombreChange: (value: string) => void;
   onEmailChange: (value: string) => void;
   onToggleMobileSummary: () => void;
@@ -78,12 +81,16 @@ export const CheckoutRenovacionView = ({
   precioPorDiaBase,
   tituloResumen,
   subtituloResumen,
+  operacion = "renovacion",
+  currentMaxUsers = 0,
+  usuariosAAgregar = 0,
   onNombreChange,
   onEmailChange,
   onToggleMobileSummary,
   onFallbackPayment,
   onBack,
 }: CheckoutRenovacionViewProps) => {
+  const esExpansion = operacion === "expansion";
   return (
     <div className="min-h-screen pt-16 text-zinc-100" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <MobileCheckoutSummary
@@ -116,14 +123,16 @@ export const CheckoutRenovacionView = ({
             <div className="flex items-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] font-semibold tracking-widest uppercase">
                 <RefreshCw className="w-3 h-3" />
-                Renovación
+                {esExpansion ? "Expansión" : "Renovación"}
               </span>
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white mb-2 leading-none">
               Completa tus datos
             </h1>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              Confirmaremos la renovación y te enviaremos el detalle final al instante por email.
+              {esExpansion
+                ? "Confirmaremos la expansión de usuarios y te enviaremos el detalle al instante por email."
+                : "Confirmaremos la renovación y te enviaremos el detalle final al instante por email."}
             </p>
           </motion.div>
 
@@ -170,13 +179,27 @@ export const CheckoutRenovacionView = ({
             </div>
 
             <div className="px-6 py-5 border-t border-white/[0.05]">
-              <SectionLabel icon={<Clock className="w-3.5 h-3.5" />} label="Detalles de la renovación" step="2" />
+              <SectionLabel icon={<Clock className="w-3.5 h-3.5" />} label={esExpansion ? "Detalles de la expansión" : "Detalles de la renovación"} step="2" />
             </div>
 
             <div className="px-6 pb-6 space-y-4">
               <div className="grid sm:grid-cols-2 gap-3">
                 <DetailCard label="Usuario" value={username} helper={planNombre ? `Plan actual: ${planNombre}` : undefined} />
-                <DetailCard label="Duración" value={`${dias} días`} helper={`${precioPorDia.toLocaleString("es-AR")} por día`} />
+                {esExpansion && (
+                  <DetailCard
+                    label="Cupos actuales"
+                    value={`${currentMaxUsers} cupos`}
+                  />
+                )}
+                {esExpansion ? (
+                  <DetailCard
+                    label="Cupos a agregar"
+                    value={`+${usuariosAAgregar} cupos`}
+                    helper={`Total final: ${cantidadSeleccionada ?? 0} cupos`}
+                  />
+                ) : (
+                  <DetailCard label="Duración" value={`${dias} días`} helper={`${precioPorDia.toLocaleString("es-AR")} por día`} />
+                )}
                 {tipo === "cliente" ? (
                   <DetailCard
                     label="Dispositivos"
@@ -185,12 +208,14 @@ export const CheckoutRenovacionView = ({
                   />
                 ) : (
                   <DetailCard
-                    label="Tipo"
-                    value={tipoRenovacion === "credit" ? "Créditos" : "Validez"}
-                    helper={cantidadSeleccionada ? `Cantidad: ${cantidadSeleccionada}` : "Renovación revendedor"}
+                    label={esExpansion ? "Operación" : "Tipo"}
+                    value={esExpansion ? "Expansión de usuarios" : (tipoRenovacion === "credit" ? "Créditos" : "Validez")}
+                    helper={cantidadSeleccionada ? (esExpansion ? `${cantidadSeleccionada} cupos totales` : `Cantidad: ${cantidadSeleccionada}`) : undefined}
                   />
                 )}
-                <DetailCard label="Operación" value={tipo === "revendedor" ? "Revendedor" : "Cliente"} helper={subtituloResumen} />
+                {!esExpansion && (
+                  <DetailCard label="Operación" value={tipo === "revendedor" ? "Revendedor" : "Cliente"} helper={subtituloResumen} />
+                )}
               </div>
 
               {hayDescuento && (
@@ -264,7 +289,7 @@ export const CheckoutRenovacionView = ({
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold tracking-wide uppercase">
                         <Check className="w-2.5 h-2.5" />
-                        Renovación
+                        {esExpansion ? "Expansión" : "Renovación"}
                       </span>
                     </div>
                     <h2 className="text-xl font-bold text-white tracking-tight leading-tight">{tituloResumen}</h2>
@@ -281,7 +306,11 @@ export const CheckoutRenovacionView = ({
                 <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/[0.05]">
                   <FeaturePill icon={<Zap className="w-3 h-3" />} text="Aplicación inmediata" color="orange" />
                   <FeaturePill icon={<Shield className="w-3 h-3" />} text="Pago seguro SSL" color="emerald" />
-                  <FeaturePill icon={<Clock className="w-3 h-3" />} text={`${dias} días extra`} color="blue" />
+                  {esExpansion ? (
+                    <FeaturePill icon={<Users className="w-3 h-3" />} text="Sin tocar vencimiento" color="blue" />
+                  ) : (
+                    <FeaturePill icon={<Clock className="w-3 h-3" />} text={`${dias} días extra`} color="blue" />
+                  )}
                   <FeaturePill
                     icon={<Check className="w-3 h-3" />}
                     text={tipo === "revendedor" ? "Proceso revendedor" : "Soporte incluido"}
@@ -297,15 +326,17 @@ export const CheckoutRenovacionView = ({
                 <span className="text-zinc-300 font-medium tabular-nums">${precioBase.toLocaleString("es-AR")}</span>
               </div>
 
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-zinc-500">Precio por día</span>
-                <div className="text-right">
-                  <span className="text-zinc-300 font-medium tabular-nums">${precioPorDia.toLocaleString("es-AR")}</span>
-                  {hayDescuento && (
-                    <p className="text-[11px] text-zinc-500 line-through tabular-nums">${precioPorDiaBase.toLocaleString("es-AR")}</p>
-                  )}
+              {!esExpansion && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-zinc-500">Precio por día</span>
+                  <div className="text-right">
+                    <span className="text-zinc-300 font-medium tabular-nums">${precioPorDia.toLocaleString("es-AR")}</span>
+                    {hayDescuento && (
+                      <p className="text-[11px] text-zinc-500 line-through tabular-nums">${precioPorDiaBase.toLocaleString("es-AR")}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <AnimatePresence>
                 {hayDescuento && (
