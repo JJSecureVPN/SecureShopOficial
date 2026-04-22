@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api.service";
 import { useBodyOverflow } from "../hooks/useBodyOverflow";
 import { useAuth } from "../contexts/AuthContext";
-import Loading from "./Loading";
 import AuthModal from "./AuthModal";
 import {
   X,
@@ -25,7 +25,7 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const isAuthenticated = !!user;
-  
+
   const [nombre, setNombre] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingDemos, setCheckingDemos] = useState(false);
@@ -68,7 +68,7 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
         }
       }
     };
-    
+
     cargarDemosInfo();
   }, [isAuthenticated, user?.id, isOpen]);
 
@@ -177,89 +177,86 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
 
   // Vista de carga de autenticación
   if (authLoading) {
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 flex items-center justify-center p-4 pt-20">
-        <div className="bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full p-8 flex items-center justify-center border border-zinc-700">
-          <Loading />
+    return createPortal(
+      <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="bg-[#131417] rounded-3xl shadow-2xl max-w-md w-full p-12 flex flex-col items-center justify-center border border-zinc-800/80">
+          <Loader2 className="w-10 h-10 animate-spin text-white mb-4" />
+          <p className="text-zinc-500 font-medium">Cargando...</p>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 flex items-center justify-center p-4 pt-20">
-      <div className="bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full max-h-[85vh] border border-zinc-700 flex flex-col overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={handleClose}>
+      <div
+        className="w-full max-w-md bg-[#131417] rounded-3xl shadow-2xl overflow-hidden border border-zinc-800/80 font-title animate-in fade-in zoom-in duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="border-b border-zinc-700 p-6 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
-              <Gift className="w-5 h-5 text-orange-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-zinc-100">
-                Prueba Gratuita
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Acceso completo por 2 horas
-              </p>
-            </div>
-          </div>
+        <div className="relative p-8 border-b border-zinc-800/50 bg-zinc-900/10">
           <button
             onClick={handleClose}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
+          <h2 className="text-3xl font-extrabold text-white tracking-tight">
+            Prueba Gratuita.
+          </h2>
+          <p className="text-zinc-500 mt-2 text-sm">
+            Obtén acceso total por 2 horas sin compromiso.
+          </p>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        <div className="p-8 space-y-6">
           {/* No autenticado - Mostrar mensaje de login */}
           {!isAuthenticated && (
             <div className="space-y-6">
-              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <LogIn className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-orange-200 font-semibold text-sm">
-                      Inicia sesión para continuar
-                    </p>
-                    <p className="text-orange-300 text-xs mt-1">
-                      Debes tener una cuenta para solicitar demos gratuitas. 
-                      Cada cuenta puede solicitar hasta 2 demos.
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-400">
+                <LogIn className="w-5 h-5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold uppercase tracking-widest">Requiere Cuenta</p>
+                  <p className="text-xs opacity-80">Debes iniciar sesión para solicitar demos gratuitas.</p>
                 </div>
               </div>
 
               {/* Beneficios */}
-              <div className="bg-gradient-to-br from-zinc-800 via-zinc-800/90 to-zinc-700 border border-zinc-600 rounded-lg p-4 space-y-2">
-                <p className="text-zinc-100 text-xs font-semibold">
-                  ✨ La demo incluye:
+              <div className="space-y-4 p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl">
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">
+                  Beneficios incluidos
                 </p>
-                <ul className="text-zinc-300 text-xs space-y-1">
-                  <li>✅ 2 horas de acceso completo</li>
-                  <li>✅ Todos los servidores disponibles</li>
-                  <li>✅ Velocidad sin limitaciones</li>
-                  <li>✅ Máximo 2 demos por cuenta</li>
+                <ul className="space-y-3">
+                  {[
+                    "2 horas de acceso completo",
+                    "Todos los servidores premium",
+                    "Velocidad máxima (1Gbps)",
+                    "Soporte técnico prioritario"
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-zinc-300">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                      {benefit}
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               <button
                 onClick={handleGoToLogin}
-                className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                className="w-full py-4 bg-white text-black font-extrabold rounded-xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
               >
-                <LogIn className="w-5 h-5" />
-                Iniciar Sesión
+                INICIAR SESIÓN
               </button>
-              
-              <p className="text-center text-xs text-zinc-400">
+
+              <p className="text-center text-xs text-zinc-500">
                 ¿No tienes cuenta?{" "}
                 <button
                   onClick={handleGoToRegister}
-                  className="text-orange-400 hover:text-orange-300 font-medium"
+                  className="text-white hover:underline font-bold"
                 >
-                  Regístrate gratis
+                  REGÍSTRATE GRATIS
                 </button>
               </p>
             </div>
@@ -269,17 +266,17 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
           {isAuthenticated && (
             <>
               {/* Usuario info */}
-              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
-                  <User className="w-4 h-4 text-orange-400" />
+              <div className="flex items-center gap-4 p-4 bg-[#060606] border border-zinc-800/80 rounded-2xl">
+                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                  <User className="w-5 h-5 text-white/60" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-orange-200 text-sm font-medium truncate">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
                     {user?.email}
                   </p>
                   {demosInfo && (
-                    <p className="text-orange-300 text-xs">
-                      Demos: {demosInfo.demos_usadas}/{demosInfo.demos_maximas} usadas
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                      {demosInfo.demos_usadas}/{demosInfo.demos_maximas} DEMOS USADAS
                     </p>
                   )}
                 </div>
@@ -287,71 +284,53 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
 
               {/* Loading demos info */}
               {checkingDemos && (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-orange-400" />
-                  <span className="ml-2 text-sm text-zinc-400">Verificando disponibilidad...</span>
+                <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-white/20" />
+                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Verificando...</span>
                 </div>
               )}
 
-              {/* Loading */}
-              {loading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loading />
+              {/* Loading solicitud */}
+              {loading && !success && (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-white" />
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Procesando Solicitud</p>
                 </div>
               )}
 
               {/* Success State - Email enviado */}
               {success && credentials && !loading && (
-                <div className="space-y-6">
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-emerald-200 font-semibold text-sm">
-                          ¡Credenciales enviadas!
-                        </p>
-                        <p className="text-zinc-300 text-xs mt-1">
-                          Hemos enviado las credenciales de tu demo a:
-                        </p>
-                        <p className="text-emerald-300 font-semibold text-sm mt-1">
-                          {user?.email}
-                        </p>
-                        {credentials.demos_restantes !== undefined && (
-                          <p className="text-emerald-400 text-xs mt-2">
-                            Te quedan {credentials.demos_restantes} demo(s) disponible(s).
-                          </p>
-                        )}
-                      </div>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                    <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold uppercase tracking-widest">¡Credenciales Enviadas!</p>
+                      <p className="text-xs opacity-80">Revisa tu bandeja de entrada y carpeta de spam.</p>
                     </div>
                   </div>
 
-                  {/* Info de la demo */}
-                  <div className="bg-gradient-to-br from-zinc-800 via-zinc-800/90 to-zinc-700 border border-zinc-600 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-orange-300" />
-                      <p className="text-zinc-300 text-sm">
-                        <span className="font-semibold text-white">{credentials.horas_validas} horas</span> de acceso completo
-                      </p>
+                  <div className="p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between py-2 border-b border-zinc-800/50">
+                      <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Duración</span>
+                      <span className="text-sm font-mono text-white">{credentials.horas_validas} horas</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">📧</span>
-                      <p className="text-zinc-300 text-xs">
-                        Revisa tu bandeja de entrada (y spam)
-                      </p>
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Enviado a</span>
+                      <span className="text-sm font-mono text-white truncate max-w-[200px]">{user?.email}</span>
                     </div>
                   </div>
 
-                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
-                    <p className="text-orange-200 text-xs leading-relaxed">
-                      📱 Descarga la app <span className="font-semibold">JJSecure VPN</span> desde Play Store o App Store e ingresa las credenciales que enviamos a tu email.
+                  <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                    <p className="text-xs text-orange-400/80 leading-relaxed text-center">
+                      Descarga la app <span className="font-bold text-orange-400">JJSecure VPN</span> e ingresa los datos enviados.
                     </p>
                   </div>
 
                   <button
                     onClick={handleClose}
-                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl"
+                    className="w-full py-4 bg-white text-black font-extrabold rounded-xl hover:bg-zinc-200 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
                   >
-                    Entendido
+                    ENTENDIDO
                   </button>
                 </div>
               )}
@@ -359,43 +338,34 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
               {/* Límite alcanzado */}
               {limiteAlcanzado && !loading && !success && (
                 <div className="space-y-6">
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-red-200 font-semibold text-sm">
-                          Límite de demos alcanzado
-                        </p>
-                        <p className="text-red-300 text-xs mt-1">
-                          Has usado todas tus demos disponibles ({demosInfo?.demos_maximas || 2} máximo por cuenta).
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold uppercase tracking-widest">Límite Alcanzado</p>
+                      <p className="text-xs opacity-80">Has agotado tus demos disponibles.</p>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-orange-500/10 to-zinc-800/50 border border-orange-500/20 rounded-lg p-4">
-                    <p className="text-orange-200 text-sm font-semibold mb-2">
-                      ¿Te gustó el servicio?
-                    </p>
-                    <p className="text-orange-300 text-xs mb-3">
-                      Adquiere un plan completo y disfruta de internet ilimitado.
+                  <div className="p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl space-y-4">
+                    <p className="text-sm text-zinc-400 text-center">
+                      ¿Te gustó el servicio? Adquiere un plan completo para seguir navegando sin límites.
                     </p>
                     <button
                       onClick={() => {
                         handleClose();
                         navigate("/planes");
                       }}
-                      className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors text-sm"
+                      className="w-full py-4 bg-white text-black font-extrabold rounded-xl hover:bg-zinc-200 transition-all"
                     >
-                      Ver Planes
+                      VER PLANES
                     </button>
                   </div>
 
                   <button
                     onClick={handleClose}
-                    className="w-full py-2 text-zinc-400 hover:text-zinc-200 font-medium text-sm transition-colors"
+                    className="w-full py-3 text-zinc-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-colors"
                   >
-                    Cerrar
+                    CERRAR
                   </button>
                 </div>
               )}
@@ -405,94 +375,61 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Error Message */}
                   {error && (
-                    <div
-                      className={`rounded-lg p-4 ${
-                        bloqueado
-                          ? "bg-orange-500/10 border border-orange-500/20"
-                          : "bg-red-500/10 border border-red-500/20"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {bloqueado ? (
-                          <Clock className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                        )}
-                        <div>
-                          <p
-                            className={`font-semibold text-sm ${
-                              bloqueado ? "text-orange-200" : "text-red-200"
-                            }`}
-                          >
-                            {bloqueado ? "Demo bloqueada" : "Error"}
-                          </p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              bloqueado ? "text-orange-300" : "text-red-300"
-                            }`}
-                          >
-                            {error}
-                          </p>
-                        </div>
+                    <div className={`flex items-center gap-3 p-4 rounded-xl ${bloqueado ? "bg-orange-500/10 border border-orange-500/20 text-orange-400" : "bg-red-500/10 border border-red-500/20 text-red-400"
+                      }`}>
+                      {bloqueado ? <Clock className="w-5 h-5 flex-shrink-0" /> : <AlertCircle className="w-5 h-5 flex-shrink-0" />}
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold uppercase tracking-widest">{bloqueado ? "Temporalmente Bloqueado" : "Error"}</p>
+                        <p className="text-xs opacity-80">{error}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Nombre Input */}
-                  <div>
-                    <label className="block text-sm font-semibold text-zinc-100 mb-2">
-                      Nombre o Alias
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Tu Nombre o Alias
                     </label>
-                    <input
-                      type="text"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      disabled={loading}
-                      placeholder="Tu nombre"
-                      className="w-full px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors disabled:opacity-50"
-                    />
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
+                      <input
+                        type="text"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        disabled={loading}
+                        placeholder="Ej. Juan Pérez"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-all font-mono text-sm"
+                      />
+                    </div>
                   </div>
 
                   {/* Info Box */}
-                  <div className="bg-gradient-to-br from-zinc-800 via-zinc-800/90 to-zinc-700 border border-zinc-600 rounded-lg p-4 space-y-2">
-                    <p className="text-zinc-100 text-xs font-semibold">
-                      ✨ Incluye:
+                  <div className="p-5 bg-zinc-900/50 border border-zinc-800/80 rounded-2xl space-y-3">
+                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Detalles de la demo</p>
+                    <div className="flex items-center gap-2 text-sm text-zinc-300">
+                      <CheckCircle className="w-4 h-4 text-emerald-500/60" />
+                      <span>Acceso Premium por 2 horas</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 pt-2 border-t border-zinc-800/50">
+                      📧 Se enviará a: <span className="text-zinc-300 font-mono">{user?.email}</span>
                     </p>
-                    <ul className="text-zinc-300 text-xs space-y-1">
-                      <li>✅ 2 horas de acceso completo</li>
-                      <li>✅ Todos los servidores disponibles</li>
-                      <li>✅ Velocidad sin limitaciones</li>
-                    </ul>
-                    <p className="text-zinc-400 text-xs mt-3 pt-2 border-t border-zinc-600">
-                      📧 Las credenciales se enviarán a: <span className="text-orange-200">{user?.email}</span>
-                    </p>
-                    {demosInfo && (
-                      <p className="text-orange-200 text-xs">
-                        ⚠️ Demos disponibles: {demosInfo.demos_disponibles} de {demosInfo.demos_maximas}
-                      </p>
-                    )}
                   </div>
 
                   {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={loading || bloqueado}
-                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-600 disabled:text-zinc-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                    className="w-full py-4 bg-white text-black font-extrabold rounded-xl hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
                   >
                     {bloqueado ? (
                       <>
                         <Clock className="w-5 h-5" />
-                        Bloqueado temporalmente
-                      </>
-                    ) : loading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Solicitando...
+                        BLOQUEADO
                       </>
                     ) : (
                       <>
                         <Gift className="w-5 h-5" />
-                        Solicitar Demo
+                        SOLICITAR DEMO
                       </>
                     )}
                   </button>
@@ -504,12 +441,13 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Modal de autenticación */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
         initialMode={authModalMode}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 

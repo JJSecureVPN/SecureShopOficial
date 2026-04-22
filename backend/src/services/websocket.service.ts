@@ -31,19 +31,52 @@ export class WebSocketService extends EventEmitter {
   private readonly HEARTBEAT_INTERVAL = 30000; // 30 segundos
   private lastMessageTime: number = Date.now();
 
+  // IDs permitidos (Allowlist) - Solo estos servidores se mostrarán en la web
+  private readonly ALLOWED_SERVER_IDS = new Set([515, 528, 1004]);
+
   // Mapeo de IDs de servidor a nombres que deseas mostrar
-  // Este mapeo sobreescribe los nombres que Servex devuelve
   private NOMBRES_PERSONALIZADOS: Map<number, string> = new Map([
     [515, 'PREMIUM 1 BR'],
-    [550, 'PREMIUM 1 USA'],
     [528, 'PREMIUM 1 AR'],
-    [557, 'GRATUITO 1'],
+    [1004, 'PREMIUM 1 USA'],
   ]);
+
+  private statsCleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     super();
     this.servexToken = process.env.SERVEX_API_KEY || '';
     this.debugLogging = (process.env.NODE_ENV || 'development') !== 'production';
+    this.iniciarLimpiezaAutomatica();
+  }
+
+  /**
+   * Limpia periódicamente servidores que no han enviado actualizaciones
+   * (Servidores fantasma o IDs antiguos)
+   */
+  private iniciarLimpiezaAutomatica(): void {
+    if (this.statsCleanupInterval) {
+      clearInterval(this.statsCleanupInterval);
+    }
+
+    this.statsCleanupInterval = setInterval(() => {
+      const ahora = Date.now();
+      const UMBRAL_INACTIVIDAD = 5 * 60 * 1000; // 5 minutos
+      let huboCambios = false;
+
+      for (const [key, stat] of this.stats.entries()) {
+        const antiguedad = ahora - stat.lastUpdate.getTime();
+        if (antiguedad > UMBRAL_INACTIVIDAD) {
+          console.log(`[WebSocket] 🧹 Limpiando servidor inactivo: ${stat.serverName} (ID: ${stat.serverId})`);
+          this.stats.delete(key);
+          huboCambios = true;
+        }
+      }
+
+      if (huboCambios) {
+        this.emit('server-stats', this.obtenerEstadisticas());
+      }
+    }, 60000); // Revisar cada minuto
   }
 
   /**
@@ -160,6 +193,16 @@ export class WebSocketService extends EventEmitter {
    */
   private procesarMensaje(message: any): void {
     try {
+      const serverId = message.id || message.serverId;
+      
+      // FILTRO: Ignorar servidores que no están en la lista blanca
+      if (!this.ALLOWED_SERVER_IDS.has(serverId)) {
+        if (this.debugLogging) {
+          console.log(`[WebSocket] 🛡️ Ignorando servidor no autorizado (ID: ${serverId}, Name: ${message.name})`);
+        }
+        return;
+      }
+
       if (this.debugLogging) {
         console.log('[WebSocket] Mensaje recibido:', JSON.stringify({
           id: message.id,
@@ -203,7 +246,12 @@ export class WebSocketService extends EventEmitter {
         location = 'Argentina';
       } else if (nombreLower.includes('br') || nombreLower.includes('brasil') || nombreLower.includes('premium 1 br')) {
         location = 'Brasil';
-      } else if (nombreLower.includes('usa') || nombreLower.includes('us') || nombreLower.includes('premium 1 usa')) {
+      } else if (
+        nombreLower.includes('usa') ||
+        nombreLower.includes('us') ||
+        nombreLower.includes('estados unidos') ||
+        nombreLower.includes('premium 1 usa')
+      ) {
         location = 'USA';
       } else if (nombreLower.includes('mx') || nombreLower.includes('mexico')) {
         location = 'México';
@@ -289,6 +337,11 @@ export class WebSocketService extends EventEmitter {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
+    }
+
+    if (this.statsCleanupInterval) {
+      clearInterval(this.statsCleanupInterval);
+      this.statsCleanupInterval = null;
     }
 
     if (this.ws) {

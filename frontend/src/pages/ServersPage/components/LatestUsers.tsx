@@ -20,7 +20,7 @@ export function LatestUsers() {
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-zinc-900 overflow-hidden">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[85rem] mx-auto">
           <style dangerouslySetInnerHTML={{
             __html: `
             @keyframes scroll-up {

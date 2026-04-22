@@ -52,12 +52,20 @@ interface CheckoutRenovacionViewProps {
   onToggleMobileSummary: () => void;
   onFallbackPayment: () => void;
   onBack: () => void;
+  // Nuevos campos
+  saldoUsado?: number;
+  codigoReferido?: string | null;
+  descuentoReferido?: number;
+  pagoConSaldoCompleto?: boolean;
+  onPayWithSaldo?: () => void;
+  userLoggedIn?: boolean;
 }
 
 export const CheckoutRenovacionView = ({
   nombre,
   email,
   error,
+  userLoggedIn = false,
   processingPayment,
   mpFallbackVisible,
   ultimoLinkPago,
@@ -89,8 +97,14 @@ export const CheckoutRenovacionView = ({
   onToggleMobileSummary,
   onFallbackPayment,
   onBack,
+  saldoUsado = 0,
+  codigoReferido = null,
+  descuentoReferido = 0,
+  pagoConSaldoCompleto = false,
+  onPayWithSaldo,
 }: CheckoutRenovacionViewProps) => {
   const esExpansion = operacion === "expansion";
+  
   return (
     <div className="min-h-screen pt-16 text-zinc-100" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <MobileCheckoutSummary
@@ -106,6 +120,9 @@ export const CheckoutRenovacionView = ({
           subtotal={precioBase}
           discount={hayDescuento ? descuentoFinal : 0}
           codigoCupon={codigoCupon}
+          saldoUsado={saldoUsado}
+          codigoReferido={codigoReferido}
+          descuentoReferido={descuentoReferido}
         />
       </MobileCheckoutSummary>
 
@@ -160,22 +177,28 @@ export const CheckoutRenovacionView = ({
                 </div>
               </FieldWrapper>
 
-              <FieldWrapper label="Correo electrónico">
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => onEmailChange(event.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-zinc-900/80 border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200"
-                    placeholder="tu@email.com"
-                  />
+              {userLoggedIn ? (
+                <div className="rounded-2xl bg-zinc-900/80 border border-white/[0.07] px-5 py-4">
+                  <p className="text-sm text-zinc-200">Usaremos tu correo de sesión para enviarte la confirmación de la renovación.</p>
                 </div>
-                <p className="flex items-center gap-1.5 text-[11px] text-zinc-600 mt-2">
-                  <Shield className="w-3 h-3 text-emerald-500/70" />
-                  Te enviaremos la confirmación de la renovación a este correo.
-                </p>
-              </FieldWrapper>
+              ) : (
+                <FieldWrapper label="Correo electrónico">
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => onEmailChange(event.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-zinc-900/80 border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200"
+                      placeholder="tu@email.com"
+                    />
+                  </div>
+                  <p className="flex items-center gap-1.5 text-[11px] text-zinc-600 mt-2">
+                    <Shield className="w-3 h-3 text-emerald-500/70" />
+                    Te enviaremos la confirmación de la renovación a este correo.
+                  </p>
+                </FieldWrapper>
+              )}
             </div>
 
             <div className="px-6 py-5 border-t border-white/[0.05]">
@@ -236,6 +259,44 @@ export const CheckoutRenovacionView = ({
                   </span>
                 </div>
               )}
+
+              {descuentoReferido > 0 && (
+                <div className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-indigo-500/[0.07] border border-indigo-500/20">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-indigo-300">Descuento de referido</p>
+                      <p className="text-xs text-indigo-400/90">
+                        Código: {codigoReferido}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-indigo-400 tabular-nums">
+                    −${descuentoReferido.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              )}
+
+              {saldoUsado > 0 && (
+                <div className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-emerald-500/[0.07] border border-emerald-500/20">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-emerald-300">Saldo utilizado</p>
+                      <p className="text-xs text-emerald-400/90">
+                        Débito de tu wallet
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-400 tabular-nums">
+                    −${saldoUsado.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              )}
             </div>
 
             <AnimatePresence>
@@ -261,8 +322,21 @@ export const CheckoutRenovacionView = ({
                 <SectionLabel icon={<Shield className="w-3.5 h-3.5" />} label="Método de pago" step="3" />
               </div>
               <div className="px-6 py-6 space-y-4">
-                <div id="wallet_container_renovacion_mobile" className="min-h-[54px]" />
-                {mpFallbackVisible && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} />}
+                {pagoConSaldoCompleto ? (
+                  <button
+                    onClick={onPayWithSaldo}
+                    disabled={processingPayment}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {processingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Confirmar renovación gratuita
+                  </button>
+                ) : (
+                  <>
+                    <div id="wallet_container_renovacion_mobile" className="min-h-[54px]" />
+                    {mpFallbackVisible && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} />}
+                  </>
+                )}
                 <SecurityBadge />
               </div>
             </div>
@@ -343,23 +417,36 @@ export const CheckoutRenovacionView = ({
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-2"
+                    className="flex justify-between items-center text-sm"
                   >
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-emerald-400 flex items-center gap-1.5">
-                        <Tag className="w-3 h-3" />
-                        {codigoCupon || "Descuento"}
-                      </span>
-                      <span className="text-emerald-400 font-medium tabular-nums">−${descuentoFinal.toLocaleString("es-AR")}</span>
-                    </div>
-                    <div className="px-3 py-2 rounded-xl bg-emerald-500/[0.07] border border-emerald-500/15 flex items-center justify-between">
-                      <span className="text-[11px] text-emerald-400">Ahorro total</span>
-                      <span className="text-[11px] font-bold text-emerald-400 tabular-nums">${descuentoFinal.toLocaleString("es-AR")}</span>
-                    </div>
+                    <span className="text-emerald-400 flex items-center gap-1.5">
+                      <Tag className="w-3 h-3" />
+                      {codigoCupon || "Descuento"}
+                    </span>
+                    <span className="text-emerald-400 font-medium tabular-nums">−${descuentoFinal.toLocaleString("es-AR")}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {descuentoReferido > 0 && (
+                <div className="flex justify-between items-center text-sm animate-in fade-in slide-in-from-top-1">
+                  <span className="text-indigo-400 flex items-center gap-1.5">
+                    <Users className="w-3 h-3" />
+                    Referido ({codigoReferido})
+                  </span>
+                  <span className="text-indigo-400 font-medium tabular-nums">−${descuentoReferido.toLocaleString("es-AR")}</span>
+                </div>
+              )}
+
+              {saldoUsado > 0 && (
+                <div className="flex justify-between items-center text-sm animate-in fade-in slide-in-from-top-1">
+                  <span className="text-emerald-400 flex items-center gap-1.5">
+                    <Check className="w-3 h-3" />
+                    Saldo Wallet
+                  </span>
+                  <span className="text-emerald-400 font-medium tabular-nums">−${saldoUsado.toLocaleString("es-AR")}</span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center pt-3 border-t border-white/[0.06]">
                 <span className="text-sm font-semibold text-zinc-200">Total</span>
@@ -376,12 +463,25 @@ export const CheckoutRenovacionView = ({
             </div>
 
             <div className="space-y-3">
-              <div id="wallet_container_renovacion" className="min-h-[54px]" />
-              {mpFallbackVisible && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} />}
+              {pagoConSaldoCompleto ? (
+                <button
+                  onClick={onPayWithSaldo}
+                  disabled={processingPayment}
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 text-white font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                >
+                  {processingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Confirmar con saldo ($0)
+                </button>
+              ) : (
+                <>
+                  <div id="wallet_container_renovacion" className="min-h-[54px]" />
+                  {mpFallbackVisible && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} />}
+                </>
+              )}
               <SecurityBadge />
               {renovacionId && <p className="text-[11px] text-zinc-600 text-center">ID de renovación: {renovacionId}</p>}
-              {ultimoLinkPago && !mpFallbackVisible && (
-                <p className="text-[11px] text-zinc-600 text-center">
+              {ultimoLinkPago && !mpFallbackVisible && !pagoConSaldoCompleto && (
+                <p className="text-[11px] text-zinc-600 text-center mt-2">
                   Si el botón no responde, recarga la página o usa el método alternativo.
                 </p>
               )}
@@ -440,6 +540,9 @@ const MobilePlanCard = ({
   subtotal,
   discount,
   codigoCupon,
+  saldoUsado,
+  codigoReferido,
+  descuentoReferido,
 }: {
   title: string;
   subtitle: string;
@@ -447,6 +550,9 @@ const MobilePlanCard = ({
   subtotal: number;
   discount: number;
   codigoCupon?: string;
+  saldoUsado?: number;
+  codigoReferido?: string | null;
+  descuentoReferido?: number;
 }) => (
   <div className="space-y-3 pt-4">
     <div className="flex justify-between items-start gap-4">
@@ -459,14 +565,32 @@ const MobilePlanCard = ({
         {discount > 0 && <p className="text-xs text-zinc-500 line-through tabular-nums">${subtotal.toLocaleString("es-AR")}</p>}
       </div>
     </div>
-    {discount > 0 && (
-      <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-        <Tag className="w-3 h-3 text-emerald-400" />
-        <span className="text-xs text-emerald-400 font-medium">
-          {codigoCupon ? `Cupón ${codigoCupon}` : "Descuento"} · −${discount.toLocaleString("es-AR")}
-        </span>
-      </div>
-    )}
+    <div className="space-y-2">
+      {discount > 0 && (
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <Tag className="w-3 h-3 text-emerald-400" />
+          <span className="text-xs text-emerald-400 font-medium">
+            {codigoCupon ? `Cupón ${codigoCupon}` : "Descuento"} · −${discount.toLocaleString("es-AR")}
+          </span>
+        </div>
+      )}
+      {descuentoReferido && descuentoReferido > 0 && (
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 font-dm">
+          <Users className="w-3 h-3 text-indigo-400" />
+          <span className="text-xs text-indigo-400 font-medium">
+            Amigo: {codigoReferido} · −${descuentoReferido.toLocaleString("es-AR")}
+          </span>
+        </div>
+      )}
+      {saldoUsado && saldoUsado > 0 && (
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 font-dm">
+          <Check className="w-3 h-3 text-emerald-400" />
+          <span className="text-xs text-emerald-400 font-medium">
+            Saldo Wallet · −${saldoUsado.toLocaleString("es-AR")}
+          </span>
+        </div>
+      )}
+    </div>
     <div className="flex items-center gap-4 text-[11px] text-zinc-600">
       <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-orange-500/60" /> Aplicación inmediata</span>
       <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-emerald-500/60" /> Pago seguro</span>

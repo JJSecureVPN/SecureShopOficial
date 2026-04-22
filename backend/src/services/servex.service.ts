@@ -575,7 +575,6 @@ export class ServexService {
       const response = await this.client.get("/resellers", {
         params: {
           search: username,
-          scope: "todos",
           limit: 50,
         },
       });
@@ -667,11 +666,14 @@ export class ServexService {
   ): Promise<any> {
     try {
       console.log(`[Servex] Actualizando cliente ID ${clienteId}`);
-      console.log("[Servex] Payload:", JSON.stringify(datos));
+
+      // Clonar para no modificar el original y ocultar password en logs
+      const logPayload = { ...datos };
+      if (logPayload.password) logPayload.password = "****";
+      console.log("[Servex] Payload:", JSON.stringify(logPayload));
 
       const response = await this.client.put(`/clients/${clienteId}`, datos);
       console.log(`[Servex] ✅ PUT /clients/${clienteId} - ${response.status}`);
-      console.log("[Servex] Respuesta:", JSON.stringify(response.data));
       return response.data;
     } catch (error: any) {
       const mensaje =
@@ -713,7 +715,6 @@ export class ServexService {
         // Listar y buscar por ID
         const response = await this.client.get("/resellers", {
           params: {
-            scope: "todos",
             limit: 100,
           },
         });
@@ -746,22 +747,10 @@ export class ServexService {
         );
       }
 
-      // Construir payload completo con todos los campos obligatorios
-      // Si el password es muy largo (hash), truncar a 25 caracteres
-      let password = datos.password || revendedorActual.password;
-      if (password && password.length > 25) {
-        console.log(
-          "[Servex] ⚠️ Password demasiado largo, truncando de",
-          password.length,
-          "a 25 caracteres"
-        );
-        password = password.substring(0, 25);
-      }
-
-      const payload = {
+      // Construir payload completo
+      const payload: any = {
         name: datos.name || revendedorActual.name,
         username: datos.username || revendedorActual.username,
-        password: password,
         max_users:
           datos.max_users !== undefined
             ? datos.max_users
@@ -777,6 +766,17 @@ export class ServexService {
           expiration_date: datos.expiration_date,
         }),
       };
+
+      // 🛑 FIX CRITICO: Solo enviar la contraseña si se está actualizando explícitamente.
+      // Si enviamos el hash que devuelve la API de Servex, y lo truncamos/rompemos,
+      // el revendedor pierde acceso a su cuenta permanentemente.
+      if (datos.password) {
+        payload.password = datos.password;
+        if (payload.password.length > 25) {
+          console.warn("[Servex] ⚠️ Password demasiado largo, truncando a 25 caracteres");
+          payload.password = payload.password.substring(0, 25);
+        }
+      }
 
       console.log(
         "[Servex] Payload completo para actualizar:",

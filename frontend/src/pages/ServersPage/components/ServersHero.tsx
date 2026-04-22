@@ -11,13 +11,13 @@ const GridPattern = () => {
 };
 
 // Enhanced feature pill with hover effects
-const FeaturePill = ({ 
-  icon: Icon, 
-  label, 
-  color = "orange" 
-}: { 
-  icon: any; 
-  label: string; 
+const FeaturePill = ({
+  icon: Icon,
+  label,
+  color = "orange"
+}: {
+  icon: any;
+  label: string;
   color?: "orange" | "emerald" | "blue";
 }) => {
   const colorClasses = {
@@ -54,7 +54,7 @@ const FeaturePill = ({
 export function ServersHero() {
   return (
     <section
-      className="relative w-full bg-[#18181b] pt-16 sm:pt-20 lg:pt-28 overflow-hidden"
+      className="relative w-full bg-[#18181b] pt-4 sm:pt-8 lg:pt-12 overflow-hidden"
       style={{
         // CSS variables to control video appearance (can be overridden globally or per-page)
         ['--video-brightness' as any]: '1.14',
@@ -164,7 +164,7 @@ export function ServersHero() {
                 ))}
               </motion.div>
             </div>
-            
+
             {/* Video without background modifications */}
             <motion.div
               className="hidden lg:block absolute bottom-0 right-0 z-0 pointer-events-none"

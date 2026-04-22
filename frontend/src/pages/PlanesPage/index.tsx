@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import SegmentedControl from "../../components/SegmentedControl";
 import CompactHeroControl from "../../components/CompactHeroControl";
 import { motion } from "framer-motion";
@@ -27,6 +28,7 @@ import {
 } from "./utils";
 import { CuentaRenovacion, ModoSeleccion, PasoRenovacion, PlanesPageProps } from "./types";
 import { PromoBanner2x1 } from "../../components/PromoBanner2x1";
+// import AdBanner from "../../components/AdBanner";
 export type { PlanesPageProps } from "./types";
 
 // eslint-disable-next-line no-empty-pattern
@@ -50,9 +52,14 @@ export default function PlanesPage({ }: PlanesPageProps) {
   const [nombreRenovacion, setNombreRenovacion] = useState("");
   const [emailRenovacion, setEmailRenovacion] = useState("");
   const [procesandoRenovacion, setProcesandoRenovacion] = useState(false);
+  const { user } = useAuth();
   const [cuponRenovacion, setCuponRenovacion] = useState<ValidacionCupon["cupon"] | null>(null);
   const [descuentoRenovacion, setDescuentoRenovacion] = useState(0);
   const [cuentaDesdeUrl, setCuentaDesdeUrl] = useState<string | null>(null);
+  
+  const [codigoReferidoRenovacion, setCodigoReferidoRenovacion] = useState<string | null>(null);
+  const [descuentoReferidoRenovacion, setDescuentoReferidoRenovacion] = useState(0);
+  const [saldoUsadoRenovacion, setSaldoUsadoRenovacion] = useState(0);
 
   useServerStats(10000);
 
@@ -87,7 +94,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
 
       setCuentaRenovacion(cuenta);
       setNombreRenovacion(data.datos?.cliente_nombre || "");
-      setEmailRenovacion(data.datos?.cliente_email || "");
+      setEmailRenovacion(user?.email || data.datos?.cliente_email || "");
       setDiasRenovacion(7);
       setDispositivosRenovacion(null);
       setPasoRenovacion("configurar");
@@ -112,6 +119,12 @@ export default function PlanesPage({ }: PlanesPageProps) {
   }, [searchParams, cuentaDesdeUrl, setSearchParams, buscarCuentaDesdeUrl]);
 
   useEffect(() => {
+    if (user?.email) {
+      setEmailRenovacion(user.email);
+    }
+  }, [user?.email]);
+
+  useEffect(() => {
     const cargarPlanes = async () => {
       try {
         const [planesObtenidos, planesRenovacionObtenidos] = await Promise.all([
@@ -130,7 +143,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
     cargarPlanes();
   }, []);
 
-  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // Forzar header fijo mientras esta página esté montada (evita que otros contenedores
   // con transform rompan el comportamiento sticky del header global)
   useEffect(() => {
     const headerEl = document.querySelector('header');
@@ -205,8 +218,8 @@ export default function PlanesPage({ }: PlanesPageProps) {
   );
 
   const precioRenovacionFinal = useMemo(
-    () => Math.max(0, Math.round(precioRenovacionBase - descuentoRenovacion)),
-    [precioRenovacionBase, descuentoRenovacion]
+    () => Math.max(0, Math.round(precioRenovacionBase - descuentoRenovacion - descuentoReferidoRenovacion - saldoUsadoRenovacion)),
+    [precioRenovacionBase, descuentoRenovacion, descuentoReferidoRenovacion, saldoUsadoRenovacion]
   );
 
   const precioRenovacionPorDia = useMemo(() => {
@@ -238,6 +251,9 @@ export default function PlanesPage({ }: PlanesPageProps) {
     setProcesandoRenovacion(false);
     setCuponRenovacion(null);
     setDescuentoRenovacion(0);
+    setCodigoReferidoRenovacion(null);
+    setDescuentoReferidoRenovacion(0);
+    setSaldoUsadoRenovacion(0);
   };
 
   const activarModoCompra = () => {
@@ -286,7 +302,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
 
       setCuentaRenovacion(cuenta);
       setNombreRenovacion(data.datos?.cliente_nombre || "");
-      setEmailRenovacion(data.datos?.cliente_email || "");
+      setEmailRenovacion(user?.email || data.datos?.cliente_email || "");
       setDiasRenovacion(7);
       setDispositivosRenovacion(null);
       setPasoRenovacion("configurar");
@@ -304,12 +320,18 @@ export default function PlanesPage({ }: PlanesPageProps) {
     setErrorRenovacion("");
     setCuponRenovacion(null);
     setDescuentoRenovacion(0);
+    setCodigoReferidoRenovacion(null);
+    setDescuentoReferidoRenovacion(0);
+    setSaldoUsadoRenovacion(0);
   };
 
   useEffect(() => {
-    if (cuponRenovacion) {
+    if (cuponRenovacion || codigoReferidoRenovacion || saldoUsadoRenovacion > 0) {
       setCuponRenovacion(null);
       setDescuentoRenovacion(0);
+      setCodigoReferidoRenovacion(null);
+      setDescuentoReferidoRenovacion(0);
+      setSaldoUsadoRenovacion(0);
     }
   }, [diasRenovacion, connectionDestino, cuentaRenovacion]);
 
@@ -322,6 +344,24 @@ export default function PlanesPage({ }: PlanesPageProps) {
   const handleCuponRenovacionRemovido = () => {
     setCuponRenovacion(null);
     setDescuentoRenovacion(0);
+  };
+
+  const handleReferidoValidado = (descuento: number, codigo: string) => {
+    setDescuentoReferidoRenovacion(descuento);
+    setCodigoReferidoRenovacion(codigo);
+  };
+
+  const handleReferidoRemovido = () => {
+    setCodigoReferidoRenovacion(null);
+    setDescuentoReferidoRenovacion(0);
+  };
+
+  const handleSaldoAplicado = (monto: number) => {
+    setSaldoUsadoRenovacion(monto);
+  };
+
+  const handleSaldoRemovido = () => {
+    setSaldoUsadoRenovacion(0);
   };
 
   const procesarRenovacion = () => {
@@ -349,25 +389,50 @@ export default function PlanesPage({ }: PlanesPageProps) {
         ? { codigo: cuponRenovacion.codigo, id: cuponRenovacion.id }
         : null,
       planId: planRenovacionSeleccionado?.id,
+      codigoReferido: codigoReferidoRenovacion,
+      saldoUsado: saldoUsadoRenovacion,
     });
 
     navigate(`/checkout-renovacion?${params.toString()}`);
   };
 
   return (
-    <div className="bg-refine-dark text-zinc-100">
+    <div className="text-zinc-100 min-h-screen relative overflow-x-hidden">
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
 
-      <main>
+      {/* Decorative Background Elements - Positioned behind content */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Lines 2: Right Middle */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 0.5, x: 0 }}
+          transition={{ duration: 2.5, delay: 0.5 }}
+          className="absolute top-[20%] -right-[10%] w-[600px] md:w-[900px] h-auto opacity-30"
+        >
+          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto" />
+        </motion.div>
+
+        {/* Lines 3: Flowing through Middle */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 0.4, x: 0 }}
+          transition={{ duration: 3, delay: 1 }}
+          className="absolute top-[55%] -left-[2%] w-[700px] md:w-[1000px] h-auto opacity-40"
+        >
+          <img src="/lines-3-4541e35a1939230404d773f7eeddcc9b.svg" alt="" className="w-full h-auto" />
+        </motion.div>
+      </div>
+
+      <main className="relative z-10">
         {/* Plans Section */}
-        <section className="relative py-12 sm:py-16 lg:py-20 bg-refine-dark">
+        <section className="relative py-4 sm:py-8 lg:py-12 z-10">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Tabs Compra / Renovación — mobile */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="flex justify-center mt-16 mb-8 md:hidden"
+              className="flex justify-center mt-4 mb-8 md:hidden"
             >
               <div className="w-full max-w-[720px]">
                 <SegmentedControl
@@ -377,6 +442,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
                     compra: 'Crea una cuenta VPN con acceso ilimitado a servidores y cambio de ubicación.',
                     renovacion: 'Renueva tu suscripción VPN y conserva tu configuración y dispositivos.'
                   }}
+                  showExpansion={false}
                 />
               </div>
             </motion.div>
@@ -385,12 +451,13 @@ export default function PlanesPage({ }: PlanesPageProps) {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className="hidden md:block mt-12 mb-10"
+              className="hidden md:block mt-6 mb-10"
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <CompactHeroControl
                   value={modoSeleccion}
                   onChange={(v) => (v === 'compra' ? activarModoCompra() : activarModoRenovacion())}
+                  showExpansion={false}
                 />
               </div>
             </motion.div>
@@ -401,15 +468,22 @@ export default function PlanesPage({ }: PlanesPageProps) {
                 <StickyLayout
                   aside={
                     <SummaryPanel
+                      className="hidden lg:block"
                       badgeText="Resumen"
-                      accent="indigo"
+                      accent="zinc"
                       title={planSeleccionado ? `${planSeleccionado.dias} días` : "Tu selección"}
                       subtitle={
-                        planSeleccionado
-                          ? `Protección para ${planSeleccionado.connection_limit} ${
-                              planSeleccionado.connection_limit === 1 ? "dispositivo" : "dispositivos"
-                            } simultáneos con velocidad ilimitada.`
-                          : "Ajusta la duración y dispositivos para ver los detalles del plan."
+                        planSeleccionado ? (
+                          <>
+                            Protección para {planSeleccionado.connection_limit}{" "}
+                            {planSeleccionado.connection_limit === 1
+                              ? "dispositivo"
+                              : "dispositivos"}{" "}
+                            simultáneos.
+                          </>
+                        ) : (
+                          "Selecciona un plan para ver los beneficios y continuar."
+                        )
                       }
                       hasSelection={!!planSeleccionado}
                       priceLabel="Pago único"
@@ -434,7 +508,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
                     label="Paso 1"
                     title="Duración del plan"
                     subtitle="Desliza para elegir cuántos días necesitas conexión segura."
-                    accent="indigo"
+                    accent="zinc"
                     delay={0.1}
                   >
                     <PlanSlider
@@ -449,7 +523,7 @@ export default function PlanesPage({ }: PlanesPageProps) {
                     label="Paso 2"
                     title="Dispositivos simultáneos"
                     subtitle="Selecciona cuántos equipos quieres proteger al mismo tiempo."
-                    accent="indigo"
+                    accent="zinc"
                     delay={0.2}
                   >
                     {is2x1Global && <PromoBanner2x1 />}
@@ -465,6 +539,48 @@ export default function PlanesPage({ }: PlanesPageProps) {
                       ¿Necesitas más conexiones? Podemos armar planes especiales para equipos o revendedores.
                     </BodyText>
                   </StepCard>
+
+                  {/* Mobile Summary: visible only on small screens, between Step 2 and Banner */}
+                  <div className="lg:hidden">
+                    <SummaryPanel
+                      badgeText="Resumen"
+                      accent="zinc"
+                      title={planSeleccionado ? `${planSeleccionado.dias} días` : "Tu selección"}
+                      subtitle={
+                        planSeleccionado ? (
+                          <>
+                            Protección para {planSeleccionado.connection_limit}{" "}
+                            {planSeleccionado.connection_limit === 1
+                              ? "dispositivo"
+                              : "dispositivos"}{" "}
+                            simultáneos.
+                          </>
+                        ) : (
+                          "Selecciona un plan para ver los beneficios y continuar."
+                        )
+                      }
+                      hasSelection={!!planSeleccionado}
+                      priceLabel="Pago único"
+                      price={planSeleccionado ? `$${planSeleccionado.precio}` : ""}
+                      unitLabel="Valor equivalente"
+                      unitValue={planSeleccionado ? `$${precioPorDiaPlan}/día` : undefined}
+                      benefits={[
+                        "Servidores premium en +15 países",
+                        "Cambio de ubicaciones sin límites",
+                        "Soporte humano 24/7",
+                      ]}
+                      ctaLabel="Continuar al pago"
+                      onCtaClick={() => planSeleccionado && navigate(`/checkout?planId=${planSeleccionado.id}`)}
+                      secondaryLabel="Ver demo rápida"
+                      onSecondaryClick={() => setIsDemoOpen(true)}
+                      is2x1={planSeleccionado?.en_oferta_2x1}
+                    />
+                  </div>
+
+                  {/* Sponsorship Banner */}
+                  <div className="pt-8">
+                    {/* <AdBanner variant="horizontal" /> */}
+                  </div>
                 </StickyLayout>
               </div>
             )}
@@ -502,6 +618,14 @@ export default function PlanesPage({ }: PlanesPageProps) {
                 onCuponAplicado={handleCuponRenovacionValidado}
                 onCuponRemovido={handleCuponRenovacionRemovido}
                 planId={planRenovacionSeleccionado?.id}
+                codigoReferido={codigoReferidoRenovacion}
+                onReferidoAplicado={handleReferidoValidado}
+                onReferidoRemovido={handleReferidoRemovido}
+                saldoUsado={saldoUsadoRenovacion}
+                onSaldoAplicado={handleSaldoAplicado}
+                onSaldoRemovido={handleSaldoRemovido}
+                descuentoReferido={descuentoReferidoRenovacion}
+                userEmail={user?.email}
               />
             )}
           </div>

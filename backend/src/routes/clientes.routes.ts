@@ -201,5 +201,99 @@ export function crearRutasClientes(
     }
   });
 
+  /**
+   * POST /api/clients/reparar/:username
+   * Forza una resincronización de la cuenta en Servex (Guardar sin cambios)
+   * Útil cuando el usuario renovó pero no le conecta la cuenta.
+   */
+  router.post('/clients/reparar/:username', async (req: Request, res: Response) => {
+    const { username } = req.params;
+
+    try {
+      if (!username || username.trim().length < 2) {
+        res.status(400).json({
+          success: false,
+          error: 'Nombre de usuario inválido'
+        } as ApiResponse);
+        return;
+      }
+
+      // Validar caracteres básicos (alfanumérico, guiones, puntos)
+      const usernameRegex = /^[a-zA-Z0-9.\-_:]+$/; // Permitimos : por si acaso, pero lo normal es alfanumérico
+      if (!usernameRegex.test(username.trim())) {
+        res.status(400).json({
+          success: false,
+          error: 'El nombre de usuario contiene caracteres no permitidos'
+        } as ApiResponse);
+        return;
+      }
+
+      console.log(`[Clientes] 🔧 Iniciando reparación/sincronización para: ${username}`);
+
+      // 1. Buscar el cliente/revendedor actual
+      let cuenta: any = null;
+      let esRevendedor = false;
+
+      try {
+        cuenta = await servexService.buscarClientePorUsername(username.trim());
+      } catch (err: any) {
+        console.warn(`[Clientes] ⚠️ Error buscando cliente (posible no existe): ${err.message}`);
+      }
+
+      if (!cuenta) {
+        try {
+          cuenta = await servexService.buscarRevendedorPorUsername(username.trim());
+          esRevendedor = cuenta !== null;
+        } catch (err: any) {
+          console.warn(`[Clientes] ⚠️ Error buscando revendedor: ${err.message}`);
+        }
+      }
+
+      if (!cuenta) {
+        console.log(`[Clientes] ❌ Cuenta no encontrada en Servex: ${username}`);
+        res.status(404).json({
+          success: false,
+          error: `La cuenta "${username}" no fue encontrada en nuestros registros de VPN`
+        } as ApiResponse);
+        return;
+      }
+
+      // 2. Ejecutar la sincronización (Guardar sin cambios con type: user)
+      if (esRevendedor) {
+        await servexService.actualizarRevendedor(cuenta.id, {
+          name: cuenta.name,
+          username: cuenta.username,
+          max_users: cuenta.max_users,
+          account_type: cuenta.account_type || 'validity',
+          expiration_date: cuenta.expiration_date
+        }, cuenta.username);
+      } else {
+        const payload: any = {
+          username: cuenta.username,
+          category_id: cuenta.category_id,
+          connection_limit: cuenta.connection_limit || 1,
+          type: 'user', 
+          ...(cuenta.observation && { observation: cuenta.observation }),
+          ...(cuenta.v2ray_uuid && { v2ray_uuid: cuenta.v2ray_uuid })
+        };
+        await servexService.actualizarCliente(cuenta.id, payload);
+      }
+
+      console.log(`[Clientes] ✅ Sincronización completada para: ${username}`);
+
+      res.json({
+        success: true,
+        message: 'Cuenta sincronizada correctamente. Intenta conectar ahora.'
+      } as ApiResponse);
+
+    } catch (error: any) {
+      console.error('[Clientes] ❌ Error fatal reparando cuenta:', error);
+      res.status(500).json({
+        success: false,
+        error: `Error interno al intentar reparar la cuenta: ${error.message}`
+      } as ApiResponse);
+    }
+  });
+
   return router;
 }

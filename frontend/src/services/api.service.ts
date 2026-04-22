@@ -68,24 +68,27 @@ class ApiService {
       (response) => response,
       (error) => {
         if (error.response) {
-          // El servidor respondió con un código de error
-          const status = error.response.status;
-          const data = error.response.data;
-
-          // Mensajes amigables para el usuario
-          const mensajesAmigables: { [key: number]: string } = {
+          const { status, data } = error.response;
+          // Mensajes por defecto según el código de estado
+          const mensajesEstandar: { [key: number]: string } = {
             429: "Demasiadas solicitudes. Por favor espera antes de intentar nuevamente.",
-            500: "Error en el servidor. Por favor intenta más tarde.",
-            400:
-              data?.error ||
-              "Solicitud inválida. Por favor verifica los datos.",
+            500: "Error interno en el servidor. Por favor intenta más tarde.",
+            400: "Solicitud inválida. Por favor verifica los datos.",
             404: "El recurso solicitado no existe.",
             401: "No autorizado. Por favor inicia sesión.",
             403: "Acceso denegado.",
           };
 
+          // Prioridad: 
+          // 1. Mensaje específico del servidor (data.error o data.message)
+          // 2. Mensaje estándar basado en el status
+          // 3. El mensaje crudo del error de axios
           const mensajeError =
-            mensajesAmigables[status] || data?.error || error.message;
+            data?.error || 
+            data?.message || 
+            mensajesEstandar[status] || 
+            error.message;
+
           console.error(`[API Error ${status}]`, mensajeError);
           error.mensaje = mensajeError;
         } else if (error.request) {
@@ -744,6 +747,16 @@ class ApiService {
       throw new Error(response.data.error || "Error obteniendo estado de cuenta");
     }
     return response.data.data;
+  }
+
+  /**
+   * Forza una resincronización de la cuenta en Servex (Auto-reparación)
+   */
+  async repararConexion(username: string): Promise<ApiResponse<any>> {
+    const response = await this.client.post<ApiResponse<any>>(
+      `/clients/reparar/${encodeURIComponent(username)}`
+    );
+    return response.data;
   }
 }
 

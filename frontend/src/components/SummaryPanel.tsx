@@ -2,16 +2,13 @@ import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Shield } from "lucide-react";
 
-type AccentColor = "indigo" | "orange";
+type AccentColor = "indigo" | "orange" | "zinc";
 
-const glowColorMap: Record<AccentColor, string> = {
-  indigo: "bg-indigo-500/10",
-  orange: "bg-orange-500/10",
-};
 
 const badgeColorMap: Record<AccentColor, string> = {
   indigo: "text-indigo-400",
   orange: "text-orange-400",
+  zinc: "text-zinc-500",
 };
 
 const dotColorMap: Record<AccentColor, { bg: string; shadow: string }> = {
@@ -23,11 +20,16 @@ const dotColorMap: Record<AccentColor, { bg: string; shadow: string }> = {
     bg: "bg-orange-500",
     shadow: "shadow-[0_0_8px_rgba(249,115,22,0.6)]",
   },
+  zinc: {
+    bg: "bg-zinc-700",
+    shadow: "shadow-[0_0_8px_rgba(113,113,122,0.3)]",
+  },
 };
 
 const unitColorMap: Record<AccentColor, string> = {
   indigo: "text-indigo-400",
   orange: "text-orange-400",
+  zinc: "text-[#00ffc8]",
 };
 
 /* ─── Price breakdown row ─────────────────────────────── */
@@ -56,6 +58,7 @@ interface SummaryPanelProps {
   /** Text shown after the price, e.g. "/día" or "/cupo" */
   unitLabel?: string;
   unitValue?: string;
+  className?: string;
 
   /** Extra rows between price and benefits (subtotal, discount…) */
   priceBreakdown?: PriceBreakdownRow[];
@@ -113,6 +116,7 @@ export default function SummaryPanel({
   emptyState,
   hasSelection = true,
   is2x1 = false,
+  className = "",
   children,
 }: SummaryPanelProps) {
   const dot = dotColorMap[accent];
@@ -123,18 +127,11 @@ export default function SummaryPanel({
       : "w-full relative overflow-hidden group rounded-xl bg-white text-zinc-950 font-medium px-4 py-3.5 transition-all hover:bg-zinc-100 active:scale-[0.98]";
 
   return (
-    <div className="relative rounded-2xl p-6 sm:p-8 lg:p-10 bg-zinc-950 border border-zinc-800 shadow-2xl">
-      {/* Glow — kept inside a clipped wrapper so it doesn't affect layout */}
-      <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-        <div
-          className={`absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[80px] ${glowColorMap[accent]}`}
-        />
-      </div>
-
+    <div className={`relative rounded-3xl p-8 sm:p-10 bg-[#0a0a0c] border border-zinc-800/80 shadow-2xl font-title ${className}`}>
       <div className="relative">
         {/* Badge */}
         <div
-          className={`inline-flex items-center gap-2 rounded px-3 py-1 text-[10px] font-mono uppercase tracking-widest bg-zinc-900 border border-zinc-800 mb-8 ${badgeColorMap[accent]}`}
+          className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] bg-[#060606] border border-zinc-800/50 mb-10 ${badgeColorMap[accent]}`}
         >
           <Sparkles className="h-3.5 w-3.5" />
           <span>{badgeText}</span>
@@ -144,11 +141,11 @@ export default function SummaryPanel({
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="mb-6 flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30"
+            className="mb-8 flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20"
           >
-            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
-              ¡Oferta 2x1 Activa! (Doble dispositivos)
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+              OFERTA 2X1 ACTIVA
             </span>
           </motion.div>
         )}
@@ -156,27 +153,27 @@ export default function SummaryPanel({
         {hasSelection ? (
           <>
             {/* Title + subtitle */}
-            <div className="space-y-2 mb-8">
-              <h3 className="text-3xl sm:text-4xl font-light text-white tracking-tight">
+            <div className="space-y-3 mb-10">
+              <h3 className="text-4xl font-extrabold text-white tracking-tighter leading-none">
                 {title}
               </h3>
-              <p className="text-sm text-zinc-400 font-light leading-relaxed">
+              <div className="text-sm text-zinc-500 font-medium leading-relaxed">
                 {subtitle}
-              </p>
+              </div>
             </div>
 
-            <div className="space-y-8 z-10">
+            <div className="space-y-10 z-10">
               {/* Price */}
               <div className="relative">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">
+                  <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em] mb-2 font-mono">
                     {priceLabel}
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl lg:text-6xl font-medium text-white tracking-tight">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-6xl lg:text-7xl font-extrabold text-white tracking-tighter">
                       {price}
                     </span>
-                    <span className="text-sm text-zinc-500 font-mono">ARS</span>
+                    <span className="text-xs font-bold text-zinc-600 font-mono tracking-widest">ARS</span>
                   </div>
                 </div>
 
@@ -196,9 +193,8 @@ export default function SummaryPanel({
                   {priceBreakdown.map((row, idx) => (
                     <div
                       key={idx}
-                      className={`flex justify-between items-center ${
-                        row.isDiscount ? "text-emerald-400" : ""
-                      }`}
+                      className={`flex justify-between items-center ${row.isDiscount ? "text-emerald-400" : ""
+                        }`}
                     >
                       <span className={`text-xs ${row.isDiscount ? "" : "text-zinc-500"}`}>
                         {row.label}
@@ -213,16 +209,16 @@ export default function SummaryPanel({
               )}
 
               {/* Benefits */}
-              <ul className="space-y-4">
+              <ul className="space-y-5">
                 {benefits.map((benefit, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                  <li key={i} className="flex items-start gap-4">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.4 + i * 0.1 }}
-                      className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${dot.bg} ${dot.shadow}`}
+                      className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${dot.bg} ${dot.shadow}`}
                     />
-                    <span className="text-sm text-zinc-300 font-light">
+                    <span className="text-sm text-zinc-300 font-medium">
                       {benefit}
                     </span>
                   </li>
@@ -233,7 +229,7 @@ export default function SummaryPanel({
               {children}
 
               {/* CTA */}
-              <div className="space-y-4 pt-4">
+              <div className="space-y-4 pt-6">
                 <button
                   onClick={onCtaClick}
                   disabled={ctaDisabled || ctaLoading}
@@ -242,9 +238,9 @@ export default function SummaryPanel({
                     `${defaultCtaClass}${ctaDisabled || ctaLoading ? " opacity-50 cursor-not-allowed" : ""}`
                   }
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
+                  <span className="relative z-10 flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-xs">
                     {ctaLoading ? (
-                      ctaLoadingLabel ?? "Procesando..."
+                      ctaLoadingLabel ?? "PROCESANDO..."
                     ) : (
                       <>
                         {ctaLabel}

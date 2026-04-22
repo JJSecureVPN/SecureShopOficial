@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import {
   Check,
   Zap,
@@ -14,6 +14,7 @@ import {
 import { PlanRevendedor } from "../../../types";
 import { PlanGroup } from "../types";
 import PlanSlider from "../../PlanesPage/components/PlanSlider";
+import StickyLayout from "../../../components/StickyLayout";
 
 const getFeatureIcon = (iconName: string) => {
   switch (iconName) {
@@ -45,44 +46,19 @@ export default function ResellerPlanSelector({
   groupData,
   onConfirmarCompra,
 }: ResellerPlanSelectorProps) {
-  const gridRef = useRef<HTMLDivElement>(null);
-  const leftContentRef = useRef<HTMLDivElement>(null);
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const desktopPanelRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
-  const lastRectRef = useRef<{ left: number; width: number; top: number } | null>(null);
-  const [desktopTopOffset, setDesktopTopOffset] = useState<number>(96);
-  const [desktopRect, setDesktopRect] = useState<{
-    left: number;
-    width: number;
-    top: number;
-  } | null>(null);
-
   const userOptions = useMemo(() => {
     // Generar opciones de 10 en 10 hasta 100
     const baseOptions = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-    
-    // Combinar con planes de la DB por si hay alguno ad-hoc
     const dbOptions = plans.map((p) => p.max_users);
-
-    return [...new Set([...baseOptions, ...dbOptions])].sort(
-      (a, b) => a - b
-    );
+    return [...new Set([...baseOptions, ...dbOptions])].sort((a, b) => a - b);
   }, [plans]);
 
   const [selectedUsers, setSelectedUsers] = useState<number>(5);
-
-  useEffect(() => {
-    if (userOptions.length > 0 && !userOptions.includes(selectedUsers)) {
-      setSelectedUsers(userOptions.includes(5) ? 5 : userOptions[0]);
-    }
-  }, [userOptions]);
 
   const selectedPlan = useMemo((): PlanRevendedor | null => {
     const exactPlan = plans.find((p) => p.max_users === selectedUsers);
     if (exactPlan) return exactPlan;
 
-    // Lógica de cálculo de precio dinámico (coincidente con el backend)
     const calculatePrice = (users: number): number | null => {
       const pExact = plans.find((p) => p.max_users === users);
       if (pExact) return pExact.precio;
@@ -107,9 +83,8 @@ export default function ResellerPlanSelector({
 
     const calculatedPrice = calculatePrice(selectedUsers);
     if (calculatedPrice !== null) {
-      // Simular un plan para la UI
       return {
-        id: 0, // 0 indica plan dinámico
+        id: 0,
         nombre: `Plan Personalizado ${selectedUsers} usuarios`,
         descripcion: `${selectedUsers} cupos mensuales reutilizables`,
         precio: calculatedPrice,
@@ -129,210 +104,131 @@ export default function ResellerPlanSelector({
       : null;
 
   const diasLabel =
-    selectedPlan?.dias && selectedPlan.dias > 0
-      ? `${selectedPlan.dias} días`
-      : "30 días";
+    selectedPlan?.dias && selectedPlan.dias > 0 ? `${selectedPlan.dias} días` : "30 días";
 
   const features = groupData.keyFeatures ?? [];
 
-  useEffect(() => {
-    const updateDesktopRect = () => {
-      if (!placeholderRef.current || !gridRef.current || !leftContentRef.current) return;
-
-      const r = placeholderRef.current.getBoundingClientRect();
-      const leftRect = leftContentRef.current.getBoundingClientRect();
-
-      const headerEl = document.querySelector("header") as HTMLElement | null;
-      const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 80;
-      const topOffset = Math.round(headerHeight + 16); // gap para que no quede pegado al header
-
-      if (desktopTopOffset !== topOffset) {
-        setDesktopTopOffset(topOffset);
-      }
-
-      const measuredPanelHeight = desktopPanelRef.current
-        ? desktopPanelRef.current.getBoundingClientRect().height
-        : 0;
-      // Fallback inicial para evitar dependencia circular antes del primer render del panel.
-      const panelHeight = measuredPanelHeight > 0 ? measuredPanelHeight : Math.max(window.innerHeight * 0.62, 420);
-
-      // Arranca alineado arriba con el bloque izquierdo, se fija al topOffset,
-      // y termina alineado abajo al final del bloque izquierdo.
-      const maxTop = leftRect.bottom - panelHeight;
-      const dynamicTop = Math.min(Math.max(leftRect.top, topOffset), maxTop);
-
-      const nextRect = {
-        left: Math.round(r.left),
-        width: Math.round(r.width),
-        top: Math.round(dynamicTop),
-      };
-
-      const prevRect = lastRectRef.current;
-      const changed =
-        !prevRect ||
-        prevRect.left !== nextRect.left ||
-        prevRect.width !== nextRect.width ||
-        prevRect.top !== nextRect.top;
-
-      if (changed) {
-        lastRectRef.current = nextRect;
-        setDesktopRect(nextRect);
-      }
-    };
-
-    const scheduleUpdate = () => {
-      if (rafRef.current != null) return;
-      rafRef.current = window.requestAnimationFrame(() => {
-        rafRef.current = null;
-        updateDesktopRect();
-      });
-    };
-
-    updateDesktopRect();
-    window.addEventListener("resize", scheduleUpdate);
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-
-    const observer = new ResizeObserver(scheduleUpdate);
-    if (placeholderRef.current) observer.observe(placeholderRef.current);
-    if (gridRef.current) observer.observe(gridRef.current);
-    if (leftContentRef.current) observer.observe(leftContentRef.current);
-
-    return () => {
-      window.removeEventListener("resize", scheduleUpdate);
-      window.removeEventListener("scroll", scheduleUpdate);
-      if (rafRef.current != null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
-      observer.disconnect();
-    };
-  }, []);
-
   const SummaryContent = () => (
-    <>
-      <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-orange-500/10 rounded-full blur-[80px]" />
+    <div className="relative font-title h-full flex flex-col p-8 sm:p-10 bg-[#060606] border border-zinc-800 rounded-3xl shadow-2xl">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full w-fit mb-8">
+        <Sparkles className="w-3.5 h-3.5 text-zinc-500" />
+        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+          Resumen de plan
+        </span>
       </div>
 
-      <div className="relative">
-        <div className="inline-flex items-center gap-2 rounded px-3 py-1 text-[10px] font-mono uppercase tracking-widest bg-zinc-900 border border-zinc-800 text-orange-400 mb-8">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>Resumen</span>
-        </div>
-
-        {selectedPlan ? (
-          <>
-            <div className="space-y-2 mb-8">
-              <h3 className="text-3xl sm:text-4xl font-light text-white tracking-tight">
-                {selectedPlan.max_users} cupos
-              </h3>
-              <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                {selectedPlan.nombre} - reutilización automática durante {diasLabel}.
-              </p>
-            </div>
-
-            <div className="space-y-8 z-10">
-              <div className="relative">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">
-                    Pago mensual
-                  </span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl lg:text-6xl font-medium text-white tracking-tight">
-                      ${selectedPlan.precio.toLocaleString("es-AR")}
-                    </span>
-                    <span className="text-sm text-zinc-500 font-mono">ARS</span>
-                  </div>
-                </div>
-
-                {unitPrice != null && (
-                  <div className="mt-3 flex items-center justify-between border-t border-dashed border-zinc-800 pt-3">
-                    <span className="text-xs text-zinc-500">Valor equivalente</span>
-                    <span className="text-sm font-mono text-orange-400">
-                      ${unitPrice.toLocaleString("es-AR")}/cupo
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <ul className="space-y-4">
-                {[
-                  `${selectedPlan.max_users} cupos mensuales reutilizables`,
-                  `Duración de suscripción: ${diasLabel}`,
-                  "Reutilización automática de cupos",
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
-                    <span className="text-sm text-zinc-300 font-light">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="space-y-4 pt-4">
-                <button
-                  onClick={() => onConfirmarCompra(selectedPlan)}
-                  className="w-full relative overflow-hidden group rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-zinc-950 font-bold px-4 py-3.5 transition-all active:scale-[0.98]"
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    Continuar al pago
-                    <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-center gap-2">
-                <Shield className="w-3.5 h-3.5 text-zinc-600" />
-                <p className="text-[10px] font-mono tracking-wider text-zinc-600 uppercase text-center">
-                  Pago cifrado y seguro
-                </p>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center bg-zinc-900/20">
-            <Shield className="w-6 h-6 text-zinc-700 mx-auto mb-4" />
-            <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest leading-relaxed">
-              Esperando
-              <br />
-              selección
+      {selectedPlan ? (
+        <div className="flex-1 flex flex-col">
+          <div className="mb-10">
+            <h3 className="text-4xl lg:text-5xl font-black text-white tracking-tight mb-2">
+              {selectedPlan.max_users} cupos.
+            </h3>
+            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">
+              {selectedPlan.nombre.split(' ')[0]} • {diasLabel}
             </p>
           </div>
-        )}
-      </div>
-    </>
+
+          <div className="space-y-8 flex-1">
+            <div className="p-6 bg-[#131417] border border-zinc-800/80 rounded-2xl">
+              <div className="space-y-1 mb-4">
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Inversión Mensual</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-black text-white tracking-tighter">
+                    ${selectedPlan.precio.toLocaleString("es-AR")}
+                  </span>
+                  <span className="text-xs font-bold text-zinc-600 uppercase">ARS</span>
+                </div>
+              </div>
+
+              {unitPrice != null && (
+                <div className="pt-4 border-t border-zinc-800/50 flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Valor / Cupo</span>
+                  <span className="text-sm font-mono font-bold text-[#00ffc8]">
+                    ${unitPrice.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <ul className="space-y-4">
+              {[
+                "Reutilización automática de cupos",
+                "Panel de control avanzado",
+                "Soporte prioritario 24/7",
+              ].map((benefit, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                  <span className="text-sm font-bold text-zinc-400 uppercase tracking-tighter">{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-10 space-y-4">
+            <button
+              onClick={() => onConfirmarCompra(selectedPlan)}
+              className="w-full py-4 bg-white text-black font-black rounded-xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
+            >
+              CONTINUAR AL PAGO
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            
+            <div className="flex items-center justify-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-zinc-700" />
+              <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest">
+                Seguridad de grado militar
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800/50 rounded-3xl p-12 text-center">
+          <Shield className="w-8 h-8 text-zinc-800 mb-4" />
+          <p className="text-xs font-bold text-zinc-700 uppercase tracking-[0.2em] leading-relaxed">
+            Selecciona una<br />configuración
+          </p>
+        </div>
+      )}
+    </div>
   );
 
   return (
-    <section className="py-10 sm:py-12">
-      <div className="mx-auto max-w-6xl">
-        {/* Header fuera del grid para que el resumen se alinee con los sliders */}
-        <div className="mb-6">
-          <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-orange-400 mb-3">
-            Cupos mensuales
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight mb-3">
-            {groupData.title}
-          </h1>
-          <p className="text-sm text-zinc-400 leading-relaxed max-w-md">
+    <section className="py-12 font-title">
+      <div className="mx-auto max-w-6xl px-4">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00ffc8]" />
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              Business Intelligence
+            </span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+            {groupData.title}.
+          </h2>
+          <p className="text-base text-zinc-500 font-medium leading-relaxed max-w-xl">
             {groupData.mainDescription}
           </p>
         </div>
 
-        <div
-          ref={gridRef}
-          className="grid gap-10 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] items-start"
+        <StickyLayout
+          aside={<div className="hidden lg:block h-full"><SummaryContent /></div>}
         >
-          <div ref={leftContentRef} className="space-y-6">
-            {/* Slider */}
-            <div className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-zinc-900/50 border border-zinc-700 shadow-sm hover:shadow-lg hover:border-zinc-600 transition-all">
-              <div className="mb-6">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 mb-3">
-                  Paso 1
-                </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                  Cantidad de usuarios
+          <div className="space-y-8">
+            {/* Step 1: Selector */}
+              <div className="p-8 md:p-10 bg-[#1e1f26] border border-[#323644] rounded-3xl shadow-xl">
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-zinc-500" />
+                  </div>
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Paso 01</span>
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tight mb-2">
+                  Cantidad de usuarios.
                 </h3>
-                <p className="text-sm mt-1 text-zinc-400">
-                  Desliza para seleccionar cuántos cupos mensuales necesitas para revender.
+                <p className="text-sm font-medium text-zinc-500">
+                  Desliza para definir tu inventario de cupos.
                 </p>
               </div>
               <PlanSlider
@@ -343,33 +239,41 @@ export default function ResellerPlanSelector({
                 unit="usuarios"
               />
             </div>
+            
+            {/* Mobile Summary: visible only on small screens, between Step 1 and Benefits */}
+            <div className="lg:hidden">
+              <SummaryContent />
+            </div>
 
-            {/* Key Features */}
+            {/* Step 2: Benefits */}
             {features.length > 0 && (
-              <div className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-zinc-900/50 border border-zinc-700 shadow-sm hover:shadow-lg hover:border-zinc-600 transition-all">
-                <div className="mb-6">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 mb-3">
-                    Beneficios
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                    ¿Qué incluye tu plan?
+              <div className="p-8 md:p-10 bg-[#1e1f26] border border-[#323644] rounded-3xl shadow-xl">
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-zinc-500" />
+                    </div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Beneficios</span>
+                  </div>
+                  <h3 className="text-2xl font-black text-white tracking-tight mb-2">
+                    Potencia tu negocio.
                   </h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {features.slice(0, 4).map((feature, idx) => (
                     <div
                       key={`feature-${idx}`}
-                      className="rounded-2xl bg-zinc-900/50 border border-orange-500/15 hover:border-orange-500/25 p-4 transition-colors duration-200"
+                      className="group p-6 bg-[#0d0d0f] border border-zinc-800/50 hover:border-zinc-700 rounded-2xl transition-all duration-300 shadow-sm"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl border shrink-0 bg-orange-500/10 border-orange-500/15 text-orange-300">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2.5 rounded-xl border bg-white/5 border-white/10 text-zinc-500 group-hover:text-[#00ffc8] transition-colors">
                           {getFeatureIcon(feature.icon)}
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white leading-snug">
+                        <div>
+                          <p className="text-sm font-black text-white uppercase tracking-tight">
                             {feature.title}
                           </p>
-                          <p className="mt-1 text-xs text-zinc-500 leading-snug">
+                          <p className="mt-1 text-[11px] font-bold text-zinc-600 uppercase tracking-widest leading-relaxed">
                             {feature.description}
                           </p>
                         </div>
@@ -379,40 +283,8 @@ export default function ResellerPlanSelector({
                 </div>
               </div>
             )}
-
-            {/* Summary mobile */}
-            <aside className="relative rounded-2xl p-6 sm:p-8 lg:hidden bg-zinc-950 border border-zinc-800 shadow-2xl mt-2">
-              <SummaryContent />
-            </aside>
           </div>
-
-          {/* Placeholder desktop para conservar el ancho de la columna derecha */}
-          <div
-            ref={placeholderRef}
-            className="hidden lg:block lg:w-[420px]"
-            aria-hidden="true"
-          />
-        </div>
-
-        {/* Panel desktop confinado al bloque de selección */}
-        {desktopRect && (
-          <div
-            className="hidden lg:flex fixed flex-col z-[10000]"
-            style={{
-              left: desktopRect.left,
-              width: desktopRect.width,
-              top: desktopRect.top,
-            }}
-          >
-            <div
-              ref={desktopPanelRef}
-              className="relative rounded-2xl p-6 sm:p-8 lg:p-10 bg-zinc-950 border border-zinc-800 shadow-2xl overflow-y-auto"
-              style={{ maxHeight: `calc(100vh - ${desktopTopOffset}px)` }}
-            >
-              <SummaryContent />
-            </div>
-          </div>
-        )}
+        </StickyLayout>
       </div>
     </section>
   );

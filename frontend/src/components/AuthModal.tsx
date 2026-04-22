@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
@@ -107,7 +108,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     setTurnstileToken(null);
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -122,48 +123,48 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+            className="w-full max-w-md bg-[#131417] rounded-3xl shadow-2xl overflow-hidden border border-zinc-800/80 font-title"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative bg-gradient-to-br from-purple-100 via-purple-50 to-white p-6 border-b border-gray-100">
+            <div className="relative p-8 border-b border-zinc-800/50 bg-zinc-900/10">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+                className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+              <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                {mode === 'login' ? 'Bienvenido.' : 'Crear Cuenta.'}
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-zinc-500 mt-2 text-sm">
                 {mode === 'login'
-                  ? 'Accede a tu cuenta para ver tu historial'
-                  : 'Regístrate para guardar tus compras'}
+                  ? 'Inicia sesión para gestionar tu red VPN.'
+                  : 'Regístrate para obtener acceso total.'}
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
               {/* Error/Success Messages */}
               <AnimatePresence mode="wait">
                 {error && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400"
                   >
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm">{error}</span>
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">{error}</span>
                   </motion.div>
                 )}
                 {success && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-medium"
                   >
                     {success}
                   </motion.div>
@@ -172,48 +173,48 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
 
               {/* Nombre (solo registro) */}
               {mode === 'register' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
                     Nombre
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
                     <input
                       type="text"
                       value={nombre}
                       onChange={(e) => setNombre(e.target.value)}
-                      placeholder="Tu nombre"
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all"
+                      placeholder="Tu nombre completo"
+                      className="w-full pl-12 pr-4 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-all font-mono text-sm"
                     />
                   </div>
                 </div>
               )}
 
               {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
                   Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tu@email.com"
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-all font-mono text-sm"
                   />
                 </div>
               </div>
 
               {/* Contraseña */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
                   Contraseña
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -221,28 +222,28 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="w-full pl-11 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all"
+                    className="w-full pl-12 pr-12 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-all font-mono text-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Turnstile - login y registro */}
+              {/* Turnstile */}
               {SITE_KEY && (
-                <div className="flex justify-center">
+                <div className="flex justify-center py-2">
                   <Turnstile
                     ref={turnstileRef}
                     siteKey={SITE_KEY}
                     onSuccess={(token) => setTurnstileToken(token)}
                     onExpire={() => setTurnstileToken(null)}
                     onError={() => setTurnstileToken(null)}
-                    options={{ theme: 'light', language: 'es' }}
+                    options={{ theme: 'dark', language: 'es' }}
                   />
                 </div>
               )}
@@ -251,27 +252,27 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               <button
                 type="submit"
                 disabled={loading || (!!SITE_KEY && !turnstileToken)}
-                className="w-full py-3 bg-[#6D4AFF] text-white font-semibold rounded-lg hover:bg-[#5B3FD9] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25"
+                className="w-full py-4 bg-white text-black font-extrabold rounded-xl hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Procesando...</span>
+                    <span>PROCESANDO</span>
                   </>
                 ) : mode === 'login' ? (
-                  'Iniciar Sesión'
+                  'INICIAR SESIÓN'
                 ) : (
-                  'Crear Cuenta'
+                  'CREAR CUENTA'
                 )}
               </button>
 
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-zinc-800/80"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">o continúa con</span>
+                <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]">
+                  <span className="px-4 bg-[#131417] text-zinc-600">o continuar con</span>
                 </div>
               </div>
 
@@ -280,7 +281,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={!!SITE_KEY && !turnstileToken}
-                className="w-full py-3 bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
+                className="w-full py-4 bg-transparent text-white font-bold rounded-xl border border-zinc-800 hover:bg-zinc-800/30 hover:border-zinc-700 transition-all flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -300,20 +301,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Continuar con Google
+                Google
               </button>
 
               {/* Switch Mode */}
-              <p className="text-center text-gray-500 mt-4">
+              <p className="text-center text-zinc-500 mt-6 text-sm">
                 {mode === 'login' ? (
                   <>
                     ¿No tienes cuenta?{' '}
                     <button
                       type="button"
                       onClick={switchMode}
-                      className="text-[#6D4AFF] hover:text-[#5B3FD9] font-medium transition-colors"
+                      className="text-white hover:underline font-bold transition-colors"
                     >
-                      Regístrate
+                      REGÍSTRATE
                     </button>
                   </>
                 ) : (
@@ -322,9 +323,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                     <button
                       type="button"
                       onClick={switchMode}
-                      className="text-[#6D4AFF] hover:text-[#5B3FD9] font-medium transition-colors"
+                      className="text-white hover:underline font-bold transition-colors"
                     >
-                      Inicia sesión
+                      INICIA SESIÓN
                     </button>
                   </>
                 )}
@@ -333,6 +334,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

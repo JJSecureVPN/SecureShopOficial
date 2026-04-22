@@ -1134,7 +1134,7 @@ class EmailService {
                 <p>Tu cuenta está activa y lista para usar. ¡Disfruta de tu conexión segura!</p>
               ` : `
                 <p>Tu panel de revendedor está actualizado. Puedes acceder desde:</p>
-                <a href="https://servex.jhservices.com.ar/reseller" class="button">Ir al Panel de Revendedor</a>
+                <a href="https://servex.ws" class="button">Ir al Panel de Revendedor</a>
               `}
             </p>
 

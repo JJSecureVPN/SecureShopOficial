@@ -206,9 +206,19 @@ export class DatabaseService {
         cupon_id INTEGER,
         descuento_aplicado REAL DEFAULT 0,
         fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+        metadata TEXT
       )
     `);
+
+    // Asegurar columnas recientes en renovaciones (compatibilidad hacia atrás)
+    try {
+      this.db.exec(`ALTER TABLE renovaciones ADD COLUMN metadata TEXT`);
+    } catch (error: any) {
+      if (!error?.message?.includes('duplicate column name')) {
+        throw error;
+      }
+    }
 
     // Asegurar columnas recientes en renovaciones (compatibilidad hacia atrás)
     try {
@@ -1040,14 +1050,15 @@ export class DatabaseService {
     estado: string;
     cupon_id?: number | null;
     descuento_aplicado?: number;
+    metadata?: string | null;
   }): any {
     const stmt = this.db.prepare(`
       INSERT INTO renovaciones (
         tipo, servex_id, servex_username, operacion,
         dias_agregados, datos_anteriores, datos_nuevos,
         monto, metodo_pago, cliente_email, cliente_nombre, estado,
-        cupon_id, descuento_aplicado
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        cupon_id, descuento_aplicado, metadata
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
@@ -1064,7 +1075,8 @@ export class DatabaseService {
       data.cliente_nombre,
       data.estado,
       data.cupon_id ?? null,
-      data.descuento_aplicado ?? 0
+      data.descuento_aplicado ?? 0,
+      data.metadata || null
     );
 
     return this.obtenerRenovacionPorId(result.lastInsertRowid as number);
@@ -1168,6 +1180,28 @@ export class DatabaseService {
     `);
 
     stmt.run(id);
+  }
+
+  actualizarMetadataRenovacion(id: number, metadata: Record<string, any>): void {
+    const stmt = this.db.prepare(`
+      UPDATE renovaciones
+      SET metadata = ?, fecha_actualizacion = datetime('now')
+      WHERE id = ?
+    `);
+    stmt.run(JSON.stringify(metadata), id);
+  }
+
+  obtenerMetadataRenovacion(id: number): Record<string, any> | null {
+    const stmt = this.db.prepare("SELECT metadata FROM renovaciones WHERE id = ?");
+    const row = stmt.get(id) as { metadata: string | null } | undefined;
+    if (row?.metadata) {
+      try {
+        return JSON.parse(row.metadata);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   // ============================================

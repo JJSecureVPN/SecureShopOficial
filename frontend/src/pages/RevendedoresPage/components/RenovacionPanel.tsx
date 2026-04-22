@@ -5,9 +5,10 @@ import {
   Mail,
   Search,
   User,
+  Clock,
+  Shield,
 } from "lucide-react";
 import CuponInput from "../../../components/CuponInput";
-import { RefineButton } from "../../../components/RefineButton";
 import StickyLayout from "../../../components/StickyLayout";
 import StepCard from "../../../components/StepCard";
 import SummaryPanel, { PriceBreakdownRow } from "../../../components/SummaryPanel";
@@ -50,6 +51,7 @@ type RenovacionPanelProps = {
   operacionSeleccionada: "renovacion" | "expansion";
   cantidadBase: number;
   diasRestantes: number;
+  userEmail?: string;
 };
 
 export function RenovacionPanel({
@@ -83,8 +85,10 @@ export function RenovacionPanel({
   operacionSeleccionada,
   cantidadBase,
   diasRestantes,
+  userEmail,
 }: RenovacionPanelProps) {
   const tipoActual = revendedor?.datos.servex_account_type;
+  const hasSessionEmail = Boolean(userEmail);
   const hayDescuento = descuentoAplicado > 0;
   const fechaExpiracion = revendedor?.datos.expiration_date
     ? new Date(revendedor.datos.expiration_date)
@@ -103,59 +107,65 @@ export function RenovacionPanel({
   const usuariosAAgregar = cantidadSeleccionada - cantidadBase;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 font-title">
       {error && (
-        <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-2xl p-4 md:p-5 lg:p-5 xl:p-6 flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-xs md:text-sm text-red-300">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-red-400">Error detectado</p>
+            <p className="text-sm text-red-300/80 font-medium">{error}</p>
+          </div>
         </div>
       )}
 
       {pasoRenovacion === "buscar" && (
         <StepCard
-          label="Paso 1"
-          title="Busca tu cuenta"
-          subtitle="Ingresa tu nombre de usuario para continuar con la renovación."
-          accent="indigo"
+          label="Paso 01"
+          title="Gestión de cuenta"
+          subtitle="Identifica tu panel de revendedor para proceder."
+          accent="zinc"
           delay={0.05}
         >
-          <div className="space-y-4">
-            <label className="block text-sm font-semibold text-white">Usuario registrado</label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                value={busqueda}
-                onChange={(event) => onBusquedaChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !buscando) {
-                    onBuscar();
-                  }
-                }}
-                placeholder="tu_usuario"
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-800 py-3 pl-11 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                disabled={buscando}
-              />
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                Usuario de revendedor
+              </label>
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+                <input
+                  type="text"
+                  value={busqueda}
+                  onChange={(event) => onBusquedaChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !buscando) {
+                      onBuscar();
+                    }
+                  }}
+                  placeholder="Ej. reseller_admin"
+                  className="w-full pl-12 pr-4 py-4 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-all font-mono text-sm"
+                  disabled={buscando}
+                />
+              </div>
             </div>
 
-            <RefineButton
+            <button
               onClick={onBuscar}
               disabled={buscando || !busqueda.trim()}
-              variant="primary"
-              className={`w-full ${buscando || !busqueda.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+              className="w-full py-4 bg-white text-black font-black rounded-xl hover:bg-zinc-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(255,255,255,0.05)]"
             >
               {buscando ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Buscando...
+                  VERIFICANDO...
                 </>
               ) : (
                 <>
                   <Search className="w-4 h-4" />
-                  Buscar cuenta
+                  BUSCAR CUENTA
                 </>
               )}
-            </RefineButton>
+            </button>
           </div>
         </StepCard>
       )}
@@ -164,101 +174,96 @@ export function RenovacionPanel({
         <StickyLayout
           aside={
             <SummaryPanel
-              badgeText={esExpansion ? "Resumen de expansión" : "Resumen de renovacion"}
-              accent="indigo"
-              title={esExpansion ? `${usuariosAAgregar} usuarios` : `${diasRenovacion} dias`}
+              badgeText={esExpansion ? "Upgrade" : "Renovación"}
+              accent="zinc"
+              title={esExpansion ? `${usuariosAAgregar} cupos` : `${diasRenovacion} días`}
               subtitle={
                 esExpansion
-                  ? `Agregando ${usuariosAAgregar} usuarios adicionales a tu cuenta.`
-                  : tipoSeleccionado === "credit"
-                  ? `${cantidadSeleccionada} creditos para mantener tu panel activo.`
-                  : `${cantidadSeleccionada} usuarios en tu plan de validez mensual.`
+                  ? `Expandiendo tu capacidad de revendedor con ${usuariosAAgregar} usuarios.`
+                  : `Extendiendo tu acceso al panel por un periodo de ${diasRenovacion} días.`
               }
-              priceLabel="Total a pagar"
+              priceLabel="Monto total"
               price={`$${precioFinal.toLocaleString("es-AR")}`}
-              unitLabel={esExpansion ? "Costo proporcional" : "Precio por unidad"}
-              unitValue={esExpansion 
-                ? `$${precioFinal.toLocaleString("es-AR")} por ${diasRestantes} días`
-                : `$${precioPorUnidad.toLocaleString("es-AR")}/${
-                  tipoSeleccionado === "credit" ? "credito" : "usuario"
-                }`
+              unitLabel={esExpansion ? "Prorrateo" : "Valor / Unidad"}
+              unitValue={esExpansion
+                ? `$${precioFinal.toLocaleString("es-AR")} (${diasRestantes} días)`
+                : `$${precioPorUnidad.toLocaleString("es-AR")}/${tipoSeleccionado === "credit" ? "crédito" : "cupo"}`
               }
               priceBreakdown={
                 hayDescuento
                   ? ([
-                      { label: "Subtotal", value: `$${precioRenovacion.toLocaleString("es-AR")}` },
-                      {
-                        label: `Descuento ${cuponActual?.codigo ? `(${cuponActual.codigo})` : ""}`,
-                        value: `-$${descuentoAplicado.toLocaleString("es-AR")}`,
-                        isDiscount: true,
-                      },
-                    ] as PriceBreakdownRow[])
+                    { label: "Subtotal", value: `$${precioRenovacion.toLocaleString("es-AR")}` },
+                    {
+                      label: `Cupón ${cuponActual?.codigo ? `(${cuponActual.codigo})` : ""}`,
+                      value: `-$${descuentoAplicado.toLocaleString("es-AR")}`,
+                      isDiscount: true,
+                    },
+                  ] as PriceBreakdownRow[])
                   : undefined
               }
               benefits={[
-                esExpansion 
-                  ? `Expansión inmediata de ${usuariosAAgregar} usuarios`
-                  : `Renovacion de ${diasRenovacion} dias acumulativos`,
-                esExpansion
-                  ? `Misma fecha de vencimiento: ${fechaExpiracion?.toLocaleDateString("es-AR")}`
-                  : tipoSeleccionado === "credit"
-                  ? "Proceso por creditos habilitado"
-                  : "Renovacion sobre tu plan de validez",
-                "Pago seguro con Mercado Pago",
+                esExpansion ? "Actualización de cupos instantánea" : "Renovación acumulativa",
+                esExpansion ? `Vence el ${fechaExpiracion?.toLocaleDateString("es-AR")}` : "Acceso ininterrumpido",
+                "Soporte técnico dedicado",
               ]}
-              ctaLabel="Continuar al pago"
+              ctaLabel="CONFIRMAR Y PAGAR"
               onCtaClick={onProcesar}
               ctaDisabled={!puedeProcesar || procesando || precioFinal <= 0 || (esExpansion && usuariosAAgregar <= 0)}
               ctaLoading={procesando}
-              ctaLoadingLabel="Procesando..."
-              secondaryLabel="Buscar otra cuenta"
+              ctaLoadingLabel="PROCESANDO..."
+              secondaryLabel="CAMBIAR CUENTA"
               onSecondaryClick={onVolverBuscar}
             />
           }
         >
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-900/20 p-4 md:p-5 xl:p-6">
+          {/* Status Box */}
+          <div className="bg-[#1e1f26] border border-zinc-700/50 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in duration-300">
             <div className="flex items-start gap-4">
-              <CheckCircle className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0 mt-1 text-emerald-400" />
-              <div className="space-y-1">
-                <p className="font-semibold text-emerald-300">Cuenta encontrada</p>
-                <p className="text-sm text-emerald-400">
-                  Revendedor • <span className="font-medium">{revendedor.datos.servex_username}</span>
-                </p>
-                <p className="text-xs text-emerald-400/90 mt-2">
-                  Sistema: <span className="font-medium">{tipoActual === "credit" ? "Creditos" : "Validez"}</span>
-                </p>
-                {fechaExpiracion && (
-                  <p className="text-xs text-emerald-400/90">
-                    Vence el <span className="font-medium">{fechaExpiracion.toLocaleDateString("es-AR")}</span>
-                  </p>
-                )}
+              <div className="w-12 h-12 rounded-xl bg-[#00ffc8]/5 border border-[#00ffc8]/10 flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-[#00ffc8]/60" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-[#00ffc8] uppercase tracking-[0.2em] mb-1">Status: Vinculado</p>
+                <h4 className="text-xl font-black text-white truncate uppercase">
+                  {revendedor.datos.servex_username}.
+                </h4>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3">
+                   <div className="flex items-center gap-2">
+                     <Shield className="w-3.5 h-3.5 text-zinc-600" />
+                     <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{tipoActual === "credit" ? "Sistema Créditos" : "Sistema Validez"}</span>
+                   </div>
+                   {fechaExpiracion && (
+                     <div className="flex items-center gap-2">
+                       <Clock className="w-3.5 h-3.5 text-zinc-600" />
+                       <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Expira: {fechaExpiracion.toLocaleDateString("es-AR")}</span>
+                     </div>
+                   )}
+                </div>
               </div>
             </div>
           </div>
 
-
-
           {tipoSeleccionado === "credit" ? (
             <StepCard
-              label="Paso 1"
-              title="Cantidad de creditos"
-              subtitle="Desliza para definir cuantos creditos deseas renovar."
-              accent="indigo"
+              label="Paso 01"
+              title="Volumen de créditos"
+              subtitle="Define la cantidad de créditos para tu panel."
+              accent="zinc"
               delay={0.2}
             >
               <PlanSlider
                 options={opcionesCreditos.length > 0 ? opcionesCreditos : [cantidadSeleccionada || 1]}
                 value={cantidadSeleccionada || (opcionesCreditos[0] ?? 1)}
                 onChange={onCantidadChange}
-                unit="creditos"
+                unit="créditos"
               />
             </StepCard>
           ) : esExpansion ? (
             <StepCard
-              label="Paso 1"
-              title="Cantidad de usuarios a agregar"
-              subtitle={`Elige cuántos usuarios adicionales necesitas. Se cobrará proporcional a los ${diasRestantes} días restantes.`}
-              accent="indigo"
+              label="Paso 01"
+              title="Escalabilidad de cupos"
+              subtitle={`Elige los usuarios adicionales. Costo prorrateado por ${diasRestantes} días.`}
+              accent="zinc"
               delay={0.2}
             >
               <PlanSlider
@@ -267,72 +272,86 @@ export function RenovacionPanel({
                 onChange={(val) => onCantidadChange(cantidadBase + val)}
                 unit="usuarios extra"
               />
-              <div className="mt-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-400">Usuarios actuales</span>
-                  <span className="text-white font-medium">{cantidadBase}</span>
+              <div className="mt-6 p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Base Actual</span>
+                  <p className="text-lg font-black text-white">{cantidadBase}</p>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-zinc-400">Usuarios finales</span>
-                  <span className="text-indigo-400 font-bold">{cantidadSeleccionada}</span>
-                </div>
-                <div className="pt-2 border-t border-zinc-800 flex justify-between text-sm">
-                  <span className="text-zinc-400">Días restantes</span>
-                  <span className="text-white font-medium">{diasRestantes} días</span>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-[#00ffc8] uppercase tracking-widest">Nueva Base</span>
+                  <p className="text-lg font-black text-white">{cantidadSeleccionada}</p>
                 </div>
               </div>
             </StepCard>
           ) : (
             <StepCard
-              label="Paso 1"
-              title="Renovacion por validez"
-              subtitle="Se mantiene tu plan actual y se agregan dias de forma acumulativa."
-              accent="indigo"
+              label="Paso 01"
+              title="Extensión de validez"
+              subtitle="Tu plan actual se extenderá manteniendo todos tus cupos."
+              accent="zinc"
               delay={0.2}
             >
-              <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-4 space-y-2">
-                <p className="text-sm text-zinc-300">Usuarios actuales: <span className="text-white font-semibold">{cantidadSeleccionada}</span></p>
-                <p className="text-sm text-zinc-300">Duracion base: <span className="text-white font-semibold">{diasRenovacion} dias</span></p>
-                <p className="text-xs text-zinc-500">Mismo plan, más tiempo.</p>
+              <div className="p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Capacidad Actual</p>
+                  <p className="text-xl font-black text-white">{cantidadSeleccionada} Cupos</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Nueva Duración</p>
+                  <p className="text-xl font-black text-white">+{diasRenovacion} Días</p>
+                </div>
               </div>
             </StepCard>
           )}
 
           <StepCard
-            label="Paso 2"
-            title="Informacion de contacto"
-            accent="indigo"
+            label="Paso 02"
+            title="Datos de facturación"
+            subtitle="Información para procesar el pago y comprobante."
+            accent="zinc"
             delay={0.3}
           >
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(event) => onNombreChange(event.target.value)}
-                  placeholder="Nombre del responsable"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
-                />
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-zinc-600 uppercase tracking-widest ml-1">Nombre Completo</label>
+                <div className="relative group">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
+                  <input
+                    type="text"
+                    value={nombre}
+                    onChange={(event) => onNombreChange(event.target.value)}
+                    placeholder="Ej. Juan Pérez"
+                    className="w-full pl-12 pr-4 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-all font-mono text-sm"
+                  />
+                </div>
               </div>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => onEmailChange(event.target.value)}
-                  placeholder="tu@email.com"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
-                />
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-zinc-600 uppercase tracking-widest ml-1">Email de contacto</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-white transition-colors" />
+                  {hasSessionEmail ? (
+                    <div className="w-full pl-12 pr-4 py-3.5 bg-[#1e1f26] border border-zinc-800/50 rounded-xl text-zinc-400 font-mono text-sm">
+                      {userEmail}
+                    </div>
+                  ) : (
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => onEmailChange(event.target.value)}
+                      placeholder="tu@email.com"
+                      className="w-full pl-12 pr-4 py-3.5 bg-[#060606] border border-zinc-800/80 rounded-xl text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 transition-all font-mono text-sm"
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </StepCard>
 
           <StepCard
-            label="Paso 3"
-            title="Codigo de descuento"
-            subtitle="Opcional"
-            accent="indigo"
+            label="Paso 03"
+            title="Código promocional"
+            subtitle="Si tienes un cupón de descuento, aplícalo aquí."
+            accent="zinc"
             delay={0.35}
           >
             <CuponInput

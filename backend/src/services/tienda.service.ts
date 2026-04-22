@@ -281,7 +281,7 @@ export class TiendaService {
           await referidosService.procesarReferidoPorEmail(
             input.codigoReferido,
             input.clienteEmail,
-            plan.precio, // Monto original para calcular comisión
+            pago.monto,
             purchaseHistoryId
           );
           console.log(`[Tienda] ✅ Referido procesado con código: ${input.codigoReferido}, usando purchase_id: ${purchaseHistoryId}`);
@@ -719,7 +719,7 @@ export class TiendaService {
             await referidosService.procesarReferidoPorEmail(
               metadata.codigoReferido,
               pago.cliente_email,
-              metadata.montoOriginal || plan.precio,
+              pago.monto,
               purchaseIdToUse
             );
             console.log(`[Tienda] ✅ Referido procesado con código: ${metadata.codigoReferido}, usando purchase_id: ${purchaseIdToUse}`);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Menu, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ReferidosSection } from '../../components/ReferidosSection';
 import { apiService } from '../../services/api.service';
 
@@ -17,7 +17,7 @@ import {
   SettingsSection,
 } from './components';
 
-// Tipos y utilidades
+import { PurchaseHistory } from '../../lib/supabase';
 import { EstadoCuentaMap } from './types';
 
 export default function ProfilePage() {
@@ -29,9 +29,6 @@ export default function ProfilePage() {
   const sectionFromUrl = searchParams.get('section') as ProfileSection | null;
   const [activeSection, setActiveSection] = useState<ProfileSection>(sectionFromUrl || 'overview');
   
-  // Mobile sidebar
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
   // Estados de consulta de cuenta
   const [estadosCuenta, setEstadosCuenta] = useState<EstadoCuentaMap>({});
 
@@ -39,10 +36,9 @@ export default function ProfilePage() {
   const handleSectionChange = (section: ProfileSection) => {
     setActiveSection(section);
     setSearchParams({ section });
-    setMobileMenuOpen(false);
   };
 
-  // Función para consultar estado de cuenta
+  // Función para consultar estado de cuenta manually (with expansion)
   const consultarEstadoCuenta = async (username: string) => {
     if (estadosCuenta[username]?.expanded) {
       setEstadosCuenta(prev => ({
@@ -71,7 +67,31 @@ export default function ProfilePage() {
     }
   };
 
-  // Función para refrescar estado
+  // Función para consulta automática silenciosa (sin expandir)
+  const sincronizarSilenciosamente = async (username: string) => {
+    // Si ya tiene datos satisfactorios o está cargando, omitir
+    if (estadosCuenta[username]?.data || estadosCuenta[username]?.loading) return;
+
+    setEstadosCuenta(prev => ({
+      ...prev,
+      [username]: { ...prev[username], loading: true, error: null }
+    }));
+
+    try {
+      const data = await apiService.obtenerEstadoCuenta(username);
+      setEstadosCuenta(prev => ({
+        ...prev,
+        [username]: { ...prev[username], loading: false, data, error: null }
+      }));
+    } catch (error: any) {
+      setEstadosCuenta(prev => ({
+        ...prev,
+        [username]: { ...prev[username], loading: false, data: null, error: error.message || 'Error' }
+      }));
+    }
+  };
+
+  // Función para refrescar estado manualmente
   const refrescarEstadoCuenta = async (username: string) => {
     setEstadosCuenta(prev => ({
       ...prev,
@@ -82,7 +102,7 @@ export default function ProfilePage() {
       const data = await apiService.obtenerEstadoCuenta(username);
       setEstadosCuenta(prev => ({
         ...prev,
-        [username]: { loading: false, data, error: null, expanded: true }
+        [username]: { ...prev[username], loading: false, data, error: null, expanded: true }
       }));
     } catch (error: any) {
       setEstadosCuenta(prev => ({
@@ -92,54 +112,111 @@ export default function ProfilePage() {
     }
   };
 
-  // Redirigir si no hay usuario
+  // Función para REPARAR conexión (Sincronización forzada)
+  const repararEstadoCuenta = async (username: string) => {
+    setEstadosCuenta(prev => ({
+      ...prev,
+      [username]: { ...prev[username], loading: true, error: null }
+    }));
+
+    try {
+      await apiService.repararConexion(username);
+      // Tras reparar, refrescar los datos locales
+      const data = await apiService.obtenerEstadoCuenta(username);
+      setEstadosCuenta(prev => ({
+        ...prev,
+        [username]: { 
+          ...prev[username], 
+          loading: false, 
+          data, 
+          error: null, 
+          expanded: true,
+          repaired: true 
+        }
+      }));
+
+      // Quitar el estado de "reparado" después de 5 segundos
+      setTimeout(() => {
+        setEstadosCuenta(prev => ({
+          ...prev,
+          [username]: { ...prev[username], repaired: false }
+        }));
+      }, 5000);
+    } catch (error: any) {
+      setEstadosCuenta(prev => ({
+        ...prev,
+        [username]: { ...prev[username], loading: false, error: error.message || 'Error al reparar' }
+      }));
+    }
+  };
+
+  // 1. Redirigir si no hay usuario
   useEffect(() => {
     if (!loading && !user) {
       navigate('/');
     }
   }, [loading, user, navigate]);
 
-  // Sincronizar sección desde URL
+  // 2. Sincronizar sección desde URL
   useEffect(() => {
     if (sectionFromUrl && sectionFromUrl !== activeSection) {
       setActiveSection(sectionFromUrl);
     }
   }, [sectionFromUrl]);
 
-  // Obtener TODAS las suscripciones activas
-  const suscripcionesActivas = purchaseHistory.filter(
-    (compra) =>
-      compra.estado === 'aprobado' &&
-      compra.servex_username &&
-      compra.servex_expiracion &&
-      new Date(compra.servex_expiracion) > new Date()
-  );
+  // 3. Obtener suscripciones activas y únicas por usuario
+  const suscripcionesActivas = Object.values(
+    purchaseHistory
+      .filter(
+        (compra) =>
+          compra.estado === 'aprobado' &&
+          compra.servex_username &&
+          compra.servex_expiracion &&
+          new Date(compra.servex_expiracion) > new Date()
+      )
+      .reduce((acc: Record<string, PurchaseHistory>, current: PurchaseHistory) => {
+        const username = current.servex_username!;
+        if (!acc[username] || new Date(current.servex_expiracion!) > new Date(acc[username].servex_expiracion!)) {
+          acc[username] = current;
+        }
+        return acc;
+      }, {})
+  ).sort((a, b) => new Date(a.servex_expiracion!).getTime() - new Date(b.servex_expiracion!).getTime());
+
+  // 4. Efecto para sincronización automática al entrar en la sección de suscripciones
+  useEffect(() => {
+    if (activeSection === 'subscription' && suscripcionesActivas.length > 0) {
+      const syncAll = async () => {
+        // Sincronizar secuencialmente
+        for (const suscripcion of suscripcionesActivas) {
+          const username = suscripcion.servex_username;
+          if (username) {
+            await sincronizarSilenciosamente(username);
+          }
+        }
+      };
+      syncAll();
+    }
+  }, [activeSection, suscripcionesActivas.length]);
   
-  // Para compatibilidad: primera suscripción activa (para overview)
   const suscripcionActiva = suscripcionesActivas[0] || null;
 
-  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-refine-dark flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  // Handlers
+  const emailVerificado = !!user.email_confirmed_at;
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
-  const emailVerificado = !!user.email_confirmed_at;
-
-  // Renderizar contenido según la sección activa
   const renderContent = () => {
     switch (activeSection) {
       case 'overview':
@@ -149,10 +226,10 @@ export default function ProfilePage() {
             profile={profile}
             suscripcionActiva={suscripcionActiva}
             purchaseHistory={purchaseHistory}
+            estadosCuenta={estadosCuenta}
             onNavigate={handleSectionChange}
           />
         );
-      
       case 'subscription':
         return (
           <AllActiveSubscriptions
@@ -160,142 +237,81 @@ export default function ProfilePage() {
             estadosCuenta={estadosCuenta}
             onConsultarEstado={consultarEstadoCuenta}
             onRefrescarEstado={refrescarEstadoCuenta}
+            onRepararEstado={repararEstadoCuenta}
           />
         );
-      
       case 'referidos':
-        return (
-          <div className="space-y-6">
-            <ReferidosSection userId={user.id} userEmail={user.email || ''} />
-          </div>
-        );
-      
+        return <ReferidosSection userId={user.id} userEmail={user.email || ''} />;
       case 'tickets':
-        return (
-          <div className="space-y-6">
-            <SupportTicketsSection userId={user.id} />
-          </div>
-        );
-      
+        return <SupportTicketsSection userId={user.id} />;
       case 'history':
         return (
-          <div className="space-y-6">
-            <PurchaseHistorySection
-              purchaseHistory={purchaseHistory}
-              estadosCuenta={{}}
-              onConsultarEstado={() => {}}
-              onRefrescarEstado={() => {}}
-              readOnly={true}
-            />
-          </div>
-        );
-      
-      case 'settings':
-        return (
-          <SettingsSection
-            user={user}
-            profile={profile}
-            onUpdateProfile={updateProfile}
+          <PurchaseHistorySection
+            purchaseHistory={purchaseHistory}
+            estadosCuenta={{}}
+            onConsultarEstado={() => {}}
+            readOnly={true}
           />
         );
-      
+      case 'settings':
+        return <SettingsSection user={user} profile={profile} onUpdateProfile={updateProfile} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-refine-dark">
-      {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-700">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -ml-2 rounded-xl hover:bg-zinc-800 transition-colors"
-          >
-            <Menu className="w-6 h-6 text-zinc-300" />
-          </button>
-          <h1 className="font-bold text-white">Mi Cuenta</h1>
-          <div className="w-10" />
-        </div>
+    <div className="min-h-screen text-zinc-100 selection:bg-orange-500/30">
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-500/[0.03] blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-zinc-800/[0.05] blur-[140px] rounded-full animate-pulse" />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[300px] bg-zinc-900 shadow-2xl"
-            >
-              <div className="p-4 border-b border-zinc-700 flex items-center justify-between">
-                <span className="font-bold text-white">Menú</span>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-xl hover:bg-zinc-800 transition-colors"
-                >
-                  <X className="w-5 h-5 text-zinc-300" />
-                </button>
-              </div>
-              <div className="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
-                <ProfileNavSidebar
-                  user={user}
-                  profile={profile}
-                  activeSection={activeSection}
-                  onSectionChange={handleSectionChange}
-                  emailVerificado={emailVerificado}
-                  onSignOut={handleSignOut}
-                  suscripcionesActivas={suscripcionesActivas.length}
-                />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <ProfileNavSidebar
+        user={user}
+        profile={profile}
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+        emailVerificado={emailVerificado}
+        onSignOut={handleSignOut}
+        suscripcionesActivas={suscripcionesActivas.length}
+      />
 
-      {/* Main Layout - sin altura fija para scroll natural */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-        <div className="lg:flex lg:gap-8">
-          {/* Desktop Sidebar - sticky */}
-          <div className="hidden lg:block lg:w-[280px] xl:w-[320px] flex-shrink-0">
-            <div className="sticky top-24">
-              <ProfileNavSidebar
-                user={user}
-                profile={profile}
-                activeSection={activeSection}
-                onSectionChange={handleSectionChange}
-                emailVerificado={emailVerificado}
-                onSignOut={handleSignOut}
-                suscripcionesActivas={suscripcionesActivas.length}
-              />
+      <div className="relative z-10 lg:ml-72 pt-14 lg:pt-0 min-h-screen flex flex-col">
+        <main className="flex-1 px-6 sm:px-10 py-10">
+          <div className="mb-10 animate-in fade-in slide-in-from-left-4 duration-700">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-1 rounded-full bg-orange-500" />
+              <div className="w-3 h-1 rounded-full bg-zinc-800" />
             </div>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight">
+              {activeSection === 'overview' ? 'Resumen' : 
+               activeSection === 'subscription' ? 'Mis Suscripciones' :
+               activeSection === 'history' ? 'Historial de Compras' :
+               activeSection === 'settings' ? 'Configuración' :
+               activeSection === 'referidos' ? 'Sistema de Referidos' :
+               activeSection === 'tickets' ? 'Soporte y Tickets' :
+               'Perfil'}
+            </h1>
+            <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest mt-1">
+              Mi Cuenta / {activeSection}
+            </p>
           </div>
 
-          {/* Content Area - fluye naturalmente */}
-          <div className="flex-1 min-w-0">
+          <div className="pb-20">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSection}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
               >
                 {renderContent()}
               </motion.div>
             </AnimatePresence>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

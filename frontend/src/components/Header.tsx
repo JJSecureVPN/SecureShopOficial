@@ -8,8 +8,14 @@ import AuthModal from "./AuthModal";
 import { HeaderDropdown } from "./HeaderDropdown";
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { PromoHeader } from "./PromoHeader";
 
-const Header = () => {
+interface HeaderProps {
+  promoTipo?: "planes" | "revendedores" | undefined;
+  showPromo?: boolean;
+}
+
+const Header = ({ promoTipo, showPromo = true }: HeaderProps) => {
   const location = useLocation();
   const { user } = useAuth();
   const [featuresOpen, setFeaturesOpen] = useState(false);
@@ -53,12 +59,27 @@ const Header = () => {
   // Medir la altura del header para posicionar el menú/overlay correctamente
   useLayoutEffect(() => {
     const measure = () => {
-      const h = headerRef.current?.getBoundingClientRect().height || 64;
-      setHeaderHeight(Math.round(h));
+      if (headerRef.current) {
+        const rect = headerRef.current.getBoundingClientRect();
+        const h = rect.height || 64;
+        setHeaderHeight(Math.round(h));
+        // Establecer variable CSS global para que el contenido principal se ajuste
+        document.documentElement.style.setProperty('--header-height', `${Math.round(h)}px`);
+      }
     };
+
+    // Usar ResizeObserver para detectar cambios de altura (por la promo)
+    const observer = new ResizeObserver(measure);
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer.disconnect();
+    };
   }, []);
   
   const isActive = (path: string) => location.pathname === path;
@@ -80,11 +101,12 @@ const Header = () => {
         />
       )}
 
-      {/* Header - Refine.dev style */}
+      {/* Header - CodePen Aesthetic */}
       <header 
         ref={headerRef}
-        className="sticky top-0 left-0 right-0 w-full z-[10001] bg-refine-dark border-b border-refine"
+        className="fixed top-0 left-0 right-0 w-full z-[10001] bg-[#060606]/95 backdrop-blur-md border-b border-zinc-800/50"
       >
+        {showPromo && <PromoHeader tipo={promoTipo} />}
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           {/* Left side: Logo */}
           <div className="flex items-center gap-6">
@@ -108,8 +130,8 @@ const Header = () => {
                   key={link.path}
                   to={link.path}
                   reloadDocument
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(link.path) ? 'text-indigo-600' : 'text-refine-secondary hover:text-refine'
+                  className={`px-3 py-2 rounded-md text-sm font-bold transition-all duration-200 font-title ${
+                    isActive(link.path) ? 'text-white' : 'text-zinc-500 hover:text-white'
                   }`}
                 >
                   {link.label}
@@ -121,7 +143,7 @@ const Header = () => {
                 <button
                   onClick={() => setFeaturesOpen(!featuresOpen)}
                   onBlur={() => setTimeout(() => setFeaturesOpen(false), 150)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-refine-secondary hover:text-refine transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-bold text-zinc-500 hover:text-white transition-all font-title"
                 >
                   Características
                   <ChevronDown className={`h-4 w-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`} />
@@ -240,12 +262,12 @@ const Header = () => {
               <ContactButton />
             </div>
 
-            {/* CTA Button - escondido en /planes */}
+            {/* CTA Button - Modern Geometric Styled */}
             {location.pathname !== '/planes' && (
               <Link
                 to="/planes"
                 reloadDocument
-                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-refine-accent text-zinc-900 hover:bg-orange-500 transition-colors"
+                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-all shadow-lg font-title"
               >
                 Obtener VPN
               </Link>
@@ -262,10 +284,10 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu - Refine.dev style */}
+        {/* Mobile Menu - CodePen Style */}
         {mobileMenuOpen && (
           <div 
-            className="lg:hidden border-t border-refine bg-refine-dark-alt z-[10000]"
+            className="lg:hidden border-t border-zinc-800 bg-[#131417] z-[10000]"
             style={{ 
               position: 'fixed',
               left: 0,

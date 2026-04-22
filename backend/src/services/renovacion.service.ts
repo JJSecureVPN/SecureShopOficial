@@ -4,8 +4,10 @@ import { MercadoPagoService } from './mercadopago.service';
 import { configService } from './config.service';
 import emailService from './email.service';
 import { cuponesSupabaseService } from './cupones-supabase.service';
+import { referidosService } from './referidos.service';
 import { supabaseService } from './supabase.service';
 import { RenovacionAutoRetryConfig } from '../types';
+import { calcularPrecioResellerDecompuesto } from './billing.utils';
 
 export class RenovacionService {
   constructor(
@@ -325,13 +327,24 @@ export class RenovacionService {
     precio?: number; // Precio calculado desde el frontend con overrides aplicados
     clienteEmail: string;
     clienteNombre: string;
+    saldoEmail?: string;
     nuevoConnectionLimit?: number;
     precioOriginal?: number;
+    planId?: number;
     codigoCupon?: string;
     cuponId?: number;
     descuentoAplicado?: number;
-    planId?: number;
-  }): Promise<{ renovacion: any; linkPago: string; descuentoAplicado?: number; cuponAplicado?: any }> {
+    codigoReferido?: string;
+    saldoUsado?: number;
+  }): Promise<{
+    renovacion: any;
+    linkPago?: string;
+    descuentoAplicado?: number;
+    cuponAplicado?: any;
+    descuentoReferido?: number;
+    saldoAplicado?: number;
+    procesadoAlInstante?: boolean;
+  }> {
     console.log(`[Renovacion] 🚀 Iniciando procesamiento de renovación de cliente: ${input.busqueda} (${input.dias} días)`);
     console.log('[Renovacion] Input recibido:', JSON.stringify(input, null, 2));
     
@@ -399,7 +412,31 @@ export class RenovacionService {
       );
     }
 
-    let monto = Math.max(0, Math.round(precioBase - descuentoAplicado));
+    // 3.1. Aplicar descuento de referido
+    let descuentoReferido = 0;
+    if (input.codigoReferido && referidosService.isEnabled()) {
+      const saldoOwnerEmail = input.saldoEmail || input.clienteEmail;
+      const validacion = await referidosService.validarCodigo(input.codigoReferido, saldoOwnerEmail);
+      if (validacion.valido && validacion.descuento) {
+        descuentoReferido = Math.round((precioBase * validacion.descuento) / 100);
+        console.log(`[Renovacion] Código de referido ${input.codigoReferido} aplicado. Descuento: $${descuentoReferido}`);
+      }
+    }
+
+    let montoSubtotal = Math.max(0, Math.round(precioBase - descuentoAplicado - descuentoReferido));
+
+    // 3.2. Aplicar uso de saldo
+    let saldoAplicado = 0;
+    if (input.saldoUsado && input.saldoUsado > 0 && referidosService.isEnabled()) {
+      const saldoOwnerEmail = input.saldoEmail || input.clienteEmail;
+      const userData = await referidosService.getSaldoByEmail(saldoOwnerEmail);
+      if (userData && userData.saldo > 0) {
+        saldoAplicado = Math.min(montoSubtotal, userData.saldo, input.saldoUsado);
+        console.log(`[Renovacion] Usando $${saldoAplicado} del saldo del usuario (${userData.saldo} disponible) [email: ${saldoOwnerEmail}]`);
+      }
+    }
+
+    let monto = Math.max(0, Math.round(montoSubtotal - saldoAplicado));
 
     if (!monto || monto <= 0) {
       throw new Error('El total a pagar con el cupón debe ser mayor a 0');
@@ -427,7 +464,14 @@ export class RenovacionService {
       cliente_nombre: input.clienteNombre,
       estado: 'pendiente',
       cupon_id: cuponAplicado?.id || null,
-      descuento_aplicado: descuentoAplicado
+      descuento_aplicado: descuentoAplicado,
+      metadata: JSON.stringify({
+        codigoReferido: input.codigoReferido || null,
+        saldoEmail: input.saldoEmail || null,
+        saldoUsado: saldoAplicado || 0,
+        montoOriginal: precioBase,
+        descuentoReferido: descuentoReferido || 0
+      })
     };
 
     if (hayCambioDispositivos) {
@@ -438,7 +482,22 @@ export class RenovacionService {
     const renovacion = this.db.crearRenovacion(renovacionData);
     const renovacionId = renovacion.id;
 
-    console.log('[Renovacion] Renovación creada:', renovacionId);
+      console.log('[Renovacion] Renovación creada:', renovacionId);
+
+    // 4.1. Si el monto es 0, procesar al instante
+    if (monto <= 0) {
+      console.log(`[Renovacion] ✅ Monto final es 0. Procesando renovación ID ${renovacionId} al instante.`);
+      await this.confirmarRenovacion(renovacionId, 'PAGO_SALDO_COMPLETO');
+      
+      return {
+        renovacion: this.db.obtenerRenovacionPorId(renovacionId),
+        procesadoAlInstante: true,
+        descuentoAplicado: descuentoAplicado > 0 ? descuentoAplicado : undefined,
+        cuponAplicado,
+        descuentoReferido: descuentoReferido > 0 ? descuentoReferido : undefined,
+        saldoAplicado: saldoAplicado > 0 ? saldoAplicado : undefined
+      };
+    }
 
     // 5. Crear preferencia en MercadoPago
     try {
@@ -462,7 +521,9 @@ export class RenovacionService {
         renovacion,
         linkPago: initPoint,
         descuentoAplicado: descuentoAplicado > 0 ? descuentoAplicado : undefined,
-        cuponAplicado: cuponAplicado
+        cuponAplicado: cuponAplicado,
+        descuentoReferido: descuentoReferido > 0 ? descuentoReferido : undefined,
+        saldoAplicado: saldoAplicado > 0 ? saldoAplicado : undefined
       };
     } catch (error: any) {
       this.db.actualizarEstadoRenovacion(renovacionId, 'rechazado');
@@ -588,59 +649,56 @@ export class RenovacionService {
       ) || null;
     }
 
-    // Si no hay plan exacto, buscar el plan inmediatamente inferior y calcular precio proporcional
+    // Si no hay plan exacto, usar la utilidad de descomposición
     if (!planSeleccionado) {
       const planesMismoTipo = planesConOverrides
         .filter((p: any) => p.account_type === tipoRenovacion && p.max_users > 0)
         .sort((a: any, b: any) => a.max_users - b.max_users);
 
       if (planesMismoTipo.length > 0) {
-        // Buscar el plan inmediatamente inferior
-        const planInferior = planesMismoTipo.reverse().find((p: any) => p.max_users < cantidad);
-        
-        if (planInferior) {
-          // Buscar el plan superior para calcular mejor el precio
-          const planSuperior = planesMismoTipo.find((p: any) => p.max_users > cantidad);
+        if (operacion === 'expansion') {
+          const extraUsers = cantidad - (revendedorExistente.max_users || 0);
+          console.log(`[Renovacion] 📊 Calculando expansión: ${revendedorExistente.max_users} -> ${cantidad} usuarios (${extraUsers} extras)`);
           
-          if (planSuperior) {
-            // Interpolar entre el plan inferior y superior
-            const rangoUsuarios = planSuperior.max_users - planInferior.max_users;
-            const rangoPrecio = planSuperior.precio - planInferior.precio;
-            const usuariosExtra = cantidad - planInferior.max_users;
-            const precioExtra = (usuariosExtra / rangoUsuarios) * rangoPrecio;
-            
-            planSeleccionado = {
-              ...planInferior,
-              max_users: cantidad,
-              precio: Math.round(planInferior.precio + precioExtra),
-              calculado: true
-            };
-            
-            console.log(`[Renovacion] 📊 Precio calculado por interpolación: ${planInferior.max_users} usuarios ($${planInferior.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio}) → ${planSuperior.max_users} usuarios ($${planSuperior.precio})`);
+          if (extraUsers <= 0) {
+            // Si por alguna razón la cantidad es menor o igual, el precio base de los extras es 0
+            planSeleccionado = { max_users: cantidad, precio: 0, calculado: true };
           } else {
-            // Solo hay plan inferior, calcular proporcional
-            const precioPorUsuario = planInferior.precio / planInferior.max_users;
+            const { precio: precio30dExtra, composicion } = calcularPrecioResellerDecompuesto(extraUsers, planesMismoTipo);
+            
+            // Prorratear por días restantes
+            const hoy = this.utcTodayStart();
+            const expiracion = this.parseYYYYMMDDToUTC(revendedorExistente.expiration_date);
+            let diasRestantes = 30;
+            if (expiracion) {
+              const diffTime = expiracion.getTime() - hoy.getTime();
+              diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+            
+            const diasProporcional = Math.min(30, Math.max(1, diasRestantes));
+            const precioFinalExpansion = Math.round((precio30dExtra / 30) * diasProporcional);
+            
             planSeleccionado = {
-              ...planInferior,
               max_users: cantidad,
-              precio: Math.round(precioPorUsuario * cantidad),
-              calculado: true
+              precio: precioFinalExpansion,
+              calculado: true,
+              extra_info: { precio30dExtra, diasProporcional, composicion }
             };
             
-            console.log(`[Renovacion] 📊 Precio calculado proporcional desde plan inferior: ${planInferior.max_users} usuarios ($${planInferior.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio})`);
+            console.log(`[Renovacion] 📊 Precio expansión: $${precioFinalExpansion} (${extraUsers} extras, ${diasProporcional} días restantes). Comp: ${composicion.join(' + ')}`);
           }
         } else {
-          // Usar el plan más pequeño disponible como base
-          const planMinimo = planesMismoTipo[planesMismoTipo.length - 1];
-          const precioPorUsuario = planMinimo.precio / planMinimo.max_users;
+          // Renovación estándar o sistema de créditos: Precio total por 30 días
+          const { precio: precioTotal, composicion } = calcularPrecioResellerDecompuesto(cantidad, planesMismoTipo);
+          
           planSeleccionado = {
-            ...planMinimo,
             max_users: cantidad,
-            precio: Math.round(precioPorUsuario * cantidad),
-            calculado: true
+            precio: precioTotal,
+            calculado: true,
+            composicion
           };
           
-          console.log(`[Renovacion] 📊 Precio calculado desde plan mínimo: ${planMinimo.max_users} usuarios ($${planMinimo.precio}) → ${cantidad} usuarios ($${planSeleccionado.precio})`);
+          console.log(`[Renovacion] 📊 Precio renovacion: $${precioTotal} (${cantidad} usuarios). Comp: ${composicion.join(' + ')}`);
         }
       }
     }
@@ -649,7 +707,7 @@ export class RenovacionService {
       console.warn(`[Renovacion] ⚠️ No se encontró un plan para tipo=${tipoRenovacion}, cantidad=${cantidad}. Usando defaults.`);
     }
 
-    let precioBase = planSeleccionado?.precio ? Math.round(Number(planSeleccionado.precio)) : 0;
+    let precioBase = planSeleccionado?.precio !== undefined ? Math.round(Number(planSeleccionado.precio)) : 0;
 
     if (!precioBase) {
       precioBase = tipoRenovacion === 'validity' ? 8500 : 10200;
@@ -821,6 +879,87 @@ export class RenovacionService {
       // 1. Actualizar estado a aprobado
       this.db.actualizarEstadoRenovacion(renovacionId, 'aprobado', mpPaymentId);
 
+      let referralPurchaseId: string | null = null;
+      let renovacionMetadata = null;
+
+      if (renovacion.tipo === 'cliente') {
+        renovacionMetadata = this.db.obtenerMetadataRenovacion(renovacionId);
+        referralPurchaseId = renovacionMetadata?.purchaseHistoryId || null;
+      }
+
+      let servexExpiracion: string | undefined = undefined;
+      try {
+        if (renovacion.servex_username) {
+          if (renovacion.tipo === 'cliente') {
+            const clienteActualizado = await this.servex.buscarClientePorUsername(renovacion.servex_username);
+            servexExpiracion = clienteActualizado?.expiration_date;
+          } else {
+            const revendedorActualizado = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
+            servexExpiracion = revendedorActualizado?.expiration_date;
+          }
+        }
+      } catch (servexError: any) {
+        console.warn('[Renovacion] No se pudo obtener expiración de Servex para sincronizar con Supabase:', servexError?.message || servexError);
+      }
+
+      // Sincronizar con Supabase ANTES de procesar el referido, para obtener un purchase_history.id válido
+      try {
+        const purchaseHistoryId = await supabaseService.syncApprovedPurchase({
+          email: renovacion.cliente_email,
+          planNombre: renovacion.operacion === 'upgrade'
+            ? `Upgrade: ${renovacion.dias_agregados} días`
+            : `Renovación: ${renovacion.dias_agregados} días`,
+          monto: renovacion.monto,
+          tipo: 'renovacion',
+          servexUsername: renovacion.servex_username,
+          servexExpiracion,
+          mpPaymentId: mpPaymentId || undefined,
+        });
+
+        if (purchaseHistoryId) {
+          referralPurchaseId = purchaseHistoryId;
+          if (renovacionMetadata && renovacionMetadata.purchaseHistoryId !== purchaseHistoryId) {
+            renovacionMetadata = {
+              ...renovacionMetadata,
+              purchaseHistoryId,
+            };
+            this.db.actualizarMetadataRenovacion(renovacionId, renovacionMetadata);
+          }
+        }
+      } catch (syncError: any) {
+        console.error('[Renovacion] ⚠️ Error sincronizando con Supabase antes de procesar el referido:', syncError?.message || syncError);
+      }
+
+      if (renovacion.tipo === 'cliente' && renovacionMetadata) {
+        const { codigoReferido, saldoUsado, saldoEmail } = renovacionMetadata;
+        const saldoOwnerEmail = saldoEmail || renovacion.cliente_email;
+
+        // Debitar saldo si se usó
+        if (saldoUsado && saldoUsado > 0) {
+          console.log(`[Renovacion] Debitando $${saldoUsado} de saldo para renovación ${renovacionId} (email: ${saldoOwnerEmail})`);
+          await referidosService.debitarSaldoPorEmail(
+            saldoOwnerEmail,
+            saldoUsado,
+            `Pago de Renovación ${renovacion.servex_username}`
+          );
+        }
+
+        // Procesar referido si se usó
+        if (codigoReferido && referidosService.isEnabled()) {
+          if (!referralPurchaseId) {
+            console.warn(`[Renovacion] ⚠️ No se obtuvo purchase_history.id válido para el referido de renovación ${renovacionId}. Se omitirá el procesamiento del referido por seguridad.`);
+          } else {
+            console.log(`[Renovacion] Procesando comisión de referido para renovación ${renovacionId}`);
+            await referidosService.procesarReferidoPorEmail(
+              codigoReferido,
+              saldoOwnerEmail,
+              renovacion.monto,
+              referralPurchaseId
+            );
+          }
+        }
+      }
+
       // 2. Si es un upgrade (cambio de dispositivos), actualizar primero el connection_limit
       if (renovacion.operacion === 'upgrade' && renovacion.tipo === 'cliente' && renovacion.datos_nuevos) {
         try {
@@ -834,20 +973,21 @@ export class RenovacionService {
               throw new Error(`Cliente no encontrado: ${renovacion.servex_username}`);
             }
             
-            // Construir payload completo con todos los campos obligatorios
-            const payload = {
+            // Construir payload completo pero IGNORANDO contraseña para no corromperla
+            // Si el password de clienteActual es un hash, enviarlo de vuelta rompería la cuenta.
+            const payload: any = {
               username: clienteActual.username,
-              password: clienteActual.password,
+              // No incluimos password por petición explícita de ignorar datos de contraseña
               category_id: clienteActual.category_id,
               connection_limit: datosNuevos.connection_limit, // El nuevo límite
-              type: clienteActual.type,
+              type: 'user', // Forzar tipo user para asegurar activación
               ...(clienteActual.observation && { observation: clienteActual.observation }),
               ...(clienteActual.v2ray_uuid && { v2ray_uuid: clienteActual.v2ray_uuid })
             };
             
-            console.log(`[Renovacion] Actualizando cliente ID ${renovacion.servex_id} con payload:`, JSON.stringify(payload));
+            console.log(`[Renovacion] Actualizando cliente ID ${renovacion.servex_id} (Upgrade) con payload (sin password):`, JSON.stringify(payload));
             await this.servex.actualizarCliente(renovacion.servex_id, payload);
-            console.log('[Renovacion] ✅ Connection limit actualizado exitosamente');
+            console.log('[Renovacion] ✅ Connection limit actualizado y cuenta marcada como "user"');
           }
         } catch (parseError) {
           console.error('[Renovacion] Error actualizando connection_limit:', parseError);
@@ -971,7 +1111,28 @@ export class RenovacionService {
         // 4. Ejecutar renovación simple de días en Servex
         if (renovacion.tipo === 'cliente') {
           try {
+            // 1. Renovar sumando días
             await this.servex.renovarCliente(renovacion.servex_id, renovacion.dias_agregados);
+            
+            // 2. ⚡️ REACTIVACIÓN CRÍTICA: Asegurar que el estado sea 'user' y refrescar en nodos
+            // Esto equivale al "Guardar sin cambios" que hace el admin para que conecte.
+            console.log(`[Renovacion] ⚡️ Reactivando cuenta para ${renovacion.servex_username} post-renovación...`);
+            const clienteActual = await this.servex.buscarClientePorUsername(renovacion.servex_username);
+            
+            if (clienteActual) {
+              const refreshPayload: any = {
+                username: clienteActual.username,
+                category_id: clienteActual.category_id,
+                connection_limit: clienteActual.connection_limit,
+                type: 'user', // Forzar activación
+                ...(clienteActual.observation && { observation: clienteActual.observation }),
+                ...(clienteActual.v2ray_uuid && { v2ray_uuid: clienteActual.v2ray_uuid })
+              };
+              
+              // Omitimos password explícitamente para no tocarla
+              await this.servex.actualizarCliente(renovacion.servex_id, refreshPayload);
+              console.log(`[Renovacion] ✅ Cuenta ${renovacion.servex_username} reactivada correctamente.`);
+            }
           } catch (renovarError: any) {
             const mensajeError = renovarError.message?.toLowerCase() || '';
             const esAccesoDenegado = mensajeError.includes('acesso negado') || 
@@ -1049,38 +1210,6 @@ export class RenovacionService {
         console.log('[Renovacion] ✅ Notificación enviada al administrador');
       } catch (emailError: any) {
         console.error('[Renovacion] ⚠️ Error notificando al admin:', emailError.message);
-        // No lanzamos error, la renovación ya está procesada
-      }
-
-      // Sincronizar con Supabase (historial de usuario)
-      try {
-        // Intentar obtener fecha de expiración desde Servex para que la suscripción aparezca como activa
-        let servexExpiracion: string | undefined = undefined;
-        try {
-          if (renovacion.servex_username) {
-            if (renovacion.tipo === 'cliente') {
-              const clienteActualizado = await this.servex.buscarClientePorUsername(renovacion.servex_username);
-              servexExpiracion = clienteActualizado?.expiration_date;
-            } else {
-              const revendedorActualizado = await this.servex.buscarRevendedorPorUsername(renovacion.servex_username);
-              servexExpiracion = revendedorActualizado?.expiration_date;
-            }
-          }
-        } catch (servexError: any) {
-          console.warn('[Renovacion] No se pudo obtener expiración de Servex para sincronizar con Supabase:', servexError?.message || servexError);
-        }
-
-        await supabaseService.syncApprovedPurchase({
-          email: renovacion.cliente_email,
-          planNombre: renovacion.operacion === 'upgrade' ? `Upgrade: ${renovacion.dias_agregados} días` : `Renovación: ${renovacion.dias_agregados} días`,
-          monto: renovacion.monto,
-          tipo: 'renovacion',
-          servexUsername: renovacion.servex_username,
-          servexExpiracion,
-          mpPaymentId: mpPaymentId || undefined,
-        });
-      } catch (supabaseError: any) {
-        console.error('[Renovacion] ⚠️ Error sincronizando con Supabase:', supabaseError.message);
         // No lanzamos error, la renovación ya está procesada
       }
 

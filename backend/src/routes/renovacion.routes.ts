@@ -44,12 +44,15 @@ export function crearRutasRenovacion(renovacionService: RenovacionService): Rout
         precio,
         clienteEmail,
         clienteNombre,
+        saldoEmail,
         nuevoConnectionLimit,
         precioOriginal,
         codigoCupon,
         cuponId,
         descuentoAplicado,
         planId,
+        codigoReferido,
+        saldoUsado,
       } = req.body;
 
       // Validaciones
@@ -77,7 +80,10 @@ export function crearRutasRenovacion(renovacionService: RenovacionService): Rout
         codigoCupon: typeof codigoCupon === 'string' ? codigoCupon : undefined,
         cuponId: cuponId ? Number(cuponId) : undefined,
         descuentoAplicado: descuentoAplicado ? Number(descuentoAplicado) : undefined,
-        planId: planId ? Number(planId) : undefined
+        planId: planId ? Number(planId) : undefined,
+        codigoReferido: typeof codigoReferido === 'string' ? codigoReferido : undefined,
+        saldoEmail: saldoEmail ? saldoEmail.trim() : undefined,
+        saldoUsado: saldoUsado ? Number(saldoUsado) : undefined
       });
 
       return res.json(resultado);

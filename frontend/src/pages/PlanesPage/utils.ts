@@ -101,6 +101,8 @@ interface CrearParametrosRenovacionArgs {
     id?: number;
   } | null;
   planId?: number;
+  codigoReferido?: string | null;
+  saldoUsado?: number;
 }
 
 export const crearParametrosRenovacion = ({
@@ -115,6 +117,8 @@ export const crearParametrosRenovacion = ({
   descuentoAplicado,
   cupon,
   planId,
+  codigoReferido,
+  saldoUsado,
 }: CrearParametrosRenovacionArgs): URLSearchParams => {
   const params = new URLSearchParams({
     tipo: cuenta.tipo,
@@ -160,6 +164,14 @@ export const crearParametrosRenovacion = ({
 
   if (planId) {
     params.set("planId", planId.toString());
+  }
+  
+  if (codigoReferido) {
+    params.set("codigoReferido", codigoReferido);
+  }
+
+  if (saldoUsado && saldoUsado > 0) {
+    params.set("saldoUsado", saldoUsado.toString());
   }
 
   return params;

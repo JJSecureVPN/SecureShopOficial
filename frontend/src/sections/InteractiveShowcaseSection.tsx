@@ -145,11 +145,15 @@ export default function InteractiveShowcaseSection() {
       `}</style>
 
       <section
-        className="sc-root"
+        className="sc-root relative z-20 overflow-hidden"
         style={{ padding: "80px 0" }}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
+        {/* Decorative SVG Lines Libres */}
+        <div className="absolute top-[40%] sm:top-1/2 -left-32 sm:-left-20 w-[300px] sm:w-[500px] h-auto pointer-events-none z-0 opacity-70 sm:opacity-85 -translate-y-1/2">
+          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto" />
+        </div>
         <div style={{ maxWidth: "1160px", margin: "0 auto", padding: "0 24px" }}>
 
           {/* ── Section header ── */}
@@ -158,8 +162,7 @@ export default function InteractiveShowcaseSection() {
               <div style={{
                 width: "5px", height: "5px", borderRadius: "50%",
                 background: feat.color.accent,
-                boxShadow: `0 0 10px 2px rgba(${feat.color.rgb},.5)`,
-                transition: "background .5s, box-shadow .5s",
+                transition: "background .5s",
               }} />
               <span className="sc-mono" style={{ fontSize: "11px", letterSpacing: "0.14em", color: "#333", textTransform: "uppercase" }}>
                 JJSecure VP-N
@@ -225,7 +228,6 @@ export default function InteractiveShowcaseSection() {
                       padding: 0,
                       cursor: "pointer",
                       background: active === i ? f.color.accent : "#1a1a1e",
-                      boxShadow: active === i ? `0 0 8px rgba(${f.color.rgb},.4)` : "none",
                       transition: "all .4s cubic-bezier(.22,1,.36,1)",
                     }}
                   />
@@ -257,23 +259,17 @@ export default function InteractiveShowcaseSection() {
             </div>
 
             {/* Col 2: Image panel */}
-            <div style={{
-              position: "relative",
-              borderRadius: "14px",
-              overflow: "hidden",
-              background: "#0c0c10",
-              border: "1px solid #131316",
-            }}>
-              {/* Glow */}
               <div style={{
-                position: "absolute", inset: 0, pointerEvents: "none",
-                background: `radial-gradient(ellipse at 65% 15%, rgba(${feat.color.rgb},.09), transparent 60%)`,
-                transition: "background .7s ease",
-              }} />
+                position: "relative",
+                borderRadius: "14px",
+                overflow: "hidden",
+                background: "#131417",
+                border: "1px solid rgba(39, 39, 42, 0.8)",
+              }}>
               {/* Top line */}
               <div style={{
                 position: "absolute", top: 0, inset: "0 0 auto 0", height: "1px",
-                background: `linear-gradient(90deg, transparent, rgba(${feat.color.rgb},.45), transparent)`,
+                background: `#1a1a1e`,
                 transition: "background .5s",
               }} />
 
@@ -324,27 +320,27 @@ export default function InteractiveShowcaseSection() {
                     <button
                       key={f.id}
                       onClick={() => goTo(i)}
-                      className="sc-tab"
+                      className="group font-title"
                       style={{
                         display: "flex", alignItems: "center", gap: "10px",
-                        padding: "9px 10px", borderRadius: "7px",
+                        padding: "12px 14px", borderRadius: "10px",
                         border: "none", cursor: "pointer", textAlign: "left",
-                        background: isAct ? "#0e0e13" : "transparent",
-                        borderLeft: `2px solid ${isAct ? f.color.accent : "transparent"}`,
-                        transition: "all .25s ease",
+                        background: isAct ? "rgba(255, 255, 255, 0.03)" : "transparent",
+                        borderLeft: `2px solid ${isAct ? "#fff" : "transparent"}`,
+                        transition: "all .3s cubic-bezier(0.16, 1, 0.3, 1)",
                         fontFamily: "inherit",
                       }}
                     >
                       <Icon style={{
-                        width: "14px", height: "14px", flexShrink: 0,
-                        color: isAct ? f.color.accent : "#2a2a30",
-                        transition: "color .25s",
+                        width: "16px", height: "16px", flexShrink: 0,
+                        color: isAct ? "#fff" : "#52525b",
+                        transition: "color .3s",
                       }} />
                       <span style={{
-                        fontSize: "13px",
-                        color: isAct ? "#d4d4d8" : "#3a3a40",
-                        fontWeight: isAct ? 500 : 400,
-                        transition: "color .25s",
+                        fontSize: "14px",
+                        color: isAct ? "#fff" : "#71717a",
+                        fontWeight: isAct ? 700 : 500,
+                        transition: "color .3s",
                         letterSpacing: "-0.01em",
                       }}>
                         {f.title}
@@ -419,16 +415,11 @@ export default function InteractiveShowcaseSection() {
               {/* Image card */}
               <div style={{
                 position: "relative", borderRadius: "14px", overflow: "hidden",
-                background: "#0c0c10", border: "1px solid #131316", height: "300px",
+                background: "#1e1f26", border: "1px solid #131316", height: "300px",
               }}>
                 <div style={{
-                  position: "absolute", inset: 0, pointerEvents: "none",
-                  background: `radial-gradient(ellipse at 70% 20%, rgba(${feat.color.rgb},.09), transparent 55%)`,
-                  transition: "background .7s",
-                }} />
-                <div style={{
                   position: "absolute", top: 0, inset: "0 0 auto 0", height: "1px",
-                  background: `linear-gradient(90deg, transparent, rgba(${feat.color.rgb},.45), transparent)`,
+                  background: `#1a1a1e`,
                   transition: "background .5s",
                 }} />
 
@@ -521,7 +512,7 @@ export default function InteractiveShowcaseSection() {
                         display: "flex", alignItems: "center", gap: "6px",
                         padding: "6px 12px", borderRadius: "100px",
                         border: isAct ? `1px solid rgba(${f.color.rgb},.35)` : "1px solid #141418",
-                        background: isAct ? `rgba(${f.color.rgb},.07)` : "#0d0d10",
+                        background: isAct ? `rgba(${f.color.rgb},.07)` : "#08080a",
                         color: isAct ? "#c8c8cc" : "#3a3a40",
                         fontSize: "12px", fontWeight: isAct ? 500 : 400,
                         cursor: "pointer",

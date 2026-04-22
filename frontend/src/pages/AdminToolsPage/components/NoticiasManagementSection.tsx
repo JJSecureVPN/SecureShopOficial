@@ -168,96 +168,93 @@ export default function NoticiasManagement({
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">
-            Gestión de Noticias
-          </h2>
-          <p className="text-sm text-neutral-400 mt-1">
-            Crea, edita y administra todas las noticias y avisos
-          </p>
+    <div className="space-y-10 pb-16 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      {/* Header Premium */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900/20 backdrop-blur-3xl border border-zinc-800/50 p-8 md:p-10 shadow-2xl">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-orange-500/5 blur-[100px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tight uppercase">Santuario Editorial</h2>
+            <p className="text-zinc-500 font-medium mt-2 text-sm max-w-xl">
+              Arquitecto de información y avisos críticos. Gestiona el flujo de conocimiento y actualizaciones estratégicas para toda la infraestructura SecureShop.
+            </p>
+          </div>
+          
+          <button
+            onClick={() => handleOpenFormModal()}
+            className="group relative h-14 px-8 rounded-2xl bg-orange-500 text-[11px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-400 hover:shadow-[0_0_30px_rgba(249,115,22,0.3)] active:scale-95 flex items-center justify-center gap-3 overflow-hidden"
+          >
+            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+            <span>Emitir Comunicado</span>
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
         </div>
-        <button
-          onClick={() => handleOpenFormModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva Noticia
-        </button>
       </div>
 
-      {/* Filtros */}
-      <NoticiasFilters
-        categorias={categorias}
-        selectedCategoria={selectedCategoria}
-        onCategoriaChange={setSelectedCategoria}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
+      {/* Control de Navegación y Filtros */}
+      <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 px-4">
+          {/* Tabs Modernas */}
+          <div className="flex p-1.5 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 backdrop-blur-xl shrink-0">
+            {(['publicas', 'borradores', 'archivadas'] as TabType[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 flex items-center gap-2 ${
+                  activeTab === tab
+                    ? 'text-white'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {activeTab === tab && (
+                  <div className="absolute inset-0 bg-orange-500 rounded-xl shadow-[0_0_20px_rgba(249,115,22,0.4)] animate-in fade-in zoom-in-95 duration-500" />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {tab === 'publicas' && <Eye className="w-3.5 h-3.5" />}
+                  {tab === 'borradores' && <Clock className="w-3.5 h-3.5" />}
+                  {tab === 'archivadas' && <EyeOff className="w-3.5 h-3.5" />}
+                  {tab === 'publicas' ? 'Emitidas' : tab === 'borradores' ? 'Borradores' : 'Archivos'}
+                </span>
+              </button>
+            ))}
+          </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-neutral-700">
-        <button
-          onClick={() => setActiveTab('publicas')}
-          className={`px-4 py-2 border-b-2 font-medium transition ${
-            activeTab === 'publicas'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          <Eye className="w-4 h-4 inline mr-2" />
-          Publicadas ({noticias.filter(n => n.estado === 'publicada').length})
-        </button>
-        <button
-          onClick={() => setActiveTab('borradores')}
-          className={`px-4 py-2 border-b-2 font-medium transition ${
-            activeTab === 'borradores'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          <Clock className="w-4 h-4 inline mr-2" />
-          Borradores ({noticias.filter(n => n.estado === 'borrador').length})
-        </button>
-        <button
-          onClick={() => setActiveTab('archivadas')}
-          className={`px-4 py-2 border-b-2 font-medium transition ${
-            activeTab === 'archivadas'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-neutral-400 hover:text-neutral-200'
-          }`}
-        >
-          <EyeOff className="w-4 h-4 inline mr-2" />
-          Archivadas ({noticias.filter(n => n.estado === 'archivada').length})
-        </button>
+          <NoticiasFilters
+            categorias={categorias}
+            selectedCategoria={selectedCategoria}
+            onCategoriaChange={setSelectedCategoria}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+          />
+        </div>
+
+        {/* Galería de Contenido */}
+        {loading ? (
+          <div className="py-32 text-center">
+            <div className="w-12 h-12 border-4 border-orange-500/10 border-t-orange-500 rounded-full animate-spin mx-auto mb-6 shadow-[0_0_20px_rgba(249,115,22,0.2)]" />
+            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] animate-pulse">Sincronizando Archivos...</p>
+          </div>
+        ) : noticiasFiltradas.length === 0 ? (
+          <div className="py-32 rounded-[3rem] bg-zinc-900/10 border border-dashed border-zinc-800 flex flex-col items-center justify-center text-center px-10">
+            <div className="w-20 h-20 rounded-full bg-zinc-950/50 flex items-center justify-center mb-6 border border-zinc-800">
+               <EyeOff className="w-8 h-8 text-zinc-700" />
+            </div>
+            <h4 className="text-xl font-black text-zinc-500 uppercase tracking-tight">Cámara de Vacío Detectada</h4>
+            <p className="text-sm text-zinc-600 max-w-xs mt-2 italic font-medium">No se han encontrado registros bajo los protocolos de filtrado actuales.</p>
+          </div>
+        ) : (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <NoticiasList
+              noticias={noticiasFiltradas}
+              onEdit={handleOpenFormModal}
+              onDelete={handleDeleteNoticia}
+              onChangeEstado={handleChangeEstado}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Lista de Noticias */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-neutral-700 border-t-blue-500" />
-          <p className="text-neutral-400 mt-3">Cargando noticias...</p>
-        </div>
-      ) : noticiasFiltradas.length === 0 ? (
-        <div className="text-center py-12 bg-neutral-900/50 border border-neutral-800 rounded-lg">
-          <p className="text-neutral-400">
-            {searchTerm || selectedCategoria
-              ? 'No se encontraron noticias con los filtros aplicados'
-              : `No hay noticias ${activeTab === 'publicas' ? 'publicadas' : activeTab === 'borradores' ? 'en borrador' : 'archivadas'}`}
-          </p>
-        </div>
-      ) : (
-        <NoticiasList
-          noticias={noticiasFiltradas}
-          onEdit={handleOpenFormModal}
-          onDelete={handleDeleteNoticia}
-          onChangeEstado={handleChangeEstado}
-        />
-      )}
-
-      {/* Modal de Formulario */}
       {showFormModal && (
         <NoticiasFormModal
           noticia={editingNoticia}

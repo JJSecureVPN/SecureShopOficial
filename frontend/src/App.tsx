@@ -14,7 +14,6 @@ import CheckoutRenovacionPage from "./pages/CheckoutRenovacionPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import Header from "./components/Header";
-import { PromoHeader } from "./components/PromoHeader";
 import Footer from "./components/Footer";
 import PageLoading from "./components/PageLoading";
 import { LiveChat } from "./components/LiveChat";
@@ -31,7 +30,6 @@ import HelpCenter from "./pages/HelpCenter";
 import AdminHelpCenter from "./pages/AdminHelpCenter";
 import HelpHtmlView from "./pages/HelpHtmlView";
 import { useRegisterActiveSession } from "./hooks/useRegisterActiveSession";
-import { useLenis } from "./hooks/useLenis";
 
 const TRANSITION_DURATION = 600;
 
@@ -44,8 +42,6 @@ const AppContent = () => {
   // Registrar sesión activa del usuario
   useRegisterActiveSession();
 
-  // Inicializar smooth scroll con Lenis
-  useLenis(isLoading);
 
   // Determinar el tipo de promo según la página actual
   // En páginas específicas, preferir esa promo. En otras páginas, dejar que el componente elija
@@ -69,12 +65,16 @@ const AppContent = () => {
     return () => clearTimeout(timeout);
   }, [location, displayLocation, setIsLoading]);
 
+  const showPromo = displayLocation.pathname !== "/chat" && displayLocation.pathname !== "/155908348";
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-900 text-white">
       {isLoading && <PageLoading />}
-      {displayLocation.pathname !== "/chat" && <PromoHeader tipo={promoHeaderTipo} />}
-      <Header />
-      <div className="flex-1 relative">
+      <Header promoTipo={promoHeaderTipo} showPromo={showPromo} />
+      <div 
+        className="flex-1 relative transition-[padding] duration-300"
+        style={{ paddingTop: 'var(--header-height, 64px)' }}
+      >
         <main>
           <Routes location={displayLocation} key={displayLocation.pathname}>
           <Route path="/" element={<HomePage />} />

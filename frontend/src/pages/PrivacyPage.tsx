@@ -7,9 +7,11 @@ import {
   Eye,
   MessageCircle,
   Phone,
+  Zap,
 } from "lucide-react";
 import BottomSheet from "../components/BottomSheet";
 import { Title } from "../components/Title";
+import { motion } from "framer-motion";
 
 interface PrivacyPageProps {
   isMobileMenuOpen: boolean;
@@ -22,13 +24,22 @@ const sectionsData = [
     icon: Database,
     content: (
       <div className="space-y-4">
-        <p className="text-gray-700">
+        <p className="text-zinc-300">
           Para el funcionamiento del servicio, recopilamos mínima información:
         </p>
-        <ul className="space-y-2 text-gray-700">
-          <li>• Device ID (removido automáticamente cada 24 horas)</li>
-          <li>• Información básica de conexión para control de límites</li>
-          <li>• Datos técnicos necesarios para el funcionamiento del proxy</li>
+        <ul className="space-y-2 text-zinc-300">
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Device ID (removido automáticamente cada 24 horas)
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Información básica de conexión para control de límites
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Datos técnicos necesarios para el funcionamiento del proxy
+          </li>
         </ul>
       </div>
     ),
@@ -38,13 +49,22 @@ const sectionsData = [
     icon: Eye,
     content: (
       <div className="space-y-4">
-        <p className="text-gray-700">
+        <p className="text-zinc-300">
           La información recopilada se utiliza exclusivamente para:
         </p>
-        <ul className="space-y-2 text-gray-700">
-          <li>• Controlar límites de conexiones simultáneas</li>
-          <li>• Mantener la estabilidad del servicio</li>
-          <li>• Proveer soporte técnico cuando sea necesario</li>
+        <ul className="space-y-2 text-zinc-300">
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Controlar límites de conexiones simultáneas
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Mantener la estabilidad del servicio
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Proveer soporte técnico cuando sea necesario
+          </li>
         </ul>
       </div>
     ),
@@ -54,7 +74,7 @@ const sectionsData = [
     icon: Lock,
     content: (
       <div className="space-y-4">
-        <p className="text-gray-700">
+        <p className="text-zinc-300">
           No almacenamos historial de navegación, contenido de comunicaciones ni
           datos personales identificables. Los datos temporales (como Device ID)
           se eliminan automáticamente de nuestros servidores cada 24 horas.
@@ -67,7 +87,7 @@ const sectionsData = [
     icon: UserX,
     content: (
       <div className="space-y-4">
-        <p className="text-gray-700">
+        <p className="text-zinc-300">
           No vendemos, alquilamos ni compartimos tu información personal con
           terceros. Solo podríamos divulgar información si fuera requerido por
           ley y con orden judicial válida.
@@ -80,34 +100,21 @@ const sectionsData = [
     icon: ShieldCheck,
     content: (
       <div className="space-y-4">
-        <p className="text-gray-700">Como usuario, tienes derecho a:</p>
-        <ul className="space-y-2 text-gray-700">
-          <li>• Solicitar información sobre los datos que almacenamos</li>
-          <li>• Pedir la eliminación de tus datos</li>
-          <li>• Dejar de usar el servicio en cualquier momento</li>
+        <p className="text-zinc-300">Como usuario, tienes derecho a:</p>
+        <ul className="space-y-2 text-zinc-300">
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Solicitar información sobre los datos que almacenamos
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Pedir la eliminación de tus datos
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Dejar de usar el servicio en cualquier momento
+          </li>
         </ul>
-      </div>
-    ),
-  },
-  {
-    title: "Contacto",
-    icon: MessageCircle,
-    content: (
-      <div className="space-y-3">
-        <p className="text-gray-700">
-          Para consultas sobre privacidad, contáctanos por Telegram:
-        </p>
-        <p className="text-gray-700">
-          Soporte oficial:{" "}
-          <a
-            href="https://t.me/SoporteJHS_bot"
-            className="text-indigo-600 hover:text-indigo-700 font-medium underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            @SoporteJHS_bot
-          </a>
-        </p>
       </div>
     ),
   },
@@ -115,7 +122,7 @@ const sectionsData = [
 
 const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps) => {
   const [activeSection, setActiveSection] = useState(
-    "información-que-recopilamos"
+    "informacion-que-recopilamos"
   );
 
   const sections = [
@@ -144,43 +151,43 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
       label: "Tus Derechos",
       icon: <ShieldCheck className="w-4 h-4" />,
     },
-    {
-      id: "contacto",
-      label: "Contacto",
-      icon: <MessageCircle className="w-4 h-4" />,
-    },
   ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-refine-dark text-white selection:bg-emerald-500/30">
       {/* Main Content */}
-      <main>
+      <main className="relative z-10">
         {/* Header */}
-        <section className="relative pt-12 sm:pt-16 lg:pt-20 xl:pt-24 pb-12 sm:pb-16 lg:pb-20 xl:pb-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-200/50 via-purple-50/30 to-white" />
-          <div className="relative w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 mb-6">
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                <span className="text-sm text-indigo-700">
-                  Política de Privacidad
+        <section className="relative pt-24 pb-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 border border-zinc-800 mb-6">
+                <Lock className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-400">
+                  Privacidad Garantizada
                 </span>
               </div>
-              <Title as="h1" className="mb-6">
+              <Title as="h1" className="mb-6 !text-white">
                 Tu privacidad es nuestra prioridad
               </Title>
-              <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl text-gray-600 leading-relaxed">
+              <p className="text-lg text-zinc-400 leading-relaxed max-w-3xl mx-auto">
                 Entendemos la importancia de tu privacidad. Aquí te explicamos
                 cómo recopilamos, usamos y protegemos tu información al utilizar
                 JJSecure VPN.
               </p>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* Content */}
-        <section className="py-12 sm:py-16 lg:py-20 xl:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-            <div className="space-y-8">
+        <section className="pb-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-4">
               {sectionsData.map((section, index) => {
                 const Icon = section.icon;
                 const sectionId = section.title
@@ -189,48 +196,57 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
                   .replace(/[\u0300-\u036f]/g, "")
                   .replace(/\s+/g, "-")
                   .replace(/[^a-z0-9-]/g, "");
+                
                 return (
-                  <div
+                  <motion.div
                     key={section.title}
                     id={sectionId}
-                    className={`group relative bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 rounded-lg p-8 transition-all duration-300 scroll-mt-24`}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
+                    className="group relative bg-zinc-900/50 rounded-xl p-8 border border-zinc-800/50 hover:border-zinc-700 transition-all duration-300 scroll-mt-24"
                   >
-                    <div className="flex items-start gap-6">
+                    <div className="relative z-10 flex flex-col md:flex-row items-start gap-6">
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-white/60 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-6 h-6 text-indigo-600" />
+                        <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center transition-colors border border-zinc-700">
+                          <Icon className="w-6 h-6 text-emerald-400" />
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1">
                         <div className="flex items-center gap-3 mb-4">
-                          <span className="text-sm font-medium text-indigo-600">
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 tracking-wider">
                             {String(index + 1).padStart(2, "0")}
                           </span>
-                          <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-serif font-medium text-gray-900 group-hover:text-indigo-700 transition-colors">
+                          <h2 className="text-xl font-bold text-white">
                             {section.title}
                           </h2>
                         </div>
-                        <div className="text-gray-700 leading-relaxed">
+                        <div className="text-zinc-400 text-sm sm:text-base">
                           {section.content}
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
 
             {/* Contact CTA */}
-            <div className="mt-16 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-200/30 via-indigo-100/20 to-purple-200/30 blur-2xl" />
-              <div className="relative bg-gradient-to-br from-indigo-50/80 via-purple-50/80 to-blue-50/80 rounded-lg p-8 md:p-12 text-center">
-                <div className="w-16 h-16 bg-white/70 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <MessageCircle className="w-8 h-8 text-indigo-600" />
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-12"
+            >
+              <div className="relative bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8 md:p-12 text-center">
+                <div className="w-16 h-16 bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-zinc-700">
+                  <MessageCircle className="w-8 h-8 text-emerald-400" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-serif font-normal text-gray-900 mb-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
                   ¿Tienes preguntas sobre privacidad?
                 </h2>
-                <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-8">
+                <p className="text-zinc-400 mb-8 max-w-2xl mx-auto">
                   Nuestro equipo está disponible 24/7 para resolver cualquier
                   duda sobre cómo manejamos tus datos.
                 </p>
@@ -239,7 +255,7 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
                     href="https://t.me/SoporteJHS_bot"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:shadow-lg hover:shadow-indigo-300/30 transition-all duration-300 font-semibold"
+                    className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-8 py-3 rounded-xl transition-all duration-300 font-bold"
                   >
                     <MessageCircle className="w-5 h-5" />
                     Soporte en Telegram
@@ -248,21 +264,25 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
                     href="https://wa.me/5493812531123"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 text-indigo-700 px-8 py-4 rounded-xl hover:bg-indigo-100/50 transition-all duration-300 font-semibold"
+                    className="inline-flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-8 py-3 rounded-xl transition-all duration-300 font-bold border border-zinc-700"
                   >
                     <Phone className="w-5 h-5" />
                     WhatsApp
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="py-6 sm:py-8 lg:py-10 xl:py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 text-center">
-            <p className="text-gray-600">
+        <footer className="py-12 border-t border-zinc-900 bg-zinc-950/50 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Zap className="w-5 h-5 text-emerald-400" />
+              <span className="font-bold text-xl tracking-tight text-white">JJSECURE VPN</span>
+            </div>
+            <p className="text-zinc-500 text-sm">
               © {new Date().getFullYear()} JJSecure VPN - Todos los derechos
               reservados
             </p>
@@ -273,10 +293,10 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
       <BottomSheet
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        title="Navegación"
+        title="Privacidad"
         subtitle="Secciones"
       >
-        <div className="space-y-1">
+        <div className="space-y-2 p-2">
           {sections.map((section) => (
             <button
               key={section.id}
@@ -284,16 +304,21 @@ const PrivacyPage = ({ isMobileMenuOpen, setIsMobileMenuOpen }: PrivacyPageProps
                 setActiveSection(section.id);
                 setIsMobileMenuOpen(false);
                 setTimeout(() => {
-                  document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  const element = document.getElementById(section.id);
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
                 }, 300);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-semibold transition-all ${
                 activeSection === section.id
-                  ? "bg-indigo-100/50 text-indigo-700"
-                  : "text-gray-600 hover:bg-indigo-50"
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
               }`}
             >
-              {section.icon}
+              <div className={`${activeSection === section.id ? "text-emerald-400" : "text-zinc-500"}`}>
+                {section.icon}
+              </div>
               {section.label}
             </button>
           ))}

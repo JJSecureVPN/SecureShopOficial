@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ThumbsUp, ThumbsDown, X } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, X, BookOpen, RefreshCw, Users, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AdminHelpCenter() {
@@ -12,11 +12,7 @@ export default function AdminHelpCenter() {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('admin_help_user_id') : null;
       if (stored) return stored;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // ignore
-    }
-    // Allow override from Vite env or fallback to known admin ID for this deploy
+    } catch (e) { /* ignore */ }
     return (import.meta.env.VITE_ADMIN_HELP_USER_ID as string) || 'd5c78366-ab1e-43ae-be99-417260fcfd73';
   })();
 
@@ -30,10 +26,10 @@ export default function AdminHelpCenter() {
       });
       const json = await res.json();
       if (json.success) setPending(json.data || []);
-      else alert(json.error || 'Error');
+      else alert(json.error || 'Error de sincronización');
     } catch (e) {
       console.error(e);
-      alert('Error cargando pendientes');
+      alert('Error en el enlace con el servidor de tutoriales');
     } finally {
       setLoading(false);
     }
@@ -54,17 +50,17 @@ export default function AdminHelpCenter() {
       if (json.success) {
         setPending((p) => p.filter((t) => t.id !== id));
       } else {
-        alert(json.error || 'Error');
+        alert(json.error || 'Fallo en la validación');
       }
     } catch (e) {
       console.error(e);
-      alert('Error al revisar');
+      alert('Error en el protocolo de revisión');
     }
   }
 
   async function removeTutorial(id: string) {
     try {
-      if (!confirm('¿Eliminar este tutorial permanentemente? Esta acción no se puede deshacer.')) return;
+      if (!confirm('¿DESVINCULAR ESTE CONTENIDO PERMANENTEMENTE?')) return;
       const res = await fetch(`/api/help-center/admin/review/${id}`, {
         method: 'DELETE',
         headers: { 'x-supabase-user-id': userId },
@@ -72,13 +68,12 @@ export default function AdminHelpCenter() {
       const json = await res.json();
       if (json.success) {
         setPending((p) => p.filter((t) => t.id !== id));
-        alert('Tutorial eliminado');
       } else {
-        alert(json.error || 'Error eliminando');
+        alert(json.error || 'Fallo en la eliminación');
       }
     } catch (e) {
       console.error(e);
-      alert('Error eliminando tutorial');
+      alert('Error en la purga de datos');
     }
   }
 
@@ -86,7 +81,6 @@ export default function AdminHelpCenter() {
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [selectedHtmlUrl, setSelectedHtmlUrl] = useState<string | null>(null);
 
-  // Bloquear scroll del body cuando cualquiera de los modales esté abierto
   useEffect(() => {
     const open = !!selectedImage || !!selectedHtmlUrl;
     if (open) document.body.style.overflow = 'hidden';
@@ -95,99 +89,208 @@ export default function AdminHelpCenter() {
   }, [selectedImage, selectedHtmlUrl]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin — Revisión de Tutoriales</h1>
-
-      <div className="flex items-center gap-3 mb-4">
-        <label className="text-sm">Tu Supabase User ID (header `x-supabase-user-id`)</label>
-        <input
-          value={userId}
-          onChange={(e) => { setUserId(e.target.value); try { localStorage.setItem('admin_help_user_id', e.target.value); } catch { /* empty */ } }}
-          className="p-2 rounded bg-zinc-800 text-zinc-100 w-96"
-        />
-        <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="p-2 rounded bg-zinc-800 text-zinc-100">
-          <option value="pending">Pendientes</option>
-          <option value="approved">Aprobados</option>
-          <option value="all">Todos</option>
-        </select>
-        <button onClick={loadPending} disabled={!userId || loading} className="px-3 py-2 bg-emerald-600 rounded text-white">Cargar</button>
+    <div className="space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      {/* Header Estelar */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-zinc-900/20 backdrop-blur-3xl border border-zinc-800/50 p-8 md:p-10 shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 rounded-[1.5rem] bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shadow-2xl shadow-orange-500/10">
+               <BookOpen className="w-8 h-8 text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-white tracking-tight uppercase">Cámara de Tutoriales</h2>
+              <p className="text-zinc-500 font-medium mt-1 text-sm max-w-xl">
+                Centro de validación y curaduría de contenido instruccional. Revisa, aprueba o depura las contribuciones de la red.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-end gap-3 shrink-0">
+             <div className="px-4 py-2 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 backdrop-blur-xl">
+                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-3">
+                   Nodos Pendientes: <span className="text-orange-400">{pending.length}</span>
+                </span>
+             </div>
+          </div>
+        </div>
       </div>
 
-      <div>
-        {pending.length === 0 && <p className="text-zinc-400">No hay tutoriales para el filtro seleccionado</p>}
-        <div className="space-y-4">
+      {/* Control Panel */}
+      <div className="rounded-[2rem] bg-zinc-900/30 backdrop-blur-xl border border-zinc-800/50 p-6 md:p-8 shadow-xl">
+        <div className="grid lg:grid-cols-12 gap-6 items-end">
+          <div className="lg:col-span-6 space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Credencial de Autoridad (Supabase ID)</label>
+            <input
+              value={userId}
+              onChange={(e) => { setUserId(e.target.value); try { localStorage.setItem('admin_help_user_id', e.target.value); } catch { /* empty */ } }}
+              className="w-full h-12 rounded-xl bg-zinc-950 border border-zinc-800 px-5 text-xs font-bold text-zinc-300 focus:outline-none focus:border-orange-500/50 transition-all font-mono"
+              placeholder="00000000-0000-0000-0000-000000000000"
+            />
+          </div>
+          <div className="lg:col-span-3 space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Filtrar Estado</label>
+            <select 
+              value={filter} 
+              onChange={(e) => setFilter(e.target.value as any)} 
+              className="w-full h-12 rounded-xl bg-zinc-950 border border-zinc-800 px-5 text-xs font-black uppercase tracking-widest text-orange-500 focus:outline-none focus:border-orange-500/50 transition-all cursor-pointer"
+            >
+              <option value="pending">Pendientes</option>
+              <option value="approved">Aprobados</option>
+              <option value="all">Todos</option>
+            </select>
+          </div>
+          <div className="lg:col-span-3">
+            <button 
+              onClick={loadPending} 
+              disabled={!userId || loading} 
+              className="w-full h-12 rounded-xl bg-orange-500 text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-400 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Sincronizar Datos
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Feed de Tutoriales */}
+      <div className="space-y-8">
+        {pending.length === 0 && !loading && (
+          <div className="py-24 text-center border border-dashed border-zinc-800 rounded-[2.5rem] bg-zinc-900/10">
+            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
+               <BookOpen className="w-6 h-6 text-zinc-700" />
+            </div>
+            <p className="text-sm font-black text-zinc-600 uppercase tracking-widest italic">Archivo de Tutoriales Vacío</p>
+            <p className="text-[11px] text-zinc-700 font-medium mt-2">No se han detectado envíos en el canal seleccionado.</p>
+          </div>
+        )}
+
+        <div className="grid gap-8">
           {pending.map((t) => (
-            <div key={t.id} className="bg-zinc-800 p-4 rounded border border-zinc-700">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">{t.title}</h3>
-                  <p className="text-sm text-zinc-400">Por {t.author_name}{t.author_email ? ` • ${t.author_email}` : ''}{t.author_phone ? ` • ${t.author_phone}` : ''}</p>
-                  {t.created_at && <p className="text-xs text-zinc-500">{new Date(t.created_at).toLocaleString()}</p>}
+            <div key={t.id} className="group relative overflow-hidden rounded-[2.5rem] bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 p-8 shadow-xl transition-all duration-500 hover:border-orange-500/30 animate-in fade-in slide-in-from-bottom-4">
+              <div className="flex flex-col xl:flex-row gap-8 justify-between">
+                <div className="flex-1 space-y-6">
+                  <div className="flex items-start gap-5">
+                    <div className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-600 group-hover:text-orange-500 group-hover:border-orange-500/30 transition-all">
+                       {t.author_name?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-orange-400 transition-colors">{t.title}</h3>
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                         <span className="flex items-center gap-1.5"><Users className="w-3 h-3 text-zinc-600" /> {t.author_name}</span>
+                         {t.author_email && (
+                           <>
+                             <span className="w-1 h-1 rounded-full bg-zinc-800" />
+                             <span className="text-zinc-600">{t.author_email}</span>
+                           </>
+                         )}
+                         <span className="w-1 h-1 rounded-full bg-zinc-800" />
+                         <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-zinc-600" /> {new Date(t.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 text-sm leading-relaxed text-zinc-400 font-medium whitespace-pre-wrap">
+                    {t.content}
+                  </div>
+
+                  {t.content_html_url && (
+                    <div className="flex justify-start">
+                      <Link to={`/ayuda/tutoriales/view/${t.id}`} className="px-5 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[9px] font-black uppercase tracking-widest text-orange-400 hover:bg-orange-500 hover:text-white transition-all shadow-2xl shadow-orange-500/5">
+                        Previsualizar Estructura
+                      </Link>
+                    </div>
+                  )}
+
+                  {t.images && t.images.length > 0 && (
+                    <div className="flex gap-3 flex-wrap pt-2">
+                      {t.images.map((img: string, idx: number) => {
+                        const bucket = (import.meta.env.VITE_SUPABASE_HELP_BUCKET as string) || 'help-center';
+                        const url = supabase.storage.from(bucket).getPublicUrl(img).data.publicUrl;
+                        return (
+                          <button 
+                            key={idx} 
+                            onClick={() => { setSelectedImage(url); setSelectedTitle(t.title); }} 
+                            className="group/img relative w-24 h-24 rounded-2xl overflow-hidden border border-zinc-800 hover:border-orange-500/50 transition-all"
+                          >
+                            <img src={url} alt={t.title} className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 group-hover/img:scale-110 transition-all duration-500" />
+                            <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => review(t.id, 'approve')} title="Aprobar" className="flex items-center gap-2 px-3 py-2 bg-emerald-600 rounded text-white">
-                    <ThumbsUp className="w-4 h-4" /> OK
-                  </button>
-                  <button onClick={() => review(t.id, 'reject')} title="Rechazar" className="flex items-center gap-2 px-3 py-2 bg-rose-600 rounded text-white">
-                    <ThumbsDown className="w-4 h-4" /> No
-                  </button>
-                  <button onClick={() => removeTutorial(t.id)} title="Eliminar" className="flex items-center gap-2 px-3 py-2 bg-zinc-700 rounded text-white">
-                    Eliminar
-                  </button>
+
+                <div className="xl:w-48 flex flex-col gap-3 shrink-0">
+                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-2 px-1">Comandos de Acción</div>
+                   <button 
+                     onClick={() => review(t.id, 'approve')} 
+                     className="h-12 w-full rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-emerald-500/5"
+                   >
+                     <ThumbsUp className="w-4 h-4" /> Autorizar
+                   </button>
+                   <button 
+                     onClick={() => review(t.id, 'reject')} 
+                     className="h-12 w-full rounded-2xl bg-rose-500/10 border border-rose-500/20 text-[9px] font-black uppercase tracking-widest text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-rose-500/5"
+                   >
+                     <ThumbsDown className="w-4 h-4" /> Descartar
+                   </button>
+                   <button 
+                     onClick={() => removeTutorial(t.id)} 
+                     className="h-12 w-full rounded-2xl bg-zinc-950 border border-zinc-800 text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-inner"
+                   >
+                     <X className="w-4 h-4" /> Eliminar
+                   </button>
                 </div>
               </div>
-
-              <div className="mt-3 text-sm text-zinc-200 white-space-pre-wrap">{t.content}</div>
-
-              {t.content_html_url && (
-                <div className="mt-3">
-                  <Link to={`/ayuda/tutoriales/view/${t.id}`} className="px-2 py-1 bg-zinc-700 rounded text-sm">Previsualizar</Link>
-                </div>
-              )}
-
-              {t.images && t.images.length > 0 && (
-                <div className="mt-3 flex gap-2 flex-wrap">
-                  {t.images.map((img: string, idx: number) => {
-                    const bucket = (import.meta.env.VITE_SUPABASE_HELP_BUCKET as string) || 'help-center';
-                    const url = supabase.storage.from(bucket).getPublicUrl(img).data.publicUrl;
-                    return (
-                      <button key={idx} onClick={() => { setSelectedImage(url); setSelectedTitle(t.title); }} className="focus:outline-none">
-                        <img src={url} alt={t.title} className="w-24 h-16 object-cover rounded border border-zinc-700" />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal imagen */}
+      {/* Modal Imagen */}
       {selectedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 hide-scrollbar" onClick={() => setSelectedImage(null)}>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden rounded-md hide-scrollbar" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900">
-              <div className="text-sm font-semibold text-zinc-100">{selectedTitle}</div>
-              <button onClick={() => setSelectedImage(null)} className="text-zinc-300 hover:text-white"><X /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 sm:p-10" onClick={() => setSelectedImage(null)}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="relative max-w-5xl w-full max-h-full flex flex-col" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute top-[-4rem] right-0 flex items-center gap-6">
+               <div className="text-sm font-black text-white uppercase tracking-widest">{selectedTitle}</div>
+               <button onClick={() => setSelectedImage(null)} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all"><X /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-zinc-800 p-4 rounded-b-md hide-scrollbar min-h-0 flex items-center justify-center">
-              <img src={selectedImage} alt={selectedTitle || 'Imagen'} className="max-w-full max-h-[80vh] object-contain rounded" />
-            </div>
+            <img src={selectedImage} alt={selectedTitle || 'Imagen'} className="w-full h-full object-contain rounded-3xl shadow-2xl" />
           </motion.div>
         </div>
       )}
 
-      {/* Modal HTML preview (sandboxed iframe) */}
+      {/* Modal HTML UI */}
       {selectedHtmlUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 hide-scrollbar" onClick={() => setSelectedHtmlUrl(null)}>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-4xl w-full h-[80vh] flex flex-col overflow-hidden rounded-md hide-scrollbar" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900">
-              <div className="text-sm font-semibold text-zinc-100">Previsualización HTML</div>
-              <button onClick={() => setSelectedHtmlUrl(null)} className="text-zinc-300 hover:text-white"><X /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 sm:p-10" onClick={() => setSelectedHtmlUrl(null)}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="relative max-w-6xl w-full h-full flex flex-col bg-zinc-950 rounded-[2.5rem] border border-zinc-800 overflow-hidden shadow-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 p-8 border-b border-zinc-800 bg-zinc-950">
+              <div className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                 Previsualización de Estructura Dinámica
+              </div>
+              <button onClick={() => setSelectedHtmlUrl(null)} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all"><X /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-zinc-800 p-2 rounded-b-md hide-scrollbar min-h-0">
-              <iframe src={selectedHtmlUrl || undefined} title="HTML Preview" className="w-full h-full border-0 min-h-0" sandbox="allow-forms allow-popups allow-modals allow-orientation-lock allow-pointer-lock"></iframe>
+            <div className="flex-1 bg-white">
+              <iframe 
+                src={selectedHtmlUrl || undefined} 
+                title="HTML Preview" 
+                className="w-full h-full border-0" 
+                sandbox="allow-forms allow-popups allow-modals allow-orientation-lock allow-pointer-lock"
+              />
             </div>
           </motion.div>
         </div>

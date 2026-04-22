@@ -40,116 +40,75 @@ export function PromoPanel({
   onGuardarTexto,
 }: PromoPanelProps) {
   
-  // Helper para obtener label del scope actual de la promo activa
   const getActiveScopeLabel = () => {
-    if (promoConfig?.solo_nuevos) return "solo nuevas cuentas";
-    if (promoConfig?.solo_renovaciones) return "solo renovaciones";
-    return "todos";
+    if (promoConfig?.solo_nuevos) return "Nuevos Usuarios";
+    if (promoConfig?.solo_renovaciones) return "Renovaciones";
+    return "Universal";
   };
   
   return (
-    <div className="border border-neutral-700 rounded-xl bg-neutral-900/40 p-5 space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-neutral-100 flex items-center gap-2">
-          <span>{icono}</span> {titulo}
-        </h3>
-        <p className="text-xs text-neutral-500 mt-1">{subtitulo}</p>
+    <div className="relative group overflow-hidden rounded-[2.5rem] bg-zinc-900/30 backdrop-blur-xl border border-zinc-800/50 p-8 transition-all duration-500 hover:border-orange-500/20 shadow-2xl">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-orange-500/10 transition-all pointer-events-none" />
+      
+      <div className="relative z-10 flex items-start gap-4 mb-8">
+        <div className="w-14 h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+          {icono}
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white tracking-tight uppercase group-hover:text-orange-400 transition-colors">
+            {titulo}
+          </h3>
+          <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mt-1 italic">{subtitulo}</p>
+        </div>
       </div>
 
-      {/* Estado actual */}
-      <div className="p-3 rounded-lg border border-neutral-800 bg-neutral-800/20">
+      {/* Status Bar */}
+      <div className="relative overflow-hidden p-4 rounded-2xl border border-zinc-800/50 bg-zinc-950/30 backdrop-blur-md mb-6">
         <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-semibold text-neutral-300">Estado</div>
-            <div className="text-xs text-neutral-500 mt-1">
-              {promoConfig?.activa ? (
-                <>
-                  <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-2"></span>
-                  Activo
-                </>
-              ) : (
-                <>
-                  <span className="inline-block w-2 h-2 bg-neutral-600 rounded-full mr-2"></span>
-                  Inactivo
-                </>
-              )}
-            </div>
+          <div className="flex items-center gap-3">
+            <div className={`w-2.5 h-2.5 rounded-full ${promoConfig?.activa ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-zinc-700'}`} />
+            <span className={`text-[11px] font-black uppercase tracking-widest ${promoConfig?.activa ? 'text-orange-500' : 'text-zinc-500'}`}>
+              {promoConfig?.activa ? 'Campaña en curso' : 'Protocolo Inactivo'}
+            </span>
           </div>
           {promoConfig?.activa && promoConfig?.duracion_horas && (
-            <div className="text-right">
-              <div className="text-xs text-neutral-400">
-                <span className="font-semibold text-neutral-200">{promoConfig.duracion_horas}h</span>
-              </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20">
+               <span className="text-[9px] font-black text-orange-500 uppercase">{promoConfig.duracion_horas}H RESTANTES</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Alcance de la promo */}
-      <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-800/20 px-3 py-3">
-        <div>
-          <div className="font-semibold text-neutral-100 text-xs mb-1">Alcance de la promoción</div>
-          <p className="text-[11px] text-neutral-500">
-            Define a quién aplica el descuento global.
-          </p>
+      {/* Scope Selector */}
+      <div className="space-y-4 mb-8">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Alcance Estratégico</span>
           {promoConfig?.activa && (
-            <p className="mt-1 text-[11px] text-emerald-400">
-              Promo actual: {getActiveScopeLabel()}
-            </p>
+            <span className="text-[9px] font-black text-orange-500 uppercase italic">Activo: {getActiveScopeLabel()}</span>
           )}
         </div>
         
-        {/* Selector de scope */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={isSaving || promoConfig?.activa}
-            onClick={() => onSetPromoScope("todos")}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
-              promoScope === "todos"
-                ? "bg-violet-600 text-white"
-                : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
-            } ${promoConfig?.activa ? "opacity-60 cursor-not-allowed" : ""}`}
-          >
-            🌐 Todos
-          </button>
-          <button
-            type="button"
-            disabled={isSaving || promoConfig?.activa}
-            onClick={() => onSetPromoScope("solo_nuevos")}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
-              promoScope === "solo_nuevos"
-                ? "bg-emerald-600 text-white"
-                : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
-            } ${promoConfig?.activa ? "opacity-60 cursor-not-allowed" : ""}`}
-          >
-            ✨ Solo nuevas cuentas
-          </button>
-          <button
-            type="button"
-            disabled={isSaving || promoConfig?.activa}
-            onClick={() => onSetPromoScope("solo_renovaciones")}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition ${
-              promoScope === "solo_renovaciones"
-                ? "bg-amber-600 text-white"
-                : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
-            } ${promoConfig?.activa ? "opacity-60 cursor-not-allowed" : ""}`}
-          >
-            🔄 Solo renovaciones
-          </button>
-        </div>
-        
-        {/* Explicación del scope seleccionado */}
-        <div className="text-[11px] text-neutral-400 mt-2">
-          {promoScope === "todos" && (
-            <p>El descuento aplicará tanto a compras de nuevas cuentas como a renovaciones.</p>
-          )}
-          {promoScope === "solo_nuevos" && (
-            <p>El descuento solo aplicará a clientes que compran por primera vez. Las renovaciones mantienen precio normal.</p>
-          )}
-          {promoScope === "solo_renovaciones" && (
-            <p>El descuento solo aplicará a clientes existentes que renuevan. Las compras nuevas mantienen precio normal.</p>
-          )}
+        <div className="grid grid-cols-1 gap-2">
+          {(["todos", "solo_nuevos", "solo_renovaciones"] as const).map((sc) => (
+            <button
+              key={sc}
+              type="button"
+              disabled={isSaving || promoConfig?.activa}
+              onClick={() => onSetPromoScope(sc)}
+              className={`relative flex items-center justify-between px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                promoScope === sc
+                  ? "bg-zinc-800 text-white border-zinc-700 shadow-xl"
+                  : "bg-transparent text-zinc-600 border border-transparent hover:text-zinc-400"
+              } ${promoConfig?.activa ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+            >
+              <span>
+                {sc === "todos" && "Universal (Global)"}
+                {sc === "solo_nuevos" && "Filtrar: Nuevos Usuarios"}
+                {sc === "solo_renovaciones" && "Filtrar: Renovaciones"}
+              </span>
+              {promoScope === sc && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -157,71 +116,68 @@ export function PromoPanel({
         <button
           onClick={onDeactivate}
           disabled={isSaving}
-          className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="group w-full relative h-[52px] rounded-2xl bg-red-500/10 border border-red-500/20 text-[11px] font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500 hover:text-white disabled:opacity-40 overflow-hidden shadow-xl"
         >
-          {isSaving ? "Procesando..." : "Desactivar"}
+          <span className="relative z-10">{isSaving ? "Abortando..." : "Terminar Promoción"}</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-semibold text-neutral-400 mb-1">
-                Descuento (%)
-              </label>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 px-1">Descuento %</label>
               <input
                 type="number"
                 min="1"
                 max="100"
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-850 px-3 py-2 text-sm text-white placeholder-neutral-500 transition focus:border-violet-500 focus:outline-none"
+                className="w-full h-12 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 text-sm text-white placeholder-zinc-800 focus:outline-none focus:border-orange-500/50 transition-all font-bold"
                 value={discountPercentageInput}
                 onChange={(e) => onDiscountPercentageChange(e.target.value)}
-                placeholder="Ej: 20"
+                placeholder="20"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-neutral-400 mb-1">
-                Duración (horas)
-              </label>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 px-1">Plazo (H)</label>
               <input
                 type="number"
                 min="1"
                 max="720"
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-850 px-3 py-2 text-sm text-white placeholder-neutral-500 transition focus:border-violet-500 focus:outline-none"
+                className="w-full h-12 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 text-sm text-white placeholder-zinc-800 focus:outline-none focus:border-orange-500/50 transition-all font-bold"
                 value={durationInput}
                 onChange={(e) => onDurationChange(e.target.value)}
-                placeholder="Horas"
+                placeholder="24"
               />
             </div>
           </div>
           <button
             onClick={onActivate}
             disabled={isSaving || !discountPercentageInput}
-            className="w-full rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group relative w-full h-[52px] rounded-2xl bg-orange-500 text-[11px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-400 hover:shadow-2xl hover:shadow-orange-500/20 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
           >
-            {isSaving ? "Activando..." : `Activar ${discountPercentageInput || "0"}% OFF`}
+            <span className="relative z-10">{isSaving ? "Iniciando..." : `Lanzar ${discountPercentageInput || "0"}% OFF`}</span>
           </button>
         </div>
       )}
 
-      {/* Texto del hero */}
-      <div className="pt-2 border-t border-neutral-700">
-        <label className="block text-xs font-semibold text-neutral-300 mb-2">Texto del hero</label>
-        <div className="mb-2">
+      {/* Hero Text Customization */}
+      <div className="mt-8 pt-6 border-t border-zinc-800/50">
+        <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 px-1 mb-3 block">Configuración Visual (Banner)</label>
+        <div className="space-y-4">
           <input
             type="text"
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-850 px-3 py-2 text-sm text-white placeholder-neutral-500 transition focus:border-violet-500 focus:outline-none"
+            className="w-full h-12 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 text-xs font-bold text-white placeholder-zinc-800 focus:outline-none focus:border-orange-500/50 transition-all"
             value={heroPromo?.texto || ""}
             onChange={(e) => onTextoChange(e.target.value)}
-            placeholder="Ej: DESCUENTO 20%"
+            placeholder="EJ: SUPER OFERTA 30% OFF"
           />
-          {/* Preview */}
+          
           {heroPromo?.texto && (
-            <div className="mt-2 p-2 rounded-lg bg-neutral-800/50 border border-neutral-700">
-              <p className="text-xs text-neutral-300">
+            <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 group/preview transition-all duration-500">
+               <p className="text-[11px] font-black uppercase tracking-widest text-zinc-400 leading-relaxed">
                 {heroPromo.texto.split(/(\d+%)/g).map((part, idx) => {
                   if (part.match(/\d+%/)) {
                     return (
-                      <span key={idx} style={{backgroundColor: '#fbbf24', color: '#059669', fontWeight: 'bold', padding: '2px 4px', borderRadius: '3px'}}>
+                      <span key={idx} className="bg-orange-500 text-white px-2 py-0.5 rounded shadow-[0_0_10px_rgba(249,115,22,0.4)] mx-1">
                         {part}
                       </span>
                     );
@@ -231,14 +187,15 @@ export function PromoPanel({
               </p>
             </div>
           )}
+          
+          <button
+            onClick={onGuardarTexto}
+            disabled={isSaving}
+            className="w-full h-10 rounded-xl bg-zinc-950/50 border border-zinc-800/80 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-zinc-700 transition-all disabled:opacity-40"
+          >
+            {isSaving ? "Guardando..." : "Sincronizar Arte"}
+          </button>
         </div>
-        <button
-          onClick={onGuardarTexto}
-          disabled={isSaving}
-          className="w-full rounded-lg bg-neutral-700 px-3 py-1 text-xs font-medium text-neutral-200 transition hover:bg-neutral-600 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSaving ? "Guardando..." : "Guardar texto"}
-        </button>
       </div>
     </div>
   );

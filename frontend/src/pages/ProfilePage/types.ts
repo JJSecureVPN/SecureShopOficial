@@ -7,5 +7,6 @@ export interface EstadoCuentaMap {
     data: EstadoCuenta | null;
     error: string | null;
     expanded: boolean;
+    repaired?: boolean;
   };
 }

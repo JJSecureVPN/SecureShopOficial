@@ -2,9 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
 import { apiService } from "../../../services/api.service";
 import { mercadoPagoService } from "../../../services/mercadopago.service";
 import { CheckoutRenovacionView } from "./CheckoutRenovacionView";
+import { SuccessModal } from "../components/SuccessModal";
+import type { CompraResponse } from "../../../types";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,12 +44,21 @@ const CheckoutRenovacionContainer: React.FC = () => {
   const cuponId = cuponIdParam ? parseInt(cuponIdParam, 10) : undefined;
   const planIdParam = searchParams.get("planId");
   const planId = planIdParam ? parseInt(planIdParam, 10) : undefined;
+  
+  const codigoReferido = searchParams.get("codigoReferido");
+  const saldoUsado = parseInt(searchParams.get("saldoUsado") || "0", 10);
+  const descuentoReferido = parseInt(searchParams.get("descuentoReferido") || "0", 10);
+  
   const operacion = (searchParams.get("operacion") || "renovacion") as "renovacion" | "expansion";
   const currentMaxUsers = parseInt(searchParams.get("maxUsers") || "0", 10);
   const precioOriginal = parseInt(precioOriginalParam || "0", 10);
   const precioBase = precioOriginal > 0 ? precioOriginal : precio;
   const descuentoInicial = parseInt(descuentoParam || "0", 10);
   const descuentoFinal = descuentoInicial > 0 ? descuentoInicial : Math.max(0, precioBase - precio);
+  const hayDescuento = descuentoFinal > 0;
+
+  // Ahora podemos definir pagoConSaldoCompleto con hayDescuento definido
+  const pagoConSaldoCompleto = precio === 0 && (saldoUsado > 0 || descuentoReferido > 0 || hayDescuento);
 
   const [nombre, setNombre] = useState(searchParams.get("nombre") || "");
   const [email, setEmail] = useState(searchParams.get("email") || "");
@@ -56,37 +68,39 @@ const CheckoutRenovacionContainer: React.FC = () => {
   const [ultimoLinkPago, setUltimoLinkPago] = useState<string | null>(null);
   const [renovacionId, setRenovacionId] = useState<number | null>(null);
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
+  const { user } = useAuth();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [renovacionExitosa, setRenovacionExitosa] = useState<CompraResponse | null>(null);
 
   const connectionActual = connectionActualParam || connectionDestino || 1;
   const hayCambioDispositivos =
     tipo === "cliente" && connectionDestino > 0 && connectionDestino !== connectionActual;
-  const datosInvalidos = !busqueda || precio <= 0 || (operacion !== "expansion" && dias <= 0);
-  const hayDescuento = descuentoFinal > 0;
+  const datosInvalidos = !busqueda || precio < 0 || (operacion !== "expansion" && dias <= 0);
 
   useEffect(() => {
     const headerEl = document.querySelector("header");
     if (!headerEl) return;
 
     const prev = {
-      position: headerEl.style.position || "",
-      top: headerEl.style.top || "",
-      left: headerEl.style.left || "",
-      right: headerEl.style.right || "",
-      zIndex: headerEl.style.zIndex || "",
+      position: (headerEl as HTMLElement).style.position || "",
+      top: (headerEl as HTMLElement).style.top || "",
+      left: (headerEl as HTMLElement).style.left || "",
+      right: (headerEl as HTMLElement).style.right || "",
+      zIndex: (headerEl as HTMLElement).style.zIndex || "",
     };
 
-    headerEl.style.position = "fixed";
-    headerEl.style.top = "0";
-    headerEl.style.left = "0";
-    headerEl.style.right = "0";
-    headerEl.style.zIndex = "10001";
+    (headerEl as HTMLElement).style.position = "fixed";
+    (headerEl as HTMLElement).style.top = "0";
+    (headerEl as HTMLElement).style.left = "0";
+    (headerEl as HTMLElement).style.right = "0";
+    (headerEl as HTMLElement).style.zIndex = "10001";
 
     return () => {
-      headerEl.style.position = prev.position;
-      headerEl.style.top = prev.top;
-      headerEl.style.left = prev.left;
-      headerEl.style.right = prev.right;
-      headerEl.style.zIndex = prev.zIndex;
+      (headerEl as HTMLElement).style.position = prev.position;
+      (headerEl as HTMLElement).style.top = prev.top;
+      (headerEl as HTMLElement).style.left = prev.left;
+      (headerEl as HTMLElement).style.right = prev.right;
+      (headerEl as HTMLElement).style.zIndex = prev.zIndex;
     };
   }, []);
 
@@ -105,6 +119,14 @@ const CheckoutRenovacionContainer: React.FC = () => {
     if (dias <= 0) return 0;
     return Math.round(precioBase / dias);
   }, [precioBase, dias]);
+
+  const walletEmail = user?.email || email;
+
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user?.email]);
 
   const tituloResumen = planNombre || username || "Renovación";
   const usuariosAAgregar =
@@ -126,7 +148,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
   const createPreference = useCallback(async () => {
     setError("");
     const nombreTrim = nombre.trim();
-    const emailTrim = email.trim();
+    const emailTrim = walletEmail.trim();
 
     if (!nombreTrim) {
       const message = "Ingresa tu nombre";
@@ -164,6 +186,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
             })
           : await apiService.procesarRenovacionCliente({
               ...basePayload,
+              saldoEmail: walletEmail,
               precio,
               nuevoConnectionLimit: hayCambioDispositivos ? connectionDestino : undefined,
               precioOriginal: precioBase > 0 ? precioBase : undefined,
@@ -171,9 +194,11 @@ const CheckoutRenovacionContainer: React.FC = () => {
               cuponId,
               descuentoAplicado: hayDescuento ? descuentoFinal : undefined,
               planId,
+              codigoReferido: codigoReferido || undefined,
+              saldoUsado: saldoUsado > 0 ? saldoUsado : undefined,
             });
 
-      if (!response?.linkPago) {
+      if (!response?.linkPago && !(response as any).procesadoAlInstante) {
         throw new Error("No se recibió el enlace de pago");
       }
 
@@ -182,12 +207,24 @@ const CheckoutRenovacionContainer: React.FC = () => {
         setRenovacionId(response.renovacion.id);
       }
 
+      if ((response as any).procesadoAlInstante) {
+         return { 
+           prefId: "instante", 
+           linkPago: "", 
+           procesadoAlInstante: true 
+         };
+      }
+
       const prefId = new URL(response.linkPago).searchParams.get("pref_id");
       if (!prefId) {
         throw new Error("No se pudo generar el identificador de pago");
       }
 
-      return { prefId, linkPago: response.linkPago };
+      return { 
+        prefId, 
+        linkPago: response.linkPago, 
+        procesadoAlInstante: (response as any).procesadoAlInstante 
+      };
     } catch (err: any) {
       const mensaje = err?.mensaje || err?.message || "Error al generar el enlace de pago";
       setError(mensaje);
@@ -210,6 +247,9 @@ const CheckoutRenovacionContainer: React.FC = () => {
     precioBase,
     tipo,
     tipoRenovacion,
+    codigoReferido,
+    saldoUsado,
+    operacion,
   ]);
 
   const getPreferenceId = useCallback(async () => {
@@ -217,10 +257,87 @@ const CheckoutRenovacionContainer: React.FC = () => {
     return prefId;
   }, [createPreference]);
 
+  const handlePayWithSaldo = async () => {
+    setProcessingPayment(true);
+    setError("");
+
+    try {
+      const nombreTrim = nombre.trim();
+      const emailTrim = email.trim();
+
+      if (!nombreTrim) {
+        setError("Ingresa tu nombre");
+        setProcessingPayment(false);
+        return;
+      }
+
+      if (!emailTrim || !emailRegex.test(emailTrim)) {
+        setError("Ingresa un email válido");
+        setProcessingPayment(false);
+        return;
+      }
+
+      const response = await apiService.procesarRenovacionCliente({
+        busqueda,
+        dias,
+        precio,
+        clienteNombre: nombreTrim,
+        clienteEmail: emailTrim,
+        nuevoConnectionLimit: hayCambioDispositivos ? connectionDestino : undefined,
+        precioOriginal: precioBase > 0 ? precioBase : undefined,
+        codigoCupon,
+        cuponId,
+        descuentoAplicado: hayDescuento ? descuentoFinal : undefined,
+        planId,
+        codigoReferido: codigoReferido || undefined,
+        saldoUsado: saldoUsado > 0 ? saldoUsado : undefined,
+      });
+
+      if ((response as any).procesadoAlInstante) {
+        // Simular respuesta de CompraResponse para el SuccessModal
+        const successData: CompraResponse = {
+          pago: (response as any).renovacion,
+          linkPago: "",
+          preferenceId: "",
+          pagoConSaldoCompleto: true,
+          saldoUsado: saldoUsado,
+          codigoReferidoUsado: codigoReferido || undefined,
+          cuentaVPN: (response as any).renovacion?.datos_nuevos ? JSON.parse((response as any).renovacion.datos_nuevos) : {
+            username: (response as any).renovacion?.servex_username || busqueda,
+            password: "Tu contraseña actual",
+            expiracion: "Actualizada",
+            categoria: planNombre || "VPN"
+          }
+        };
+        
+        setRenovacionExitosa(successData);
+        setShowSuccessModal(true);
+      } else if (response.linkPago) {
+        window.location.href = response.linkPago;
+      }
+    } catch (err: any) {
+      setError(err?.mensaje || err?.message || "Error al procesar la renovación");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   const handleFallbackPayment = async () => {
+    if (pagoConSaldoCompleto) {
+      await handlePayWithSaldo();
+      return;
+    }
+
     setProcessingPayment(true);
     try {
-      const { linkPago } = await createPreference();
+      const { linkPago, procesadoAlInstante } = await createPreference();
+      
+      if (procesadoAlInstante) {
+        // Se maneja vía Modal si es por saldo/cupón
+        setProcessingPayment(false);
+        return;
+      }
+      
       window.location.href = linkPago;
     } catch {
       // El error ya se maneja en createPreference
@@ -230,7 +347,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
   };
 
   useEffect(() => {
-    if (datosInvalidos) return;
+    if (datosInvalidos || pagoConSaldoCompleto) return;
 
     let mounted = true;
 
@@ -258,7 +375,7 @@ const CheckoutRenovacionContainer: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [datosInvalidos, getPreferenceId]);
+  }, [datosInvalidos, getPreferenceId, pagoConSaldoCompleto]);
 
   if (datosInvalidos) {
     return (
@@ -287,48 +404,69 @@ const CheckoutRenovacionContainer: React.FC = () => {
   }
 
   return (
-    <CheckoutRenovacionView
-      nombre={nombre}
-      email={email}
-      error={error}
-      processingPayment={processingPayment}
-      mpFallbackVisible={mpFallbackVisible}
-      ultimoLinkPago={ultimoLinkPago}
-      renovacionId={renovacionId}
-      mobileSummaryOpen={mobileSummaryOpen}
-      tipo={tipo}
-      dias={dias}
-      precio={precio}
-      username={username}
-      planNombre={planNombre}
-      connectionActual={connectionActual}
-      connectionDestino={connectionDestino}
-      tipoRenovacion={tipoRenovacion}
-      cantidadSeleccionada={cantidadSeleccionada}
-      precioBase={precioBase}
-      descuentoFinal={descuentoFinal}
-      codigoCupon={codigoCupon}
-      hayCambioDispositivos={hayCambioDispositivos}
-      hayDescuento={hayDescuento}
-      precioPorDia={precioPorDia}
-      precioPorDiaBase={precioPorDiaBase}
-      tituloResumen={tituloResumen}
-      subtituloResumen={subtituloResumen}
-      onNombreChange={(value) => {
-        setNombre(value);
-        setError("");
-      }}
-      onEmailChange={(value) => {
-        setEmail(value);
-        setError("");
-      }}
-      onToggleMobileSummary={() => setMobileSummaryOpen((value) => !value)}
-      onFallbackPayment={handleFallbackPayment}
-      onBack={() => navigate(-1)}
-      operacion={operacion}
-      currentMaxUsers={currentMaxUsers}
-      usuariosAAgregar={usuariosAAgregar}
-    />
+    <>
+      <CheckoutRenovacionView
+        nombre={nombre}
+        email={email}
+        error={error}
+        processingPayment={processingPayment}
+        mpFallbackVisible={mpFallbackVisible}
+        ultimoLinkPago={ultimoLinkPago}
+        renovacionId={renovacionId}
+        mobileSummaryOpen={mobileSummaryOpen}
+        tipo={tipo}
+        dias={dias}
+        precio={precio}
+        username={username}
+        planNombre={planNombre}
+        connectionActual={connectionActual}
+        connectionDestino={connectionDestino}
+        tipoRenovacion={tipoRenovacion}
+        cantidadSeleccionada={cantidadSeleccionada}
+        precioBase={precioBase}
+        descuentoFinal={descuentoFinal}
+        codigoCupon={codigoCupon}
+        hayCambioDispositivos={hayCambioDispositivos}
+        hayDescuento={hayDescuento}
+        precioPorDia={precioPorDia}
+        precioPorDiaBase={precioPorDiaBase}
+        tituloResumen={tituloResumen}
+        subtituloResumen={subtituloResumen}
+        onNombreChange={(value) => {
+          setNombre(value);
+          setError("");
+        }}
+        onEmailChange={(value) => {
+          setEmail(value);
+          setError("");
+        }}
+        onToggleMobileSummary={() => setMobileSummaryOpen((value) => !value)}
+        onFallbackPayment={handleFallbackPayment}
+        onBack={() => navigate(-1)}
+        operacion={operacion}
+        currentMaxUsers={currentMaxUsers}
+        usuariosAAgregar={usuariosAAgregar}
+        saldoUsado={saldoUsado}
+        codigoReferido={codigoReferido}
+        descuentoReferido={descuentoReferido}
+        pagoConSaldoCompleto={pagoConSaldoCompleto}
+        userLoggedIn={!!user?.email}
+        onPayWithSaldo={handlePayWithSaldo}
+      />
+
+      {showSuccessModal && renovacionExitosa?.cuentaVPN && (
+        <SuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => {
+            setShowSuccessModal(false);
+            navigate("/perfil");
+          }}
+          cuentaVPN={renovacionExitosa.cuentaVPN}
+          saldoUsado={renovacionExitosa.saldoUsado || 0}
+          codigoReferidoUsado={renovacionExitosa.codigoReferidoUsado}
+        />
+      )}
+    </>
   );
 };
 

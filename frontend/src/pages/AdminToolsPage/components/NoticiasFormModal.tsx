@@ -101,17 +101,16 @@ export default function NoticiasFormModal({
     e.preventDefault();
     setSubmitError('');
 
-    // Validaciones básicas
     if (!formData.titulo.trim()) {
-      setSubmitError('El título es requerido');
+      setSubmitError('La identidad del comunicado (título) es obligatoria.');
       return;
     }
     if (!formData.descripcion.trim()) {
-      setSubmitError('La descripción es requerida');
+      setSubmitError('Se requiere un resumen ejecutivo (descripción).');
       return;
     }
     if (!formData.categoria_id) {
-      setSubmitError('Debes seleccionar una categoría');
+      setSubmitError('Debe clasificar el comunicado en una categoría.');
       return;
     }
 
@@ -119,282 +118,261 @@ export default function NoticiasFormModal({
       await onSave(formData);
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : 'Error guardando noticia'
+        error instanceof Error ? error.message : 'Fallo en la sincronización del comunicado.'
       );
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-neutral-700 bg-neutral-900">
-          <h3 className="text-xl font-bold text-white">
-            {noticia ? 'Editar Noticia' : 'Nueva Noticia'}
-          </h3>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-500">
+      <div 
+        className="absolute inset-0 bg-zinc-950/80 backdrop-blur-manual" 
+        onClick={onClose}
+      />
+      
+      <div className="relative w-full max-w-4xl max-h-full overflow-hidden rounded-[3rem] bg-zinc-900 border border-zinc-800 shadow-[0_30px_100px_rgba(0,0,0,0.8)] flex flex-col animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
+        
+        {/* Header Premium */}
+        <div className="flex items-center justify-between p-8 md:px-12 border-b border-zinc-800/50 bg-zinc-900/50 backdrop-blur-xl relative z-10 shrink-0">
+          <div>
+             <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+              {noticia ? 'Refactorizar Comunicado' : 'Nuevo Manifiesto Editorial'}
+            </h3>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mt-1">
+              Estación de Mando: {noticia ? `Rastreo ID-${noticia.id.slice(0, 8)}` : 'Nueva Entrada de Registro'}
+            </p>
+          </div>
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-neutral-400 hover:text-white"
+            className="w-12 h-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white hover:border-zinc-700 transition-all active:scale-90"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Form Body - Scrollable */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 space-y-12">
           {submitError && (
-            <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-red-300 text-sm">{submitError}</p>
+            <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-[1.5rem] flex items-start gap-4 animate-in slide-in-from-top-4 duration-500">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1 italic">Anomalía Detectada</p>
+                 <p className="text-sm text-red-300/80 font-medium">{submitError}</p>
+              </div>
             </div>
           )}
 
-          {/* Título */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Título *
-            </label>
-            <input
-              type="text"
-              name="titulo"
-              value={formData.titulo}
-              onChange={handleInputChange}
-              placeholder="Ingresa el título de la noticia"
-              maxLength={200}
-              className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-neutral-400 mt-1">
-              {formData.titulo.length}/200
-            </p>
-          </div>
+          {/* Section: Identidad */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+               <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
+               <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Identidad</h4>
+            </div>
 
-          {/* Descripción */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Descripción *
-            </label>
-            <textarea
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handleInputChange}
-              placeholder="Resumen breve de la noticia"
-              maxLength={500}
-              rows={3}
-              className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-neutral-400 mt-1">
-              {formData.descripcion.length}/500
-            </p>
-          </div>
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Título del Comunicado</label>
+                <input
+                  type="text"
+                  name="titulo"
+                  value={formData.titulo}
+                  onChange={handleInputChange}
+                  placeholder="EJ: ACTUALIZACIÓN DE SEGURIDAD V2.4"
+                  className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-white placeholder-zinc-800 focus:outline-none focus:border-orange-500/50 transition-all"
+                />
+              </div>
 
-          {/* Contenido Completo */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Contenido Completo
-            </label>
-            <textarea
-              name="contenido_completo"
-              value={formData.contenido_completo || ''}
-              onChange={handleInputChange}
-              placeholder="Contenido detallado (opcional)"
-              rows={5}
-              className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Categoría */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Categoría *
-            </label>
-            <select
-              name="categoria_id"
-              value={formData.categoria_id}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Selecciona una categoría</option>
-              {categorias.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Imagen */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Imagen Principal
-            </label>
-            <div className="flex gap-4">
-              {imagenPreview && (
-                <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-neutral-700 flex-shrink-0">
-                  <img
-                    src={imagenPreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-neutral-700 rounded-lg cursor-pointer hover:border-blue-500 transition">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm text-neutral-300">
-                    Click para subir
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImagenChange}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-xs text-neutral-400 mt-2">
-                  PNG, JPG o WebP (máx. 5MB)
-                </p>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Resumen Ejecutivo</label>
+                <textarea
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleInputChange}
+                  placeholder="Breve descripción del impacto de esta noticia..."
+                  rows={3}
+                  className="w-full rounded-2xl bg-zinc-950/50 border border-zinc-800 p-6 text-sm font-medium text-zinc-400 placeholder-zinc-800 focus:outline-none focus:border-orange-500/50 transition-all resize-none"
+                />
               </div>
             </div>
           </div>
 
-          {/* Dos columnas: Estado, Visibilidad, etc. */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Estado
-              </label>
-              <select
-                name="estado"
-                value={formData.estado || 'borrador'}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {estadoOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+          {/* Section: Multimedia y Categoría */}
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
+                 <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Visuales</h4>
+              </div>
+
+              <div className="group relative">
+                {imagenPreview ? (
+                  <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-zinc-800 group-hover:border-orange-500/30 transition-all duration-500 shadow-2xl">
+                    <img
+                      src={imagenPreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-zinc-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <label className="cursor-pointer px-6 py-3 rounded-2xl bg-white text-zinc-950 text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-transform">
+                          Cambiar Archivo
+                          <input type="file" accept="image/*" onChange={handleImagenChange} className="hidden" />
+                       </label>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-zinc-800 bg-zinc-950/30 cursor-pointer hover:bg-zinc-950/50 hover:border-orange-500/50 transition-all duration-500 group/upload">
+                    <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4 group-hover/upload:scale-110 transition-transform">
+                       <Upload className="w-6 h-6 text-zinc-600 group-hover/upload:text-orange-500" />
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest group-hover/upload:text-zinc-400">Anexar Multimedia</span>
+                    <input type="file" accept="image/*" onChange={handleImagenChange} className="hidden" />
+                  </label>
+                )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Visibilidad
-              </label>
-              <select
-                name="visible_para"
-                value={formData.visible_para || 'todos'}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {visibilidadOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
+                 <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Clasificación</h4>
+              </div>
+
+              <div className="space-y-6">
+                 <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Clasificador Logístico</label>
+                  <select
+                    name="categoria_id"
+                    value={formData.categoria_id}
+                    onChange={handleInputChange}
+                    className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-zinc-400 focus:outline-none focus:border-orange-500/50 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">Selección de Ruta</option>
+                    {categorias.map((cat) => (
+                      <option key={cat.id} value={cat.id} className="bg-zinc-900">{cat.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Prioridad de Rastreo (0-100)</label>
+                  <input
+                    type="number"
+                    name="prioridad"
+                    value={formData.prioridad || 0}
+                    onChange={handleInputChange}
+                    className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-white focus:outline-none focus:border-orange-500/50 transition-all"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Prioridad */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Prioridad
-            </label>
-            <input
-              type="number"
-              name="prioridad"
-              value={formData.prioridad || 0}
-              onChange={handleInputChange}
-              min="0"
-              max="100"
-              className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-neutral-400 mt-1">
-              Las noticias con mayor prioridad aparecerán primero
-            </p>
+          {/* Section: Configuración Avanzada */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+               <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
+               <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Configuración de Protocolo</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Estado Operativo</label>
+                <select
+                  name="estado"
+                  value={formData.estado || 'borrador'}
+                  onChange={handleInputChange}
+                  className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-zinc-400 focus:outline-none focus:border-orange-500/50 transition-all appearance-none cursor-pointer"
+                >
+                  {estadoOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-zinc-900">{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1">Permisos de Acceso</label>
+                <select
+                  name="visible_para"
+                  value={formData.visible_para || 'todos'}
+                  onChange={handleInputChange}
+                  className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-zinc-400 focus:outline-none focus:border-orange-500/50 transition-all appearance-none cursor-pointer"
+                >
+                  {visibilidadOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-zinc-900">{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4 h-14 md:mt-7 bg-zinc-950/30 rounded-2xl px-6 border border-zinc-800/50">
+                 <button
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, destacada: !p.destacada }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${
+                      formData.destacada ? "bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]" : "bg-zinc-800"
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.destacada ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Destacar</span>
+              </div>
+            </div>
           </div>
 
-          {/* Checkboxes */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="destacada"
-                checked={formData.destacada || false}
-                onChange={handleInputChange}
-                className="w-4 h-4 rounded border-neutral-600 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm text-neutral-300">
-                Marcar como destacada
-              </span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="allow_comentarios"
-                checked={formData.allow_comentarios || false}
-                onChange={handleInputChange}
-                className="w-4 h-4 rounded border-neutral-600 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm text-neutral-300">
-                Permitir comentarios
-              </span>
-            </label>
-          </div>
+          {/* Section: Vigencia */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+               <div className="w-1.5 h-6 bg-orange-500 rounded-full" />
+               <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em]">Cronología</h4>
+            </div>
 
-          {/* Fechas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Fecha de Publicación
-              </label>
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-neutral-400 mr-2" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1 flex items-center gap-2">
+                  <Calendar className="w-3 h-3" /> Lanzamiento Real
+                </label>
                 <input
                   type="date"
                   name="fecha_publicacion"
                   value={formData.fecha_publicacion || ''}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-white focus:outline-none focus:border-orange-500/50 transition-all"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
-                Fecha de Expiración
-              </label>
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 text-neutral-400 mr-2" />
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-1 flex items-center gap-2">
+                  <Calendar className="w-3 h-3" /> Retirada Estratégica
+                </label>
                 <input
                   type="date"
                   name="fecha_expiracion"
                   value={formData.fecha_expiracion || ''}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-neutral-700 rounded-lg bg-neutral-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-14 rounded-2xl bg-zinc-950/50 border border-zinc-800 px-6 text-sm font-bold text-white focus:outline-none focus:border-orange-500/50 transition-all"
                 />
               </div>
             </div>
           </div>
 
-          {/* Botones */}
-          <div className="flex gap-3 pt-6">
-            <button
+          <div className="pt-12 border-t border-zinc-800/50 flex flex-col md:flex-row gap-4">
+             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-800 transition disabled:opacity-50"
+              className="h-14 px-10 rounded-2xl bg-zinc-950 border border-zinc-800 text-[11px] font-black uppercase tracking-widest text-zinc-500 hover:text-white hover:border-zinc-700 transition-all active:scale-95"
             >
-              Cancelar
+              Abortar Operación
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="flex-1 h-14 px-10 rounded-2xl bg-orange-500 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-orange-400 hover:shadow-2xl hover:shadow-orange-500/20 shadow-orange-500/10 transition-all active:scale-95 flex items-center justify-center gap-3 overflow-hidden group"
             >
-              {loading ? 'Guardando...' : 'Guardar Noticia'}
+              <span className="relative z-10">{loading ? 'Sincronizando...' : (noticia ? 'Actualizar Registro' : 'Confirmar Lanzamiento')}</span>
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </div>
         </form>

@@ -168,155 +168,75 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin text-orange-400" />
-        <span className="ml-2 text-neutral-400">Cargando planes...</span>
+      <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/20 rounded-3xl border border-zinc-800/50 backdrop-blur-sm">
+        <div className="relative">
+          <Loader2 className="w-10 h-10 animate-spin text-orange-500" />
+          <div className="absolute inset-0 blur-xl bg-orange-500/20 animate-pulse" />
+        </div>
+        <span className="mt-4 text-zinc-400 font-medium tracking-wide">Sincronizando planes...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Mensajes */}
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-300">{error}</p>
+        <div className="flex items-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-2xl backdrop-blur-md">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <p className="text-sm font-medium text-red-400/90">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-          <div className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5">✓</div>
-          <p className="text-sm text-emerald-300">{success}</p>
+        <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl backdrop-blur-md">
+          <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] text-zinc-950 font-bold">✓</div>
+          <p className="text-sm font-medium text-emerald-400/90">{success}</p>
         </div>
       )}
 
       {/* Tabla de planes */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {tipo === "normales" && diasOrdenados.length > 0 ? (
-          // Renderizar planes normales agrupados por días
           diasOrdenados.map((dias) => (
-            <div key={dias} className="border border-neutral-700 rounded-lg overflow-hidden">
-              <div className="bg-neutral-800/50 px-4 py-3 border-b border-neutral-700">
-                <h4 className="text-sm font-semibold text-violet-400">
-                  Planes de {dias} día{dias !== 1 ? 's' : ''}
-                </h4>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-800">
-                      <th className="px-4 py-3 text-left text-neutral-400 font-medium">Nombre</th>
-                      <th className="px-4 py-3 text-left text-neutral-400 font-medium">Especificaciones</th>
-                      <th className="px-4 py-3 text-right text-neutral-400 font-medium">Precio ARS</th>
-                      <th className="px-4 py-3 text-right text-neutral-400 font-medium">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {planesPorDias[dias]?.map((plan) => (
-                      <tr key={plan.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/30">
-                        <td className="px-4 py-3">
-                          <div className="text-neutral-200 font-medium">{plan.nombre}</div>
-                          <div className="text-xs text-neutral-500">{plan.descripcion}</div>
-                        </td>
-                        <td className="px-4 py-3 text-neutral-400 text-xs">
-                          {getPlanLabel(plan)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {editingId === plan.id ? (
-                            <input
-                              type="number"
-                              value={editValues?.precio || ""}
-                              onChange={(e) =>
-                                setEditValues((prev) => ({
-                                  ...prev!,
-                                  precio: Number(e.target.value),
-                                }))
-                              }
-                              className="w-32 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-neutral-200 text-right"
-                              placeholder="Precio"
-                            />
-                          ) : (
-                            <span className="font-semibold text-neutral-100">
-                              ${plan.precio.toLocaleString("es-AR")}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right space-x-2 flex justify-end">
-                          {editingId === plan.id ? (
-                            <>
-                              <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="p-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded transition-colors"
-                                title="Guardar"
-                              >
-                                {saving ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Save className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={handleCancel}
-                                className="p-2 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 rounded transition-colors"
-                                title="Cancelar"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => handleEdit(plan)}
-                              className="p-2 bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 rounded transition-colors"
-                              title="Editar"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))
-        ) : tipo === "revendedores" && tiposOrdenados.length > 0 ? (
-          // Renderizar planes de revendedor agrupados por tipo de cuenta
-          tiposOrdenados.map((tipoKey) => {
-            const labelTipo = tipoKey === "credit" ? "Planes por Créditos" : tipoKey === "validity" ? "Planes por Validez" : "Otros Planes";
-            const colorTipo = tipoKey === "credit" ? "text-blue-400" : tipoKey === "validity" ? "text-emerald-400" : "text-neutral-400";
-            
-            return (
-              <div key={tipoKey} className="border border-neutral-700 rounded-lg overflow-hidden">
-                <div className="bg-neutral-800/50 px-4 py-3 border-b border-neutral-700">
-                  <h4 className={`text-sm font-semibold ${colorTipo}`}>
-                    {labelTipo}
+            <div key={dias} className="group overflow-hidden border border-zinc-800/50 rounded-3xl bg-zinc-900/30 backdrop-blur-xl shadow-xl shadow-black/20 transition-all hover:border-zinc-700/50">
+              <div className="bg-gradient-to-r from-zinc-800/50 to-transparent px-6 py-4 border-b border-zinc-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-8 bg-orange-500 rounded-full" />
+                  <h4 className="text-lg font-bold text-white tracking-tight">
+                    Planes de <span className="text-orange-500">{dias} día{dias !== 1 ? 's' : ''}</span>
                   </h4>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-neutral-800">
-                        <th className="px-4 py-3 text-left text-neutral-400 font-medium">Nombre</th>
-                        <th className="px-4 py-3 text-left text-neutral-400 font-medium">Especificaciones</th>
-                        <th className="px-4 py-3 text-right text-neutral-400 font-medium">Precio ARS</th>
-                        <th className="px-4 py-3 text-right text-neutral-400 font-medium">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {planesPorTipo[tipoKey]?.map((plan) => (
-                        <tr key={plan.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/30">
-                          <td className="px-4 py-3">
-                            <div className="text-neutral-200 font-medium">{plan.nombre}</div>
-                          </td>
-                          <td className="px-4 py-3 text-neutral-400 text-xs">
+                <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/50 px-3 py-1.5 rounded-full border border-zinc-800/50">
+                  {planesPorDias[dias]?.length} Variantes
+                </div>
+              </div>
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-zinc-800/30 bg-zinc-900/20">
+                      <th className="px-6 py-4 text-left text-[11px] font-black text-zinc-500 uppercase tracking-widest">Servicio</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-black text-zinc-500 uppercase tracking-widest">Especificaciones</th>
+                      <th className="px-6 py-4 text-right text-[11px] font-black text-zinc-500 uppercase tracking-widest">Inversión</th>
+                      <th className="px-6 py-4 text-right text-[11px] font-black text-zinc-500 uppercase tracking-widest">Gestión</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/30">
+                    {planesPorDias[dias]?.map((plan) => (
+                      <tr key={plan.id} className="group/row transition-colors hover:bg-white/[0.02]">
+                        <td className="px-6 py-5">
+                          <div className="text-zinc-100 font-bold tracking-tight mb-0.5">{plan.nombre}</div>
+                          <div className="text-xs text-zinc-500 font-medium">{plan.descripcion}</div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="px-3 py-1 bg-orange-500/10 text-orange-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-orange-500/20">
                             {getPlanLabel(plan)}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            {editingId === plan.id ? (
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          {editingId === plan.id ? (
+                            <div className="inline-flex items-center gap-2 bg-zinc-950 border border-orange-500/50 rounded-xl px-3 py-1.5">
+                              <span className="text-orange-500 font-bold">$</span>
                               <input
                                 type="number"
                                 value={editValues?.precio || ""}
@@ -326,23 +246,28 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
                                     precio: Number(e.target.value),
                                   }))
                                 }
-                                className="w-32 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-neutral-200 text-right"
-                                placeholder="Precio"
+                                className="w-20 bg-transparent border-none focus:ring-0 text-white font-bold text-right p-0 outline-none"
                               />
-                            ) : (
-                              <span className="font-semibold text-neutral-100">
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-end">
+                              <span className="text-lg font-black text-white lining-nums tracking-tighter">
                                 ${plan.precio.toLocaleString("es-AR")}
                               </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right space-x-2 flex justify-end">
+                              <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter mt-[-2px]">
+                                Pesos ARS
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex justify-end gap-2">
                             {editingId === plan.id ? (
                               <>
                                 <button
                                   onClick={handleSave}
                                   disabled={saving}
-                                  className="p-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded transition-colors"
-                                  title="Guardar"
+                                  className="flex items-center justify-center p-2.5 bg-orange-500 text-white rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50"
                                 >
                                   {saving ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -352,8 +277,7 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
                                 </button>
                                 <button
                                   onClick={handleCancel}
-                                  className="p-2 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 rounded transition-colors"
-                                  title="Cancelar"
+                                  className="flex items-center justify-center p-2.5 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 hover:text-white transition-all active:scale-95"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -361,12 +285,115 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
                             ) : (
                               <button
                                 onClick={() => handleEdit(plan)}
-                                className="p-2 bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 rounded transition-colors"
-                                title="Editar"
+                                className="flex items-center justify-center p-2.5 bg-zinc-800/50 text-zinc-400 rounded-xl hover:bg-orange-500 hover:text-white hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 group-hover/row:scale-110 active:scale-95"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                             )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))
+        ) : tipo === "revendedores" && tiposOrdenados.length > 0 ? (
+          tiposOrdenados.map((tipoKey) => {
+            const labelTipo = tipoKey === "credit" ? "Planes por Créditos" : tipoKey === "validity" ? "Planes por Validez" : "Otros Planes";
+            const colorTipo = tipoKey === "credit" ? "text-orange-400" : tipoKey === "validity" ? "text-emerald-400" : "text-zinc-400";
+            const borderTipo = tipoKey === "credit" ? "border-orange-500/30" : tipoKey === "validity" ? "border-emerald-500/30" : "border-zinc-800/30";
+            const bgTipo = tipoKey === "credit" ? "bg-orange-500" : tipoKey === "validity" ? "bg-emerald-500" : "bg-zinc-500";
+            
+            return (
+              <div key={tipoKey} className={`group overflow-hidden border ${borderTipo} rounded-3xl bg-zinc-900/30 backdrop-blur-xl shadow-xl shadow-black/20 transition-all`}>
+                <div className="bg-gradient-to-r from-zinc-800/50 to-transparent px-6 py-4 border-b border-zinc-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-8 ${bgTipo} rounded-full`} />
+                    <h4 className={`text-lg font-bold ${colorTipo} tracking-tight`}>
+                      {labelTipo}
+                    </h4>
+                  </div>
+                  <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-950/50 px-3 py-1.5 rounded-full border border-zinc-800/50">
+                    {planesPorTipo[tipoKey]?.length} Planes
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-zinc-800/30 bg-zinc-900/20">
+                        <th className="px-6 py-4 text-left text-[11px] font-black text-zinc-500 uppercase tracking-widest">Paquete Comercial</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-black text-zinc-500 uppercase tracking-widest">Atributos</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-black text-zinc-500 uppercase tracking-widest">Costo</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-black text-zinc-500 uppercase tracking-widest">Ajustes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800/30">
+                      {planesPorTipo[tipoKey]?.map((plan) => (
+                        <tr key={plan.id} className="group/row transition-colors hover:bg-white/[0.02]">
+                          <td className="px-6 py-5">
+                            <div className="text-zinc-100 font-bold tracking-tight">{plan.nombre}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className={`px-3 py-1 ${tipoKey === 'credit' ? 'bg-orange-500/10 text-orange-400' : 'bg-emerald-500/10 text-emerald-400'} text-[10px] font-black uppercase tracking-wider rounded-lg border border-white/5`}>
+                              {getPlanLabel(plan)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            {editingId === plan.id ? (
+                              <div className="inline-flex items-center gap-2 bg-zinc-950 border border-orange-500/50 rounded-xl px-3 py-1.5">
+                                <span className="text-orange-500 font-bold">$</span>
+                                <input
+                                  type="number"
+                                  value={editValues?.precio || ""}
+                                  onChange={(e) =>
+                                    setEditValues((prev) => ({
+                                      ...prev!,
+                                      precio: Number(e.target.value),
+                                    }))
+                                  }
+                                  className="w-20 bg-transparent border-none focus:ring-0 text-white font-bold text-right p-0 outline-none"
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-end">
+                                <span className="text-lg font-black text-white lining-nums">
+                                  ${plan.precio.toLocaleString("es-AR")}
+                                </span>
+                                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter mt-[-2px]">
+                                  Pesos ARS
+                                </span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex justify-end gap-2">
+                              {editingId === plan.id ? (
+                                <>
+                                  <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="p-2.5 bg-orange-500 text-white rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50"
+                                  >
+                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                  </button>
+                                  <button
+                                    onClick={handleCancel}
+                                    className="p-2.5 bg-zinc-800 text-zinc-400 rounded-xl hover:bg-zinc-700 hover:text-white transition-all active:scale-95"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => handleEdit(plan)}
+                                  className="p-2.5 bg-zinc-800/50 text-zinc-400 rounded-xl hover:bg-orange-500 hover:text-white hover:shadow-lg hover:shadow-orange-500/20 transition-all duration-300 active:scale-95"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -377,93 +404,11 @@ export function PlanesSection({ tipo, onPlanesUpdated }: PlanesSectionProps) {
             );
           })
         ) : (
-          // Renderizar tabla normal como fallback
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-neutral-800">
-                  <th className="px-4 py-3 text-left text-neutral-400 font-medium">Nombre</th>
-                  <th className="px-4 py-3 text-left text-neutral-400 font-medium">Especificaciones</th>
-                  <th className="px-4 py-3 text-right text-neutral-400 font-medium">Precio ARS</th>
-                  <th className="px-4 py-3 text-right text-neutral-400 font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {planes.map((plan) => (
-                  <tr key={plan.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/30">
-                    <td className="px-4 py-3">
-                      <div className="text-neutral-200 font-medium">{plan.nombre}</div>
-                      <div className="text-xs text-neutral-500">{plan.descripcion}</div>
-                    </td>
-                    <td className="px-4 py-3 text-neutral-400 text-xs">
-                      {getPlanLabel(plan)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {editingId === plan.id ? (
-                        <input
-                          type="number"
-                          value={editValues?.precio || ""}
-                          onChange={(e) =>
-                            setEditValues((prev) => ({
-                              ...prev!,
-                              precio: Number(e.target.value),
-                            }))
-                          }
-                          className="w-32 px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-neutral-200 text-right"
-                          placeholder="Precio"
-                        />
-                      ) : (
-                        <span className="font-semibold text-neutral-100">
-                          ${plan.precio.toLocaleString("es-AR")}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-2 flex justify-end">
-                      {editingId === plan.id ? (
-                        <>
-                          <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="p-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded transition-colors"
-                            title="Guardar"
-                          >
-                            {saving ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Save className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={handleCancel}
-                            className="p-2 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 rounded transition-colors"
-                            title="Cancelar"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => handleEdit(plan)}
-                          className="p-2 bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 rounded transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="text-center py-20 bg-zinc-900/20 rounded-3xl border border-zinc-800/50 border-dashed">
+            <p className="text-zinc-500 font-medium">No se encontraron planes configurados</p>
           </div>
         )}
       </div>
-
-      {planes.length === 0 && (
-        <div className="text-center py-8 text-neutral-500">
-          No hay planes disponibles
-        </div>
-      )}
     </div>
   );
 }

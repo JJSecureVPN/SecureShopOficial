@@ -1,10 +1,5 @@
-/* ============================================
-   SecureShop VPN - Estilos Globales
-   Sistema de fuentes inspirado en Proton VPN
-   ============================================ */
-
-/* Importar sistema de fuentes */
-@import './styles/fonts.css';
+/* Importar sistema de fuentes - Geist & Geist Mono (CodePen Aesthetic) */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,10 +10,10 @@
    ============================================ */
 
 :root {
-  /* Fondos principales */
-  --bg-primary: #18181b;        /* zinc-900 */
-  --bg-secondary: #27272a;      /* zinc-800 */
-  --bg-tertiary: #3f3f46;       /* zinc-700 */
+  /* Fondos principales - CodePen Aesthetic */
+  --bg-primary: #18181b;        /* Global Background (Zinc-900) */
+  --bg-secondary: #0b0b0e;      /* Very Dark Gray */
+  --bg-tertiary: #131417;       /* Sidebar Black */
   
   /* Acentos */
   --accent-primary: #fb923c;    /* orange-400 */
@@ -34,7 +29,7 @@
   --border-primary: #3f3f46;    /* zinc-700 */
   --border-secondary: #52525b;  /* zinc-600 */
 
-  --background: 240 10% 8%;
+  --background: 0 0% 9%;
   --foreground: 0 0% 98%;
 }
 
@@ -50,24 +45,7 @@ html {
   overflow-x: hidden;
 }
 
-/* Habilitar smooth scrolling nativo como fallback */
-html.lenis,
-html.lenis.lenis-smooth {
-  height: auto;
-  scroll-behavior: auto !important;
-}
 
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden !important;
-}
-
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
-}
 
 html::-webkit-scrollbar {
   display: none;

@@ -100,8 +100,10 @@ export function ServerDashboard() {
   return (
     <section className="pt-6 sm:pt-8 lg:pt-10 relative z-10 lg:-mt-[41px]">
       <div className="w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="mx-auto bg-zinc-900 rounded-2xl lg:rounded-3xl border border-zinc-800 pt-8 sm:pt-10 lg:pt-12 px-5 sm:px-8 lg:px-12 pb-8 sm:pb-10 lg:pb-12">
+        <div className="max-w-[85rem] mx-auto px-4 sm:px-6">
+          <div className="mx-auto bg-[#131417] rounded-2xl lg:rounded-3xl border border-[#323644] pt-8 sm:pt-10 lg:pt-12 px-5 sm:px-8 lg:px-12 pb-8 sm:pb-10 lg:pb-12 shadow-2xl relative overflow-hidden">
+            {/* Subtle top highlight */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
             {/* ── Header ── */}
             <div className="mb-8 sm:mb-10">
@@ -116,7 +118,7 @@ export function ServerDashboard() {
             {/* ── KPIs globales ── */}
             <div className="grid grid-cols-2 gap-3 mb-8">
               {/* Servidores */}
-              <div className="relative rounded-2xl border border-zinc-800 bg-zinc-800/50 p-5 overflow-hidden">
+              <div className="relative rounded-2xl border border-[#323644] bg-[#1e1f26] p-5 overflow-hidden shadow-sm transition-all hover:border-[#444857]">
                 {/* línea de acento superior */}
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500 to-emerald-500/0" />
                 <div className="flex items-center gap-2 mb-3">
@@ -136,7 +138,7 @@ export function ServerDashboard() {
               </div>
 
               {/* Usuarios */}
-              <div className="relative rounded-2xl border border-zinc-800 bg-zinc-800/50 p-5 overflow-hidden">
+              <div className="relative rounded-2xl border border-[#323644] bg-[#1e1f26] p-5 overflow-hidden shadow-sm transition-all hover:border-[#444857]">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500/0 via-orange-500 to-orange-500/0" />
                 <div className="flex items-center gap-2 mb-3">
                   <Crown className="w-4 h-4 text-orange-400" />
@@ -163,9 +165,9 @@ export function ServerDashboard() {
 
             {/* ── Divider con título ── */}
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-zinc-800" />
+              <div className="flex-1 h-px bg-[#323644]" />
               <span className="text-[11px] font-bold tracking-[0.2em] text-zinc-600 uppercase">Por servidor</span>
-              <div className="flex-1 h-px bg-zinc-800" />
+              <div className="flex-1 h-px bg-[#323644]" />
             </div>
 
             {loading && !servers.length ? (
@@ -188,7 +190,7 @@ export function ServerDashboard() {
                         className={`flex-shrink-0 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-colors duration-150 focus:outline-none ${
                           active
                             ? `${lvl.bg} ${lvl.border} ${lvl.text}`
-                            : "bg-zinc-800/60 border-zinc-700/50 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+                            : "bg-[#0d0d0f] border-zinc-700/50 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600 shadow-sm"
                         }`}
                       >
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.status === "online" ? "bg-emerald-400" : "bg-zinc-600"}`}
@@ -202,9 +204,9 @@ export function ServerDashboard() {
                 </div>
 
                 {/* ── Panel de detalle del servidor activo ── */}
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-800/30 overflow-hidden">
+                <div className="rounded-2xl border border-[#323644] bg-[#1e1f26] overflow-hidden shadow-lg">
                     {/* Header del servidor */}
-                    <div className="px-5 pt-5 pb-4 border-b border-zinc-800 flex items-center justify-between">
+                    <div className="px-5 pt-5 pb-4 border-b border-[#323644] flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{getCountryFlag(active?.location ?? "")}</span>
                         <div>
@@ -291,7 +293,7 @@ export function ServerDashboard() {
                             color: "text-zinc-400",
                           },
                         ].map((item) => (
-                          <div key={item.label} className="bg-zinc-900/70 rounded-xl p-3 border border-zinc-800">
+                          <div key={item.label} className="bg-[#0d0d0f] rounded-xl p-3 border border-zinc-800 shadow-sm">
                             <div className="flex items-center gap-1.5 mb-1">
                               <item.icon className={`w-3 h-3 ${item.color}`} />
                               <span className="text-[10px] text-zinc-600 font-semibold uppercase tracking-wide">{item.label}</span>

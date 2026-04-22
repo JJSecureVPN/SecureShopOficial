@@ -10,15 +10,13 @@ export default {
       // SISTEMA DE FUENTES - Inspirado en Refine.dev
       // ============================================
       fontFamily: {
-        // Inter - Textos generales (igual que Refine.dev)
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        // Fraunces - Títulos (alternativa gratuita a ABC Arizona)
-        serif: ['Fraunces', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-        // JetBrains Mono - Para código y elementos técnicos (igual que Refine.dev)
-        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
-        // Display - Para elementos destacados
-        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        // Tourney removed (unused)
+        // Geist - Modern Geometric Sans (CodePen Aesthetic)
+        sans: ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Geist Mono - Clean Technical Mono
+        mono: ['Geist Mono', 'JetBrains Mono', 'ui-monospace', 'monospace'],
+        // Geist also used for Titles to maintain sharp geometric feel
+        title: ['Geist', 'sans-serif'],
+        display: ['Geist', 'sans-serif'],
       },
       fontSize: {
         // Tamaños exactos de ProtonVPN con line-heights optimizados
@@ -65,9 +63,9 @@ export default {
           400: '#a1a1aa',
           500: '#71717a',
           600: '#52525b',
-          700: '#3f3f46',
-          800: '#27272a',  // Fondo secundario Refine
-          900: '#18181b',  // Fondo principal Refine
+          700: '#27272a',  // Ajustado para contraste en fondo negro
+          800: '#131417',  // Sidebar CodePen
+          900: '#18181b',  // Zinc-900 (Matching Hero)
           950: '#09090b',
         },
         
@@ -87,13 +85,13 @@ export default {
         
         // Colores de marca Refine
         refine: {
-          dark: '#18181b',        // zinc-900
-          darkAlt: '#27272a',     // zinc-800
+          dark: '#060606',        // CodePen Black
+          darkAlt: '#131417',     // CodePen Sidebar
           orange: '#fb923c',      // orange-400
           orangeAlt: '#f97316',   // orange-500
           text: '#ffffff',
           textMuted: '#a1a1aa',   // zinc-400
-          border: '#3f3f46',      // zinc-700
+          border: '#27272a',      // zinc-700
         },
         
         neutral: {

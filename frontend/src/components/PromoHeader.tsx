@@ -252,11 +252,10 @@ export function PromoHeader({
                 width: 'clamp(14px, 2.5vw, 16px)',
                 height: 'clamp(14px, 2.5vw, 16px)',
                 borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDark} 100%)`,
+                background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDark} 100%)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                  boxShadow: `0 0 8px ${hexToRgba(theme.accent, 0.4)}`,
               }}
             >
               <svg
@@ -307,17 +306,14 @@ export function PromoHeader({
               fontWeight: '700',
               transition: 'all 0.2s ease',
               whiteSpace: 'nowrap',
-              boxShadow: `0 1px 8px ${hexToRgba(theme.accent, 0.3)}`,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = `0 3px 12px ${hexToRgba(theme.accent, 0.5)}`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 1px 8px ${hexToRgba(theme.accent, 0.3)}`;
             }}
           >
             {buttonText || 'Obtener'}

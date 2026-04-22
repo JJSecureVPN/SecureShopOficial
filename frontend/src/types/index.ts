@@ -270,12 +270,15 @@ export interface RenovacionClienteRequest {
   precio?: number;
   clienteEmail: string;
   clienteNombre: string;
+  saldoEmail?: string;
   nuevoConnectionLimit?: number;
   precioOriginal?: number;
   codigoCupon?: string;
   cuponId?: number;
   descuentoAplicado?: number;
   planId?: number;
+  codigoReferido?: string;
+  saldoUsado?: number;
 }
 
 export interface RenovacionRevendedorRequest {
@@ -316,6 +319,9 @@ export interface RenovacionResponse {
     tipo: "porcentaje" | "monto_fijo";
     valor: number;
   } | null;
+  descuentoReferido?: number;
+  saldoAplicado?: number;
+  procesadoAlInstante?: boolean;
 }
 
 export type SponsorCategory = "empresa" | "persona";

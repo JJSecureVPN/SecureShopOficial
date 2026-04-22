@@ -20,96 +20,49 @@ interface CuponesListProps {
 // CONSTANTES
 // ============================================================================
 
-const CURRENCY_FORMATTER = new Intl.NumberFormat("es-CO", {
-  style: "currency",
-  currency: "COP",
-  minimumFractionDigits: 0,
-});
 
 const COUPON_STATUS_STYLES = {
   activo: {
-    status: "Activo",
-    class: "bg-emerald-500/10 text-emerald-400",
+    status: "Operativo",
+    class: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   inactivo: {
-    status: "Inactivo",
-    class: "bg-neutral-700/30 text-neutral-400",
+    status: "Desactivado",
+    class: "bg-zinc-800/50 text-zinc-500 border-zinc-700/30",
   },
   expirado: {
-    status: "Expirado",
-    class: "bg-red-500/10 text-red-400",
+    status: "Vencido",
+    class: "bg-red-500/10 text-red-400 border-red-500/20",
   },
   agotado: {
-    status: "Agotado",
-    class: "bg-yellow-500/10 text-yellow-400",
+    status: "Sin Cupos",
+    class: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
 };
 
-// ============================================================================
-// FUNCIONES AUXILIARES
-// ============================================================================
-
 function getCouponStatus(cupon: Cupon): CouponStatusInfo {
-  if (!cupon.activo) {
-    return COUPON_STATUS_STYLES.inactivo;
-  }
-
-  if (cupon.fecha_expiracion && new Date(cupon.fecha_expiracion) < new Date()) {
-    return COUPON_STATUS_STYLES.expirado;
-  }
-
-  if (cupon.limite_uso && (cupon.usos_actuales ?? 0) >= cupon.limite_uso) {
-    return COUPON_STATUS_STYLES.agotado;
-  }
-
+  if (!cupon.activo) return COUPON_STATUS_STYLES.inactivo;
+  if (cupon.fecha_expiracion && new Date(cupon.fecha_expiracion) < new Date()) return COUPON_STATUS_STYLES.expirado;
+  if (cupon.limite_uso && (cupon.usos_actuales ?? 0) >= cupon.limite_uso) return COUPON_STATUS_STYLES.agotado;
   return COUPON_STATUS_STYLES.activo;
 }
 
 function formatCouponValue(tipo: string, valor: number): string {
-  return tipo === "porcentaje" ? `${valor}%` : `$${CURRENCY_FORMATTER.format(valor)}`;
+  return tipo === "porcentaje" ? `${valor}%` : `$${valor.toLocaleString()}`;
 }
-
-// ============================================================================
-// COMPONENTES AUXILIARES
-// ============================================================================
 
 function TableHeader() {
   return (
-    <thead className="border-b border-neutral-800">
-      <tr>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Código
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Tipo
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Valor
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Límite de Usos
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Usos Actuales
-        </th>
-        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Estado
-        </th>
-        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Acciones
-        </th>
+    <thead>
+      <tr className="border-b border-zinc-800/50 bg-zinc-900/40">
+        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Credencial</th>
+        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Modalidad</th>
+        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Beneficio</th>
+        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Utilización</th>
+        <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Vigencia</th>
+        <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Gestión</th>
       </tr>
     </thead>
-  );
-}
-
-function EmptyState() {
-  return (
-    <tr>
-      <td colSpan={7} className="px-4 py-12 text-center text-neutral-500">
-        No hay cupones registrados aún
-      </td>
-    </tr>
   );
 }
 
@@ -124,104 +77,65 @@ function CouponRow({
 }) {
   const { status, class: statusClass } = getCouponStatus(cupon);
   const currentUsos = cupon.usos_actuales ?? 0;
-  const canDelete = true;
 
   return (
-    <tr key={cupon.id} className="border-b border-neutral-800 hover:bg-neutral-800/30 transition">
-      <td className="px-4 py-3 font-mono text-xs uppercase text-neutral-200">
-        {cupon.codigo}
+    <tr className="group border-b border-zinc-800/30 hover:bg-zinc-800/20 transition-all duration-300">
+      <td className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className={`w-2 h-2 rounded-full ${cupon.activo ? 'bg-orange-500' : 'bg-zinc-700'}`} />
+          <span className="font-black text-[13px] uppercase tracking-wider text-white group-hover:text-orange-400 transition-colors">
+            {cupon.codigo}
+          </span>
+        </div>
       </td>
-      <td className="px-4 py-3 capitalize text-neutral-300">
-        {cupon.tipo.replace("_", " ")}
+      <td className="px-6 py-5">
+        <span className="text-xs font-bold text-zinc-400 capitalize">
+          {cupon.tipo.replace("_", " ")}
+        </span>
       </td>
-      <td className="px-4 py-3 text-neutral-300 font-medium">
-        {formatCouponValue(cupon.tipo, cupon.valor)}
+      <td className="px-6 py-5">
+        <span className="text-sm font-black text-white">
+          {formatCouponValue(cupon.tipo, cupon.valor)}
+        </span>
       </td>
-      <td className="px-4 py-3 text-neutral-400">
-        {cupon.limite_uso ?? "Sin límite"}
+      <td className="px-6 py-5">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between w-24">
+             <span className="text-[10px] font-black text-zinc-500 uppercase">{currentUsos} / {cupon.limite_uso || "∞"}</span>
+          </div>
+          <div className="w-24 h-1 bg-zinc-850 rounded-full overflow-hidden">
+             <div 
+               className="h-full bg-orange-500 transition-all duration-500" 
+               style={{ width: cupon.limite_uso ? `${Math.min((currentUsos / cupon.limite_uso) * 100, 100)}%` : "100%" }} 
+             />
+          </div>
+        </div>
       </td>
-      <td className="px-4 py-3 text-neutral-400">
-        {currentUsos} {cupon.limite_uso && `/ ${cupon.limite_uso}`}
-      </td>
-      <td className="px-4 py-3">
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}
-        >
+      <td className="px-6 py-5">
+        <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-tighter shadow-sm ${statusClass}`}>
           {status}
         </span>
       </td>
-      <td className="px-4 py-3 text-right">
-        <ActionButtons
-          cupon={cupon}
-          canDelete={canDelete}
-          onDesactivar={onDesactivar}
-          onDelete={onDelete}
-        />
+      <td className="px-6 py-5 text-right">
+        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+          <button
+            onClick={() => onDesactivar(cupon.id)}
+            disabled={!cupon.activo}
+            className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-orange-500 hover:bg-orange-500/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Suspender
+          </button>
+          <button
+            onClick={() => onDelete(cupon)}
+            className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-all"
+          >
+            Revocar
+          </button>
+        </div>
       </td>
     </tr>
   );
 }
-
-function ActionButtons({
-  cupon,
-  canDelete,
-  onDesactivar,
-  onDelete,
-}: {
-  cupon: Cupon;
-  canDelete: boolean;
-  onDesactivar: (id: number) => void;
-  onDelete: (cupon: Cupon) => void;
-}) {
-  return (
-    <div className="flex items-center justify-end gap-3">
-      <button
-        onClick={() => onDesactivar(cupon.id)}
-        disabled={!cupon.activo}
-        className="text-xs font-medium text-neutral-400 transition hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-        aria-label={`Desactivar cupón ${cupon.codigo}`}
-      >
-        Desactivar
-      </button>
-
-      {canDelete && (
-        <>
-          <span className="text-neutral-600">•</span>
-          <button
-            onClick={() => onDelete(cupon)}
-            className="text-xs font-medium text-white bg-red-600 px-3 py-1 rounded transition hover:bg-red-700"
-            aria-label={`Eliminar cupón ${cupon.codigo}`}
-          >
-            Eliminar
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-function TableStats({ cupones, loading }: { cupones: Cupon[]; loading: boolean }) {
-  return (
-    <div className="mb-6">
-      <p className="text-sm text-neutral-400">
-        {loading ? (
-          <>
-            <span className="inline-block animate-pulse">Cargando cupones...</span>
-          </>
-        ) : (
-          <>
-            <span className="font-medium text-neutral-300">{cupones.length}</span>{" "}
-            cupones {cupones.length === 1 ? "registrado" : "registrados"}
-          </>
-        )}
-      </p>
-    </div>
-  );
-}
-
-// ============================================================================
-// COMPONENTE PRINCIPAL
-// ============================================================================
 
 export function CuponesList({
   cupones,
@@ -230,27 +144,44 @@ export function CuponesList({
   onDelete,
 }: CuponesListProps) {
   return (
-    <div className="space-y-4">
-      <TableStats cupones={cupones} loading={loading} />
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex items-center justify-between px-2">
+         <h3 className="text-sm font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-orange-500" />
+            Inventario de Vales ({cupones.length})
+         </h3>
+         {loading && (
+           <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest animate-pulse">
+             Sincronizando...
+           </span>
+         )}
+      </div>
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-800">
-        <table className="w-full text-left text-sm text-neutral-200">
-          <TableHeader />
-          <tbody className="divide-y divide-neutral-800">
-            {cupones.length === 0 && !loading ? (
-              <EmptyState />
-            ) : (
-              cupones.map((cupon) => (
-                <CouponRow
-                  key={cupon.id}
-                  cupon={cupon}
-                  onDesactivar={onDesactivar}
-                  onDelete={onDelete}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="overflow-hidden rounded-[2rem] border border-zinc-800/50 bg-zinc-900/30 backdrop-blur-xl shadow-2xl">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+          <table className="w-full text-left">
+            <TableHeader />
+            <tbody className="divide-y divide-zinc-800/30">
+              {cupones.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <p className="text-sm font-black text-zinc-600 uppercase tracking-widest">Base de Datos Limpia</p>
+                    <p className="text-xs text-zinc-500 mt-2">No se han detectado cupones activos en el sistema.</p>
+                  </td>
+                </tr>
+              ) : (
+                cupones.map((cupon) => (
+                  <CouponRow
+                    key={cupon.id}
+                    cupon={cupon}
+                    onDesactivar={onDesactivar}
+                    onDelete={onDelete}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

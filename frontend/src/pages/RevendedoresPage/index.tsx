@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { BarChart3 } from "lucide-react";
 import { motion } from 'framer-motion';
 import { PlanRevendedor } from "../../types";
 import { apiService, ValidacionCupon } from "../../services/api.service";
+import SegmentedControl from "../../components/SegmentedControl";
 import CompactHeroControl from "../../components/CompactHeroControl";
-import { ModeSelector } from "./components/ModeSelector";
 import { RenovacionPanel } from "./components/RenovacionPanel";
 import ResellerPlanSelector from "./components/ResellerPlanSelector";
 import { SupportSection } from "./components/SupportSection";
+import { ShowcaseGallery } from "./components/ShowcaseGallery";
+// import AdBanner from "../../components/AdBanner";
 import { DIAS_POR_CREDITOS, EMAIL_REGEX } from "./constants";
 import {
   ModoSeleccion,
@@ -37,6 +40,7 @@ export default function RevendedoresPage() {
   const [nombreRenovacion, setNombreRenovacion] = useState("");
   const [emailRenovacion, setEmailRenovacion] = useState("");
   const [procesandoRenovacion, setProcesandoRenovacion] = useState(false);
+  const { user } = useAuth();
   const [cuponRenovacion, setCuponRenovacion] = useState<CuponAplicado | null>(null);
   const [descuentoRenovacion, setDescuentoRenovacion] = useState(0);
   const [cuentaDesdeUrl, setCuentaDesdeUrl] = useState<string | null>(null);
@@ -76,59 +80,45 @@ export default function RevendedoresPage() {
       tipoRenovacionSeleccionado === "credit"
         ? planesCreditRenovacion
         : planesValidityRenovacion;
-    
+
     // Primero intentar encontrar un plan exacto
     const planCoincidente = planesFuente.find((plan) => plan.max_users === cantidadSeleccionada);
     if (planCoincidente) {
       return planCoincidente;
     }
 
-    // Si no hay plan exacto, calcular precio proporcional (igual que el backend)
+    // Si no hay plan exacto, calcular precio mediante descomposición (Greedy)
     if (planesFuente.length === 0) {
       return null;
     }
 
-    const planesOrdenados = [...planesFuente].sort((a, b) => a.max_users - b.max_users);
-    
-    // Buscar plan inferior y superior
-    const planInferior = planesOrdenados.reverse().find((p) => p.max_users < cantidadSeleccionada);
-    const planSuperior = planesOrdenados.find((p) => p.max_users > cantidadSeleccionada);
+    // Algoritmo Greedy de Descomposición (Espejo de billing.utils.ts)
+    const planesOrdenados = [...planesFuente].sort((a, b) => b.max_users - a.max_users);
+    let restante = cantidadSeleccionada;
+    let precioTotal = 0;
+    let iter = 0;
 
-    if (planInferior && planSuperior) {
-      // Interpolar entre ambos planes
-      const rangoUsuarios = planSuperior.max_users - planInferior.max_users;
-      const rangoPrecio = planSuperior.precio - planInferior.precio;
-      const usuariosExtra = cantidadSeleccionada - planInferior.max_users;
-      const precioExtra = (usuariosExtra / rangoUsuarios) * rangoPrecio;
-      
-      return {
-        ...planInferior,
-        max_users: cantidadSeleccionada,
-        precio: Math.round(planInferior.precio + precioExtra),
-        calculado: true
-      };
-    } else if (planInferior) {
-      // Solo hay plan inferior, calcular proporcional
-      const precioPorUsuario = planInferior.precio / planInferior.max_users;
-      return {
-        ...planInferior,
-        max_users: cantidadSeleccionada,
-        precio: Math.round(precioPorUsuario * cantidadSeleccionada),
-        calculado: true
-      };
-    } else if (planesOrdenados.length > 0) {
-      // Usar el plan más pequeño como base
-      const planMinimo = planesOrdenados[planesOrdenados.length - 1];
-      const precioPorUsuario = planMinimo.precio / planMinimo.max_users;
-      return {
-        ...planMinimo,
-        max_users: cantidadSeleccionada,
-        precio: Math.round(precioPorUsuario * cantidadSeleccionada),
-        calculado: true
-      };
+    while (restante > 0 && iter < 100) {
+      iter++;
+      const p = planesOrdenados.find(x => x.max_users <= restante);
+      if (p) {
+        precioTotal += p.precio;
+        restante -= p.max_users;
+      } else {
+        const pMin = planesOrdenados[planesOrdenados.length - 1];
+        precioTotal += (restante / pMin.max_users) * pMin.precio;
+        restante = 0;
+      }
     }
 
-    return null;
+    return {
+      id: 0,
+      nombre: `Plan Personalizado (${cantidadSeleccionada} ${tipoRenovacionSeleccionado === 'credit' ? 'créditos' : 'usuarios'})`,
+      max_users: cantidadSeleccionada,
+      precio: Math.round(precioTotal),
+      calculado: true,
+      account_type: tipoRenovacionSeleccionado
+    } as any;
   }, [
     planesCreditRenovacion,
     planesValidityRenovacion,
@@ -153,27 +143,36 @@ export default function RevendedoresPage() {
   // Cálculo del precio final de la operación (Renovación vs Expansión)
   const precioRenovacion = useMemo(() => {
     if (!planSeleccionado || !revendedorRenovacion) return 0;
-    
+
     if (operacionRenovacionSeleccionada === "expansion" && tipoRenovacionSeleccionado === "validity") {
       const usuariosAAgregar = cantidadSeleccionada - cantidadBaseRevendedor;
       if (usuariosAAgregar <= 0) return 0;
 
-      // Buscar el plan para la cantidad de usuarios AGREGADOS
-      const planAdicional = planesValidityRenovacion.find(p => p.max_users === usuariosAAgregar);
-      let precioPlanAdicional = planAdicional?.precio;
-      
-      if (!precioPlanAdicional) {
-        // Fallback: calcular proporcionalmente
-        const plan10 = planesValidityRenovacion.find(p => p.max_users === 10);
-        if (plan10) {
-          precioPlanAdicional = (plan10.precio / 10) * usuariosAAgregar;
+      // Calcular precio base (30 días) para los usuarios ADICIONALES usando decomposición Greedy
+      const planesFuente = planesValidityRenovacion;
+      const planesOrdenados = [...planesFuente].sort((a, b) => b.max_users - a.max_users);
+
+      let restante = usuariosAAgregar;
+      let precioBaseExtra = 0;
+      let iter = 0;
+
+      while (restante > 0 && iter < 100) {
+        iter++;
+        const p = planesOrdenados.find(x => x.max_users <= restante);
+        if (p) {
+          precioBaseExtra += p.precio;
+          restante -= p.max_users;
+        } else if (planesOrdenados.length > 0) {
+          const pMin = planesOrdenados[planesOrdenados.length - 1];
+          precioBaseExtra += (restante / pMin.max_users) * pMin.precio;
+          restante = 0;
         } else {
-          precioPlanAdicional = (planSeleccionado.precio / planSeleccionado.max_users) * usuariosAAgregar;
+          break;
         }
       }
 
       const diasCalculo = Math.min(30, Math.max(1, diasRestantes));
-      return Math.round((precioPlanAdicional / 30) * diasCalculo);
+      return Math.round((precioBaseExtra / 30) * diasCalculo);
     }
 
     return Math.round(planSeleccionado.precio);
@@ -246,7 +245,7 @@ export default function RevendedoresPage() {
       setTipoRenovacionSeleccionado(info.datos.servex_account_type);
       setCuponRenovacion(null);
       setDescuentoRenovacion(0);
-      
+
       // Para renovaciones, SIEMPRE usar los usuarios actuales del revendedor
       // El backend calculará el precio proporcionalmente si no hay plan exacto
       setCantidadSeleccionada(info.datos.max_users);
@@ -254,7 +253,7 @@ export default function RevendedoresPage() {
       setOperacionRenovacionSeleccionada("renovacion");
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
-      setEmailRenovacion(info.datos.cliente_email || "");
+      setEmailRenovacion(user?.email || info.datos.cliente_email || "");
       setPasoRenovacion("configurar");
     } catch (error: any) {
       setErrorRenovacion(error?.message || "Error al buscar el revendedor");
@@ -303,7 +302,7 @@ export default function RevendedoresPage() {
     // Para renovaciones, SIEMPRE mantener los usuarios actuales del revendedor
     // No buscar planes coincidentes, el backend calculará el precio
     const usuariosActuales = revendedorRenovacion.datos.max_users;
-    
+
     if (cantidadSeleccionada !== usuariosActuales && operacionRenovacionSeleccionada === "renovacion") {
       setCantidadSeleccionada(usuariosActuales);
     }
@@ -421,7 +420,7 @@ export default function RevendedoresPage() {
       const initialOp = modoSeleccion === "expansion" ? "expansion" : "renovacion"; setOperacionRenovacionSeleccionada(initialOp);
 
       setNombreRenovacion(info.datos.cliente_nombre || "");
-      setEmailRenovacion(info.datos.cliente_email || "");
+      setEmailRenovacion(user?.email || info.datos.cliente_email || "");
       setPasoRenovacion("configurar");
     } catch (error: any) {
       setErrorRenovacion(error?.message || "Error al buscar el revendedor");
@@ -503,32 +502,32 @@ export default function RevendedoresPage() {
         id: "validez",
         title: "Sistema de Validez",
         subtitle: "Suscripción con reutilización automática de cupos",
-        accent: "bg-orange-500/10 border-orange-500/20",
-        accentText: "text-orange-400",
+        accent: "bg-white/5 border-white/10",
+        accentText: "text-zinc-400",
         icon: <BarChart3 className="w-5 h-5" />,
         mainDescription:
-          "Suscripción mensual renovable con reutilización de cupos. Crea múltiples cuentas dentro del rango de usuarios durante ese mes. Los usuarios están vinculados a tu suscripción: si esta vence, todos los usuarios expiran también. Al contrario de Créditos donde las cuentas son independientes.",
+          "Suscripción mensual renovable con reutilización de cupos. Crea múltiples cuentas dentro del rango de usuarios durante ese mes. Los usuarios están vinculados a tu suscripción: si esta vence, todos los usuarios expiran también.",
         shortDescription: "0/N usuarios → Vinculados a tu suscripción mensual",
         keyFeatures: [
           {
             icon: "refresh-cw",
-            title: "Vinculado a Suscripción Mensual",
-            description: "Los usuarios están ligados a tu suscripción. Si expira, todos expiran.",
+            title: "Vinculado a Suscripción",
+            description: "Los usuarios están ligados a tu suscripción mensual.",
           },
           {
             icon: "users",
-            title: "Reutilización dentro del Mes",
-            description: "Crea cuentas de cualquier duración dentro del mismo mes",
+            title: "Reutilización Total",
+            description: "Crea cuentas de cualquier duración dentro del mismo mes.",
           },
           {
             icon: "dollar-sign",
-            title: "Sin Costo Adicional",
-            description: "No consumes créditos, solo cupos reutilizables",
+            title: "Sin Costo Extra",
+            description: "No consumes créditos, solo cupos reutilizables.",
           },
           {
             icon: "maximize",
             title: "Máxima Rentabilidad",
-            description: "Optimiza tu inventario con diferentes duraciones mensuales",
+            description: "Optimiza tu inventario con diferentes duraciones.",
           },
         ],
         useCases: [
@@ -549,7 +548,7 @@ export default function RevendedoresPage() {
     navigate(`/checkout-revendedor?planId=${plan.id}&maxUsers=${plan.max_users}`);
   };
 
-  // Forzar header fijo mientras esta página esté montada (evita que Lenis u otros contenedores
+  // Forzar header fijo mientras esta página esté montada (evita que otros contenedores
   // con transform rompan el comportamiento sticky del header global)
   useEffect(() => {
     const headerEl = document.querySelector('header');
@@ -579,26 +578,68 @@ export default function RevendedoresPage() {
   }, []);
 
   return (
-    <div className="bg-refine-dark text-zinc-100">
-      <main>
+    <div className="text-zinc-100 min-h-screen relative overflow-x-hidden">
+      {/* Decorative Background Elements - Positioned behind content */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Lines 2: Right Middle */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 0.5, x: 0 }}
+          transition={{ duration: 2.5, delay: 0.5 }}
+          className="absolute top-[20%] -right-[10%] w-[600px] md:w-[900px] h-auto opacity-30"
+        >
+          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto" />
+        </motion.div>
 
-        <section id="planes-section" className="relative pt-20 sm:pt-16 lg:pt-20 pb-12 sm:pb-16 lg:pb-20 bg-refine-dark">
+        {/* Lines 3: Flowing through Gallery (Refined Position) */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 0.4, x: 0 }}
+          transition={{ duration: 3, delay: 1 }}
+          className="absolute top-[61%] -left-[2%] w-[700px] md:w-[1000px] h-auto opacity-40"
+        >
+          <img src="/lines-3-4541e35a1939230404d773f7eeddcc9b.svg" alt="" className="w-full h-auto" />
+        </motion.div>
+
+        {/* Lines 4: Bottom Left */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 0.3, y: 0 }}
+          transition={{ duration: 3.5, delay: 1.5 }}
+          className="absolute bottom-0 -left-[10%] w-[500px] md:w-[800px] h-auto opacity-30"
+        >
+          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto" />
+        </motion.div>
+      </div>
+
+      <main className="relative z-10">
+        <section id="planes-section" className="relative pt-4 sm:pt-8 lg:pt-12 pb-12 sm:pb-16 lg:pb-20 z-10">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* keep hero controls outside the scrolling .w-full so transforms don't leak */}
             <motion.div
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="mt-12 mb-10"
+              transition={{ duration: 0.5 }}
+              className="mt-6 mb-12"
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="lg:hidden">
-                  <ModeSelector
-                    mode={modoSeleccion}
-                    onSelectCompra={activarModoCompra}
-                    onSelectRenovacion={activarModoRenovacion}
-                    onSelectExpansion={activarModoExpansion}
-                  />
+                <div className="lg:hidden flex justify-center">
+                  <div className="w-full max-w-[720px]">
+                    <SegmentedControl
+                      value={modoSeleccion}
+                      onChange={(v) => {
+                        if (v === 'compra') activarModoCompra();
+                        else if (v === 'renovacion') activarModoRenovacion();
+                        else activarModoExpansion();
+                      }}
+                      showExpansion={true}
+                      descriptions={{
+                        compra: 'Adquiere una nueva suscripción de revendedor con sistema de validez.',
+                        renovacion: 'Extiende la duración de tu suscripción actual manteniendo tus cupos.',
+                        expansion: 'Aumenta la capacidad de usuarios de tu cuenta de forma inmediata.'
+                      }}
+                    />
+                  </div>
                 </div>
                 <div className="hidden lg:block">
                   <CompactHeroControl
@@ -608,64 +649,78 @@ export default function RevendedoresPage() {
                       else if (v === 'renovacion') activarModoRenovacion();
                       else activarModoExpansion();
                     }}
+                    showExpansion={true}
                   />
                 </div>
               </div>
             </motion.div>
 
             <div className="w-full">
-
-            {(modoSeleccion === "renovacion" || modoSeleccion === "expansion") && (
-              <RenovacionPanel
-                pasoRenovacion={pasoRenovacion}
-                busqueda={busquedaRenovacion}
-                onBusquedaChange={setBusquedaRenovacion}
-                onBuscar={buscarRevendedor}
-                buscando={buscandoRenovacion}
-                error={errorRenovacion}
-                revendedor={revendedorRenovacion}
-                tipoSeleccionado={tipoRenovacionSeleccionado}
-                cantidadSeleccionada={cantidadSeleccionada}
-                onCantidadChange={setCantidadSeleccionada}
-                nombre={nombreRenovacion}
-                onNombreChange={setNombreRenovacion}
-                email={emailRenovacion}
-                onEmailChange={setEmailRenovacion}
-                procesando={procesandoRenovacion}
-                puedeProcesar={puedeProcesarRenovacion}
-                diasRenovacion={diasRenovacion}
-                precioRenovacion={precioRenovacion}
-                precioFinal={precioFinalRenovacion}
-                planesCredit={planesCreditRenovacion}
-                onVerPlanes={activarModoCompra}
-                onVolverBuscar={volverABuscarRevendedor}
-                onProcesar={procesarRenovacion}
-                planSeleccionado={planSeleccionado}
-                cuponActual={cuponRenovacion}
-                descuentoAplicado={descuentoRenovacion}
-                onCuponValidado={manejarCuponValidado}
-                onCuponRemovido={manejarCuponRemovido}
-                operacionSeleccionada={operacionRenovacionSeleccionada}
-                cantidadBase={cantidadBaseRevendedor}
-                diasRestantes={diasRestantes}
-              />
-            )}
-
-            {modoSeleccion === "compra" && groupedPlans.length > 0 && (
-              <div className="pb-28 lg:pb-0">
-                <ResellerPlanSelector
-                  plans={planesValidity}
-                  groupData={groupedPlans[0]}
-                  onConfirmarCompra={handleConfirmarCompra}
-                />
+              {/* Sponsorship Banner Post-Controls */}
+              <div className="mb-12">
+                {/* <AdBanner variant="horizontal" /> */}
               </div>
-            )}
+
+              {(modoSeleccion === "renovacion" || modoSeleccion === "expansion") && (
+                <RenovacionPanel
+                  pasoRenovacion={pasoRenovacion}
+                  busqueda={busquedaRenovacion}
+                  onBusquedaChange={setBusquedaRenovacion}
+                  onBuscar={buscarRevendedor}
+                  buscando={buscandoRenovacion}
+                  error={errorRenovacion}
+                  revendedor={revendedorRenovacion}
+                  tipoSeleccionado={tipoRenovacionSeleccionado}
+                  cantidadSeleccionada={cantidadSeleccionada}
+                  onCantidadChange={setCantidadSeleccionada}
+                  nombre={nombreRenovacion}
+                  onNombreChange={setNombreRenovacion}
+                  email={emailRenovacion}
+                  onEmailChange={setEmailRenovacion}
+                  procesando={procesandoRenovacion}
+                  puedeProcesar={puedeProcesarRenovacion}
+                  diasRenovacion={diasRenovacion}
+                  precioRenovacion={precioRenovacion}
+                  precioFinal={precioFinalRenovacion}
+                  planesCredit={planesCreditRenovacion}
+                  onVerPlanes={activarModoCompra}
+                  onVolverBuscar={volverABuscarRevendedor}
+                  onProcesar={procesarRenovacion}
+                  planSeleccionado={planSeleccionado}
+                  cuponActual={cuponRenovacion}
+                  descuentoAplicado={descuentoRenovacion}
+                  onCuponValidado={manejarCuponValidado}
+                  onCuponRemovido={manejarCuponRemovido}
+                  operacionSeleccionada={operacionRenovacionSeleccionada}
+                  cantidadBase={cantidadBaseRevendedor}
+                  diasRestantes={diasRestantes}
+                  userEmail={user?.email}
+                />
+              )}
+
+              {modoSeleccion === "compra" && groupedPlans.length > 0 && (
+                <div className="pb-28 lg:pb-0">
+                  <ResellerPlanSelector
+                    plans={planesValidity}
+                    groupData={groupedPlans[0]}
+                    onConfirmarCompra={handleConfirmarCompra}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </section>
+
+        {/* Closing Sponsorship Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+          {/* <AdBanner variant="horizontal" /> */}
+        </div>
+        
+        <ShowcaseGallery />
 
         <SupportSection />
       </main>
     </div>
   );
 }
+

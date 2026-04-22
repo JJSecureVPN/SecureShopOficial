@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 
-type AccentColor = "indigo" | "orange";
+type AccentColor = "indigo" | "orange" | "zinc";
 
 const accentMap: Record<AccentColor, string> = {
   indigo: "bg-indigo-500/10 text-indigo-400",
   orange: "bg-orange-500/10 text-orange-400",
+  zinc: "bg-white/5 text-zinc-400 border border-white/5",
 };
 
 interface StepCardProps {
@@ -39,8 +40,9 @@ export default function StepCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-zinc-900/50 border border-zinc-700 shadow-sm hover:shadow-lg hover:border-zinc-600 transition-all"
+      className="rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#1e1f26] border border-[#323644] shadow-xl hover:shadow-2xl hover:border-[#444857] transition-all relative overflow-hidden group"
     >
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="mb-6">
         <span
           className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-3 ${accentMap[accent]}`}

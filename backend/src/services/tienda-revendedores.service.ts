@@ -12,6 +12,7 @@ import {
   CrearPagoRevendedorInput,
   RevendedorServex,
 } from "../types";
+import { calcularPrecioResellerDecompuesto } from "./billing.utils";
 
 export class TiendaRevendedoresService {
   constructor(
@@ -121,10 +122,6 @@ export class TiendaRevendedoresService {
     }
   }
 
-  /**
-   * Calcula el precio de forma dinámica para cantidades grandes o personalizadas
-   * Lógica: Price(100) + Price(Quantity - 100)
-   */
   async calcularPrecioDinamico(
     maxUsers: number,
     accountType: "validity" | "credit" = "validity"
@@ -138,40 +135,26 @@ export class TiendaRevendedoresService {
       return { precio: exactPlan.precio, plan: exactPlan };
     }
 
-    // Si es > 100, aplicar lógica de suma: Plan(100) + resto
-    if (maxUsers > 100) {
-      const plan100 = planesTipo.find((p) => p.max_users === 100);
-      if (!plan100) {
-        throw new Error(`No se encontró un plan base de 100 para el sistema de ${accountType === 'credit' ? 'créditos' : 'validez'}.`);
-      }
-
-      const resto = maxUsers - 100;
-      const { precio: precioResto } = await this.calcularPrecioDinamico(resto, accountType);
-      
-      return { 
-        precio: plan100.precio + precioResto, 
-        plan: { ...plan100, max_users: maxUsers, nombre: `Plan Personalizado ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}` } 
-      };
+    // Usar la utilidad de descomposición centralizada
+    const { precio, composicion } = calcularPrecioResellerDecompuesto(maxUsers, planesTipo);
+    
+    if (precio <= 0) {
+      throw new Error(`No se pudo calcular el precio para ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}. No hay planes base suficientes.`);
     }
 
-    // Si es < 100 y no hay plan exacto, buscar el más grande disponible que sea menor y sumar el resto
-    // Esto permite que si tienen 10, 20, 30... funcione para cualquier múltiplo de 10
-    const planesMenores = planesTipo
-      .filter((p) => p.max_users < maxUsers)
-      .sort((a, b) => b.max_users - a.max_users);
+    const planBase = planesTipo.sort((a,b) => b.max_users - a.max_users)[0] || { id: 0 };
 
-    if (planesMenores.length > 0) {
-      const planBase = planesMenores[0];
-      const resto = maxUsers - planBase.max_users;
-      const { precio: precioResto } = await this.calcularPrecioDinamico(resto, accountType);
-      
-      return { 
-        precio: planBase.precio + precioResto, 
-        plan: { ...planBase, max_users: maxUsers, nombre: `Plan Personalizado ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}` } 
-      };
-    }
-
-    throw new Error(`No se pudo calcular el precio para ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}. No hay planes base suficientes.`);
+    return { 
+      precio, 
+      plan: { 
+        ...planBase, 
+        id: 0, // ID 0 para planes dinámicos
+        max_users: maxUsers, 
+        precio: precio, // Asegurar que el plan tenga el precio total calculado
+        nombre: `Plan Personalizado ${maxUsers} ${accountType === 'credit' ? 'créditos' : 'usuarios'}`,
+        descripcion: `Compuesto por: ${composicion.join(" + ")}`
+      } 
+    };
   }
 
   /**
