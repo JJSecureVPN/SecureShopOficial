@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "version": "1.0.0",
+  "ultima_actualizacion": "2025-10-24T00:00:00Z",
+  "aviso": {
+    "habilitado": true,
+    "texto": "⚠️ Servidor Argentina 2 - Temporalmente desactivado por mantenimiento",
+    "subtitulo": "",
+    "bgColor": "bg-red-500/10",
+    "textColor": "text-red-600",
+    "variant": "pill",
+    "icon": "shield"
+  },
+  "_instrucciones": {
+    "habilitado": "true para mostrar el aviso, false para ocultarlo",
+    "texto": "Mensaje del aviso",
+    "bgColor": "(opcional) Color de fondo usando clases Tailwind. Si se omite o está vacío, no se aplicará fondo.",
+    "textColor": "Color de texto usando clases Tailwind (ej: text-red-500, text-gray-900)",
+    "subtitulo": "(opcional) Texto secundario que puede mostrarse debajo del aviso principal"
+  }
+}

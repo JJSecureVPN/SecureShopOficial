@@ -1,0 +1,37 @@
+
+> secureshop-backend@1.0.0 build
+> tsc
+
+src/routes/suscripciones-automaticas.routes.ts(246,48): error TS6133: 'req' is declared but its value is never read.
+src/services/cron.service.ts(15,26): error TS2304: Cannot find name 'ScheduledTask'.
+src/services/cron.service.ts(16,27): error TS2304: Cannot find name 'ScheduledTask'.
+src/services/cron.service.ts(17,32): error TS2304: Cannot find name 'ScheduledTask'.
+src/services/cron.service.ts(339,9): error TS2353: Object literal may only specify known properties, and 'to' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/cron.service.ts(372,9): error TS2353: Object literal may only specify known properties, and 'to' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(65,37): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(105,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(123,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(151,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(190,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(216,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(305,11): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/services/suscripciones-automaticas.service.ts(336,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(496,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(520,41): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(528,42): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(550,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(572,29): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(588,5): error TS6133: 'estado' is declared but its value is never read.
+src/services/suscripciones-automaticas.service.ts(591,29): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(610,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(631,29): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(644,29): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(658,29): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(672,35): error TS2531: Object is possibly 'null'.
+src/services/suscripciones-automaticas.service.ts(719,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(736,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(752,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(770,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(794,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
+src/services/suscripciones-automaticas.service.ts(812,9): error TS2353: Object literal may only specify known properties, and 'html' does not exist in type '{ destinatario: string; asunto: string; plantilla?: string | undefined; datos?: Record<string, any> | undefined; }'.
