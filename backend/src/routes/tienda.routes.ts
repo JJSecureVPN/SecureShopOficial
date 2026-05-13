@@ -1,10 +1,8 @@
 import { Router, Request, Response } from "express";
 import { TiendaService } from "../services/tienda.service";
 import { WebSocketService } from "../services/websocket.service";
-import { configService } from "../services/config.service";
 import { supabaseService } from "../services/supabase.service";
 import { ApiResponse, CrearPagoInput } from "../types";
-
 export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSocketService): Router {
   const router = Router();
   console.log("[crearRutasTienda] 🚀 INICIALIZANDO RUTAS DE TIENDA...");
@@ -470,101 +468,6 @@ export function crearRutasTienda(tiendaService: TiendaService, wsService: WebSoc
     );
   });
 
-  /**
-   * GET /api/config/info
-   * Obtiene información sobre la configuración de planes
-   */
-  router.get("/config/info", (_req: Request, res: Response) => {
-    try {
-      const info = configService.obtenerInfoConfig();
-
-      const response: ApiResponse = {
-        success: true,
-        data: info,
-        message: "Información de configuración",
-      };
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[Rutas] Error obteniendo info de config:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error obteniendo configuración",
-      } as ApiResponse);
-    }
-  });
-
-  /**
-   * GET /api/config/hero
-   * Obtiene la configuración del hero (promociones, título, etc)
-   */
-  router.get("/config/hero", (_req: Request, res: Response) => {
-    try {
-      const heroConfig = configService.obtenerConfigHero();
-
-      const response: ApiResponse = {
-        success: true,
-        data: heroConfig,
-        message: "Configuración del hero",
-      };
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[Rutas] Error obteniendo config del hero:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error obteniendo configuración",
-      } as ApiResponse);
-    }
-  });
-
-  /**
-   * POST /api/config/reload
-   * Recarga la configuración desde el archivo (limpia caché)
-   */
-  router.post("/config/reload", (_req: Request, res: Response) => {
-    try {
-      configService.limpiarCache();
-
-      const response: ApiResponse = {
-        success: true,
-        message: "Configuración recargada exitosamente",
-        data: configService.obtenerInfoConfig(),
-      };
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[Rutas] Error recargando config:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error recargando configuración",
-      } as ApiResponse);
-    }
-  });
-
-  /**
-   * POST /api/config/crear-default
-   * Crea un archivo de configuración por defecto
-   */
-  router.post("/config/crear-default", (_req: Request, res: Response) => {
-    try {
-      configService.crearConfigPorDefecto();
-
-      const response: ApiResponse = {
-        success: true,
-        message: "Archivo de configuración por defecto creado",
-        data: configService.obtenerInfoConfig(),
-      };
-
-      res.json(response);
-    } catch (error: any) {
-      console.error("[Rutas] Error creando config default:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error creando configuración",
-      } as ApiResponse);
-    }
-  });
 
   /**
    * POST /api/demo

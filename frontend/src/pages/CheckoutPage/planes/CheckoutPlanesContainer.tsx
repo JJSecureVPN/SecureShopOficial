@@ -229,18 +229,41 @@ const CheckoutPlanesContainer: React.FC = () => {
     let mounted = true;
 
     const initMercadoPago = async () => {
+      // Pequeño delay para asegurar que el DOM de React se ha asentado
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (!mounted) return;
+
       try {
+        console.log('[Checkout] Inicializando MercadoPago...');
         await mercadoPagoService.initialize();
-        await mercadoPagoService.createButton("wallet_container_planes", getPreferenceIdForPayment);
-        try {
-          await mercadoPagoService.createButton("wallet_container_planes_mobile", getPreferenceIdForPayment);
-        } catch {
-          // ignore if mobile container is not mounted yet
-        }
+        
+        if (!mounted) return;
+
+        // Intentar crear botones con reintento si el contenedor no está listo
+        const createWithRetry = async (cid: string) => {
+          for (let i = 0; i < 3; i++) {
+            try {
+              if (document.getElementById(cid)) {
+                await mercadoPagoService.createButton(cid, getPreferenceIdForPayment);
+                return true;
+              }
+            } catch (e) {
+              console.warn(`[Checkout] Intento ${i+1} fallido para ${cid}:`, e);
+            }
+            await new Promise(r => setTimeout(r, 500));
+          }
+          return false;
+        };
+
+        const successDesktop = await createWithRetry("wallet_container_planes");
+        const successMobile = await createWithRetry("wallet_container_planes_mobile");
+
         if (mounted) {
-          setMpFallbackVisible(false);
+          setMpFallbackVisible(!successDesktop && !successMobile);
         }
-      } catch {
+      } catch (err) {
+        console.error('[Checkout] Error fatal inicializando MP:', err);
         if (mounted) {
           setMpFallbackVisible(true);
         }
@@ -251,6 +274,9 @@ const CheckoutPlanesContainer: React.FC = () => {
 
     return () => {
       mounted = false;
+      // No destruimos todo el servicio porque es un singleton, 
+      // pero podemos resetear los contenedores para la próxima vez
+      mercadoPagoService.resetContainers();
     };
   }, [getPreferenceIdForPayment, plan]);
 

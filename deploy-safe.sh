@@ -93,6 +93,8 @@ echo "📤 FASE 3: Transferencia de Archivos"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Frontend
+echo "  Limpiando dist remoto..."
+ssh $REMOTE_HOST "rm -rf $FRONTEND_PATH/dist/*" || true
 echo "  Transferiendo frontend..."
 if scp -r ./frontend/dist/* $REMOTE_HOST:$FRONTEND_PATH/dist/ 2>/dev/null; then
     echo "  ✓ Frontend transferido"
@@ -101,6 +103,8 @@ else
 fi
 
 # Backend compilado
+echo "  Limpiando dist remoto..."
+ssh $REMOTE_HOST "rm -rf $BACKEND_PATH/dist/*" || true
 echo "  Transferiendo backend compilado..."
 if scp -r ./backend/dist/* $REMOTE_HOST:$BACKEND_PATH/dist/ 2>/dev/null; then
     echo "  ✓ Backend compilado transferido"
@@ -175,34 +179,6 @@ fi
 ssh $REMOTE_HOST "pm2 status" || true
 
 # ============================================================================
-# FASE 7: SINCRONIZACIÓN
-# ============================================================================
-echo ""
-echo "🔄 FASE 7: Sincronización de Precios"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-SYNC_OK=0
-for i in {1..3}; do
-    echo "  Intento $i: Sincronizando..."
-    if ssh $REMOTE_HOST "curl -s -X POST http://localhost:$PORT/api/config/sync-todo" &>/dev/null; then
-        echo "  ✓ Sincronización exitosa"
-        SYNC_OK=1
-        break
-    fi
-    
-    if [ $i -lt 3 ]; then
-        echo "  ⏳ Reintentando en 2 segundos..."
-        sleep 2
-    fi
-done
-
-if [ $SYNC_OK -eq 0 ]; then
-    echo "  ⚠️  Advertencia: La sincronización no respondió (pero el deploy continuó)"
-fi
-
-sleep 2
-
-# ============================================================================
 # RESUMEN FINAL
 # ============================================================================
 echo ""
@@ -216,7 +192,6 @@ echo "   ✓ Backend compilado, transferido y online"
 echo "   ✓ Puerto $PORT liberado y verificado"
 echo "   ✓ PM2 reiniciado y ejecutándose"
 echo "   ✓ Backend escuchando en puerto $PORT"
-echo "   ✓ Configuraciones sincronizadas"
 echo ""
 echo "🎯 Backend URL: http://185.194.204.192:4001"
 echo ""

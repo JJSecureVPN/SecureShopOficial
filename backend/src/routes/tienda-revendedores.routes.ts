@@ -1,8 +1,7 @@
 import { Router, Request, Response } from "express";
 import { TiendaRevendedoresService } from "../services/tienda-revendedores.service";
 import { RenovacionService } from "../services/renovacion.service";
-import { configService } from "../services/config.service";
-import { CrearPagoRevendedorInput, ApiResponse } from "../types";
+import { CrearPagoRevendedorInput } from "../types";
 
 export function crearRutasRevendedores(
   tiendaRevendedores: TiendaRevendedoresService,
@@ -72,32 +71,6 @@ export function crearRutasRevendedores(
     }
   );
 
-  /**
-   * GET /api/config/hero-revendedores
-   * Obtiene la configuración del hero para revendedores (promociones, título, etc)
-   */
-  router.get("/config/hero-revendedores", (_req: Request, res: Response) => {
-    try {
-      const heroConfig = configService.obtenerConfigHeroRevendedores();
-
-      const response: ApiResponse = {
-        success: true,
-        data: heroConfig,
-        message: "Configuración del hero de revendedores",
-      };
-
-      res.json(response);
-    } catch (error: any) {
-      console.error(
-        "[Rutas Revendedores] Error obteniendo config del hero:",
-        error
-      );
-      res.status(500).json({
-        success: false,
-        error: error.message || "Error obteniendo configuración",
-      } as ApiResponse);
-    }
-  });
 
   /**
    * GET /api/pago-revendedor/success

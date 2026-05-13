@@ -10,7 +10,7 @@ export const PRECIOS_POR_DIA: Record<number, number> = {
 };
 
 export const DIAS_RENOVACION = [3, 7, 15, 20, 25, 30];
-export const DISPOSITIVOS_RENOVACION = [1, 2, 3, 4];
+export const DISPOSITIVOS_RENOVACION = [1, 2, 3, 4, 5, 10];
 
 export const PLAN_SECTIONS: SectionItem[] = [
   { id: "selector", label: "Selector de Planes", icon: createElement(Zap, { className: "w-4 h-4" }) },

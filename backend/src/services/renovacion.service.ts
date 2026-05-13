@@ -1,11 +1,11 @@
 import { DatabaseService } from './database.service';
 import { ServexService } from './servex.service';
 import { MercadoPagoService } from './mercadopago.service';
-import { configService } from './config.service';
 import emailService from './email.service';
 import { cuponesSupabaseService } from './cupones-supabase.service';
 import { referidosService } from './referidos.service';
 import { supabaseService } from './supabase.service';
+import { planesSupabaseService } from './planes-supabase.service';
 import { RenovacionAutoRetryConfig } from '../types';
 import { calcularPrecioResellerDecompuesto } from './billing.utils';
 
@@ -366,7 +366,7 @@ export class RenovacionService {
     console.log(`[Renovacion] Límite actual: ${connectionLimitActual}, Nuevo límite: ${connectionLimitNuevo}, Hay cambio: ${hayCambioDispositivos}`);
 
     // 3. Calcular precio base considerando overrides actuales
-    const precioBaseCalculado = this.calcularPrecioBaseRenovacion(input.dias, connectionLimitNuevo);
+    const precioBaseCalculado = await this.calcularPrecioBaseRenovacion(input.dias, connectionLimitNuevo);
     let precioBase = precioBaseCalculado;
 
     if (input.precioOriginal && input.precioOriginal > 0) {
@@ -531,27 +531,48 @@ export class RenovacionService {
     }
   }
 
-  private calcularPrecioBaseRenovacion(dias: number, connectionLimit: number): number {
+  private async calcularPrecioBaseRenovacion(dias: number, connectionLimit: number): Promise<number> {
     if (!dias || dias <= 0) {
       return 0;
     }
 
-    const planesBase = this.db.obtenerPlanes();
-    const planesConOverrides = configService.aceptarOverridesAListaPlanes(
-      planesBase,
-      { forNewCustomers: false }
-    );
+    // Obtener planes de Supabase (Fuente única de verdad)
+    const planesConPrecios = await planesSupabaseService.obtenerPlanesVPNConPrecios();
+    const config = await planesSupabaseService.obtenerPromocionesConfig().catch(() => null);
+    const is2x1Active = config?.vpn_2x1_activa || false;
 
-    const planCoincidente = planesConOverrides.find(
+    // 1. Intentar coincidencia exacta (si hay 2x1 activo, connection_limit ya viene duplicado en la lista)
+    const planCoincidente = planesConPrecios.find(
       (plan: any) => plan.dias === dias && plan.connection_limit === connectionLimit
     );
 
     if (planCoincidente) {
+      console.log(`[Renovacion] Coincidencia exacta encontrada para ${connectionLimit} disp: $${planCoincidente.precio}`);
       return Math.round(planCoincidente.precio);
     }
 
+    // 2. DETECCIÓN DE 2x1: Si no hubo coincidencia exacta, puede ser que el usuario tenga 20 dispositivos 
+    // pero no haya un plan de 20 (porque el 2x1 está desactivado).
+    if (connectionLimit % 2 === 0) {
+      const halfLimit = connectionLimit / 2;
+      const planBase = planesConPrecios.find(
+        (plan: any) => plan.dias === dias && (plan.dispositivos === halfLimit || plan.connection_limit === halfLimit)
+      );
+
+      if (planBase) {
+        // Si el 2x1 NO está activo, cobramos el doble (usuario quiere renovar 20 dispositivos usando plan de 10)
+        if (!is2x1Active) {
+          console.log(`[Renovacion] Detectado posible 2x1 inactivo para ${connectionLimit} disp. Usando plan base de ${halfLimit} y cobrando doble.`);
+          return Math.round(planBase.precio * 2);
+        } else {
+          // Si el 2x1 SI está activo, pero por alguna razón no coincidió antes (poco probable), cobramos normal
+          return Math.round(planBase.precio);
+        }
+      }
+    }
+
     // Fallback: tomar plan de 30 días con el mismo límite para estimar precio diario
-    const planReferencia = planesConOverrides.find(
+    const planReferencia = planesConPrecios.find(
       (plan: any) => plan.dias === 30 && plan.connection_limit === connectionLimit
     );
 
@@ -571,6 +592,15 @@ export class RenovacionService {
           break;
         case 4:
           precioPorDia = 500;
+          break;
+        case 5:
+          precioPorDia = 700;
+          break;
+        case 10:
+          precioPorDia = 1166.66;
+          break;
+        case 20:
+          precioPorDia = 2333.33;
           break;
         default:
           precioPorDia = 200 * Math.max(1, connectionLimit);
@@ -610,16 +640,9 @@ export class RenovacionService {
 
     const revendedorExistente = resultado.datos;
 
-    // 2. Obtener planes de revendedores con overrides de configuración aplicados
-    const planesBase = this.db.obtenerPlanesRevendedores();
-    console.log(`[Renovacion] 📊 Planes base obtenidos: ${planesBase.length} planes`);
-    console.log(`[Renovacion] 📊 Planes base:`, JSON.stringify(planesBase.map((p: any) => ({id: p.id, max_users: p.max_users, account_type: p.account_type, precio: p.precio})), null, 2));
-    const planesConOverrides =
-      configService.aceptarOverridesAListaPlanesRevendedor(planesBase, {
-        forNewCustomers: false,
-      });
-    console.log(`[Renovacion] 📊 Planes con overrides: ${planesConOverrides.length} planes`);
-    console.log(`[Renovacion] 📊 Planes con overrides:`, JSON.stringify(planesConOverrides.map((p: any) => ({id: p.id, max_users: p.max_users, account_type: p.account_type, precio: p.precio})), null, 2));
+    // 2. Obtener planes de revendedores desde Supabase (Fuente única de verdad)
+    const planesConOverrides = await planesSupabaseService.obtenerPlanesRevendedorConPrecios();
+    console.log(`[Renovacion] 📊 Planes obtenidos de Supabase: ${planesConOverrides.length} planes`);
     
     // 3. Calcular precio según el plan seleccionado
     const tipoRenovacion = input.tipoRenovacion || 'validity';
@@ -631,7 +654,11 @@ export class RenovacionService {
       cantidad = revendedorExistente.max_users;
       console.log(`[Renovacion] 📊 Validity: Usando usuarios actuales del revendedor: ${cantidad}`);
     } else if (operacion === 'expansion') {
-      console.log(`[Renovacion] 📊 Expansión: Usando cantidad target: ${cantidad} (actuales: ${revendedorExistente.max_users || 0})`);
+      const actuales = revendedorExistente.max_users || 0;
+      console.log(`[Renovacion] 📊 Expansión: Solicitado Target: ${cantidad}, Actuales: ${actuales}`);
+      if (cantidad <= actuales) {
+        console.warn(`[Renovacion] ⚠️ Advertencia: El nuevo límite (${cantidad}) no es mayor al actual (${actuales})`);
+      }
     }
     
     console.log(`[Renovacion] 🔍 Buscando plan con: tipo=${tipoRenovacion}, cantidad=${cantidad}`);
@@ -1021,6 +1048,7 @@ export class RenovacionService {
             console.log(`[Renovacion] 📅 Expansión: Manteniendo fecha ${expirationDate} para ${renovacion.servex_username}`);
             
             // Actualizar: cambiar usuarios, mantener fecha y tipo
+            console.log(`[Renovacion] 🔄 Ejecutando expansión Servex: ID=${renovacion.servex_id}, Nuevo Límite=${cantidad}`);
             await this.servex.actualizarRevendedor(renovacion.servex_id, {
               max_users: cantidad,
               account_type: 'validity',

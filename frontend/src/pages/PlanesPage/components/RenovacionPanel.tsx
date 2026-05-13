@@ -60,6 +60,8 @@ interface RenovacionPanelProps {
   onSaldoRemovido: () => void;
   descuentoReferido: number;
   userEmail?: string;
+  diasDisponibles?: number[];
+  dispositivosDisponibles?: number[];
 }
 
 export function RenovacionPanel({
@@ -100,6 +102,8 @@ export function RenovacionPanel({
   onSaldoRemovido,
   descuentoReferido,
   userEmail,
+  diasDisponibles = [],
+  dispositivosDisponibles = [],
 }: RenovacionPanelProps) {
   const hasSessionEmail = Boolean(userEmail);
   const handleBuscar = () => {
@@ -268,7 +272,7 @@ export function RenovacionPanel({
             delay={0.1}
           >
             <PlanSlider
-              options={DIAS_RENOVACION}
+              options={diasDisponibles.length > 0 ? diasDisponibles : DIAS_RENOVACION}
               value={dias}
               onChange={onDiasChange}
             />
@@ -283,7 +287,7 @@ export function RenovacionPanel({
               delay={0.2}
             >
               <PlanSlider
-                options={DISPOSITIVOS_RENOVACION}
+                options={dispositivosDisponibles.length > 0 ? dispositivosDisponibles : DISPOSITIVOS_RENOVACION}
                 value={dispositivosSeleccionados ?? connectionActual}
                 onChange={(v) => onDispositivosChange(v)}
                 unit="dispositivos"

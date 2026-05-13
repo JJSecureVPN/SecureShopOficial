@@ -261,25 +261,29 @@ export function RenovacionPanel({
           ) : esExpansion ? (
             <StepCard
               label="Paso 01"
-              title="Escalabilidad de cupos"
-              subtitle={`Elige los usuarios adicionales. Costo prorrateado por ${diasRestantes} días.`}
+              title="Nuevo límite de usuarios"
+              subtitle={`Selecciona el nuevo límite total para tu panel. El costo se prorrateará por los ${diasRestantes} días restantes.`}
               accent="zinc"
               delay={0.2}
             >
               <PlanSlider
-                options={[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
-                value={usuariosAAgregar}
-                onChange={(val) => onCantidadChange(cantidadBase + val)}
-                unit="usuarios extra"
+                options={[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].filter(opt => opt > cantidadBase)}
+                value={cantidadSeleccionada}
+                onChange={(val) => onCantidadChange(val)}
+                unit="cupos totales"
               />
-              <div className="mt-6 p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl grid grid-cols-2 gap-4">
+              <div className="mt-6 p-6 bg-[#060606] border border-zinc-800/80 rounded-2xl grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Base Actual</span>
                   <p className="text-lg font-black text-white">{cantidadBase}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-[#00ffc8] uppercase tracking-widest">Nueva Base</span>
-                  <p className="text-lg font-black text-white">{cantidadSeleccionada}</p>
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Cupos Extra</span>
+                  <p className="text-lg font-black text-white">+{usuariosAAgregar}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-[#00ffc8] uppercase tracking-widest">Nuevo Total</span>
+                  <p className="text-lg font-black text-[#00ffc8]">{cantidadSeleccionada}</p>
                 </div>
               </div>
             </StepCard>

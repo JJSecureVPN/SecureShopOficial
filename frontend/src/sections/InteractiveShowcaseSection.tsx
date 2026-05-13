@@ -150,10 +150,6 @@ export default function InteractiveShowcaseSection() {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Decorative SVG Lines Libres */}
-        <div className="absolute top-[40%] sm:top-1/2 -left-32 sm:-left-20 w-[300px] sm:w-[500px] h-auto pointer-events-none z-0 opacity-70 sm:opacity-85 -translate-y-1/2">
-          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto" />
-        </div>
         <div style={{ maxWidth: "1160px", margin: "0 auto", padding: "0 24px" }}>
 
           {/* ── Section header ── */}
@@ -354,7 +350,7 @@ export default function InteractiveShowcaseSection() {
               <div style={{ height: "1px", background: "#111", marginBottom: "24px" }} />
 
               {/* Description */}
-              <div style={{ flex: 1, overflow: "hidden" }}>
+              <div style={{ flex: 1, overflow: "hidden", background: "rgba(10,10,12,0.4)", backdropFilter: "blur(8px)", padding: "20px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.02)" }}>
                 <div key={`dt-${active}`} className={dir === "next" ? "title-in" : "title-in-p"}>
                   <h3 style={{
                     fontSize: "16px", fontWeight: 500, color: "#e0e0e4",
@@ -365,7 +361,7 @@ export default function InteractiveShowcaseSection() {
                 </div>
                 <div key={`dd-${active}`} className={dir === "next" ? "desc-in" : "desc-in-p"}>
                   <p style={{
-                    fontSize: "13px", color: "#444", lineHeight: 1.75,
+                    fontSize: "13px", color: "#d1d1d6", lineHeight: 1.75,
                     margin: 0,
                   }}>
                     {feat.description}
@@ -477,7 +473,7 @@ export default function InteractiveShowcaseSection() {
               </div>
 
               {/* Text */}
-              <div style={{ padding: "22px 0", minHeight: "150px" }}>
+              <div style={{ padding: "24px", minHeight: "150px", background: "rgba(10,10,12,0.6)", backdropFilter: "blur(12px)", borderRadius: "20px", marginTop: "16px", border: "1px solid rgba(255,255,255,0.03)" }}>
                 <div key={`mt-${active}`} className={dir === "next" ? "title-in" : "title-in-p"}>
                   <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "10px" }}>
                     {(() => {
@@ -493,7 +489,7 @@ export default function InteractiveShowcaseSection() {
                   </div>
                 </div>
                 <div key={`md-${active}`} className={dir === "next" ? "desc-in" : "desc-in-p"}>
-                  <p style={{ fontSize: "14px", color: "#4a4a52", lineHeight: 1.72, margin: 0 }}>
+                  <p style={{ fontSize: "14px", color: "#d1d1d6", lineHeight: 1.72, margin: 0 }}>
                     {feat.description}
                   </p>
                 </div>

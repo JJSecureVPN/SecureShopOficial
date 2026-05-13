@@ -2,9 +2,7 @@ import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
-  Clock,
   Gift,
   Loader2,
   Mail,
@@ -12,9 +10,8 @@ import {
   ShoppingBag,
   Tag,
   User,
-  Users,
   Wallet,
-  Zap,
+  X,
 } from "lucide-react";
 import CuponInput from "../../../components/CuponInput";
 import type { Plan } from "../../../types";
@@ -76,7 +73,7 @@ export const CheckoutPlanesView = ({
 }: CheckoutPlanesViewProps) => {
   if (!plan) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0c]">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto">
             <ShoppingBag className="w-5 h-5 text-orange-500 animate-pulse" />
@@ -94,7 +91,29 @@ export const CheckoutPlanesView = ({
   const precioPorDia = plan.dias > 0 ? Math.round(totalFinal / plan.dias) : 0;
 
   return (
-    <div className="min-h-screen pt-16 text-zinc-100" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen text-zinc-100 relative bg-[#111114]" style={{ fontFamily: "'Geist', system-ui, sans-serif" }}>
+
+      {/* Subtle decorative SVGs (left column only) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 lg:w-[62%] xl:w-[65%]">
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 0.3, x: 0 }}
+          transition={{ duration: 2 }}
+          className="absolute top-0 right-[2%] w-[250px] md:w-[400px] h-auto"
+        >
+          <img src="/lines-1-6ac7ba4c47562c61c5018028fd2b7a0e.svg" alt="" className="w-full h-auto opacity-50" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 0.2, y: 0 }}
+          transition={{ duration: 3, delay: 0.5 }}
+          className="absolute bottom-0 -left-[5%] w-[400px] md:w-[600px] h-auto"
+        >
+          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto opacity-40" />
+        </motion.div>
+      </div>
+
+      {/* ── Mobile summary bar ── */}
       <MobileCheckoutSummary
         isOpen={mobileSummaryOpen}
         totalLabel={`$${totalFinal.toLocaleString("es-AR")}`}
@@ -113,19 +132,18 @@ export const CheckoutPlanesView = ({
         />
       </MobileCheckoutSummary>
 
-      {/* Spacer for fixed mobile summary bar */}
-      <div className="lg:hidden h-[52px]" />
+      {/* ── Form column (left, scrollable) ── */}
+      <div className="relative z-10 lg:w-[62%] xl:w-[65%] px-4 sm:px-6 lg:px-12 xl:px-20 pt-20 pb-8 lg:py-14">
+        <div className="max-w-[600px] mx-auto">
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 lg:py-0 lg:min-h-screen lg:flex mt-4 lg:mt-0">
-        <div className="lg:flex-1 lg:pr-8 xl:pr-16 lg:py-12 lg:max-w-[58%]">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-8">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-10">
             <div className="flex items-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] font-semibold tracking-widest uppercase">
                 <ShoppingBag className="w-3 h-3" />
                 Plan VPN
               </span>
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white mb-2 leading-none">
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white mb-2 leading-tight">
               Completa tus datos
             </h1>
             <p className="text-sm text-zinc-500 leading-relaxed">
@@ -137,7 +155,7 @@ export const CheckoutPlanesView = ({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.03] overflow-hidden"
+            className="rounded-2xl border border-[#323644] bg-[#1e1f26] shadow-xl overflow-hidden"
           >
             <div className="px-6 py-5 border-b border-white/[0.05]">
               <SectionLabel icon={<User className="w-3.5 h-3.5" />} label="Información de contacto" step="1" />
@@ -151,7 +169,7 @@ export const CheckoutPlanesView = ({
                     type="text"
                     value={nombre}
                     onChange={(event) => onNombreChange(event.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-zinc-900/80 border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-900/80 border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200"
                     placeholder="Juan Pérez"
                   />
                 </div>
@@ -165,7 +183,7 @@ export const CheckoutPlanesView = ({
                     value={email}
                     readOnly={userEmailLocked}
                     onChange={(event) => onEmailChange(event.target.value)}
-                    className={`w-full pl-11 pr-11 py-3.5 rounded-xl border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200 ${
+                    className={`w-full pl-11 pr-11 py-3 rounded-xl border border-white/[0.07] text-[15px] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20 hover:border-white/[0.12] transition-all duration-200 ${
                       userEmailLocked ? "bg-zinc-800/90 cursor-not-allowed" : "bg-zinc-900/80"
                     }`}
                     placeholder="tu@email.com"
@@ -218,14 +236,13 @@ export const CheckoutPlanesView = ({
                 >
                   <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-rose-500/[0.07] border border-rose-500/20">
                     <AlertCircle className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-rose-300">{error}</p>
-                    </div>
+                    <p className="text-sm font-medium text-rose-300">{error}</p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
+            {/* Mobile-only payment */}
             <div className="lg:hidden border-t border-white/[0.05]">
               <div className="px-6 py-5 border-b border-white/[0.05]">
                 <SectionLabel icon={<Shield className="w-3.5 h-3.5" />} label="Método de pago" step="4" />
@@ -242,134 +259,74 @@ export const CheckoutPlanesView = ({
             </div>
           </motion.div>
 
-          <div className="mt-6 lg:mt-10">
+          <div className="mt-12 pt-8 border-t border-[#323644]/30">
             <button
               onClick={onBack}
-              className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 text-sm font-semibold rounded-xl transition-colors"
+              className="w-full py-4 px-6 bg-[#1e1f26] hover:bg-[#2a2b35] border border-[#323644] text-zinc-400 hover:text-zinc-100 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Volver a planes
+              <X className="w-4 h-4" />
+              Cancelar y volver
             </button>
           </div>
         </div>
-
-        <DesktopCheckoutSummary>
-            <div className="space-y-4">
-              <p className="text-[11px] font-semibold tracking-widest text-zinc-600 uppercase">Resumen del pedido</p>
-
-              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-5">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold tracking-wide uppercase">
-                        <Check className="w-2.5 h-2.5" />
-                        Seleccionado
-                      </span>
-                    </div>
-                    <h2 className="text-xl font-bold text-white tracking-tight leading-tight">{plan.nombre}</h2>
-                    <p className="text-sm text-zinc-500 mt-1 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      {plan.dias} días de acceso
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                    <ShoppingBag className="w-5 h-5 text-orange-400" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/[0.05]">
-                  <FeaturePill icon={<Users className="w-3 h-3" />} text={`${plan.connection_limit} dispositivos`} color="orange" />
-                  <FeaturePill icon={<Zap className="w-3 h-3" />} text="Velocidad alta" color="emerald" />
-                  <FeaturePill icon={<Shield className="w-3 h-3" />} text="Pago seguro SSL" color="blue" />
-                  <FeaturePill icon={<Check className="w-3 h-3" />} text="Soporte incluido" color="violet" />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-5 space-y-3">
-              <PriceLine label="Subtotal" value={`$${subtotal.toLocaleString("es-AR")}`} />
-
-              <AnimatePresence>
-                {descuentoAplicado > 0 && (
-                  <AnimatedLine key="coupon-line">
-                    <PriceLine
-                      label={cuponData?.codigo ? `Cupón ${cuponData.codigo}` : "Descuento"}
-                      value={`−$${descuentoAplicado.toLocaleString("es-AR")}`}
-                      accent="emerald"
-                      icon={<Tag className="w-3 h-3" />}
-                    />
-                  </AnimatedLine>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {descuentoReferido > 0 && (
-                  <AnimatedLine key="referral-line">
-                    <PriceLine
-                      label={codigoReferido ? `Referido ${codigoReferido}` : "Descuento referido"}
-                      value={`−$${descuentoReferido.toLocaleString("es-AR")}`}
-                      accent="emerald"
-                      icon={<Gift className="w-3 h-3" />}
-                    />
-                  </AnimatedLine>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {saldoUsado > 0 && (
-                  <AnimatedLine key="balance-line">
-                    <PriceLine
-                      label="Saldo aplicado"
-                      value={`−$${saldoUsado.toLocaleString("es-AR")}`}
-                      accent="emerald"
-                      icon={<Wallet className="w-3 h-3" />}
-                    />
-                  </AnimatedLine>
-                )}
-              </AnimatePresence>
-
-              {totalDescuentos + saldoUsado > 0 && (
-                <div className="px-3 py-2 rounded-xl bg-emerald-500/[0.07] border border-emerald-500/15 flex items-center justify-between">
-                  <span className="text-[11px] text-emerald-400">Ahorro total</span>
-                  <span className="text-[11px] font-bold text-emerald-400 tabular-nums">
-                    ${Math.max(0, totalDescuentos + saldoUsado).toLocaleString("es-AR")}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center text-sm pt-1">
-                <span className="text-zinc-500">Precio por día</span>
-                <span className="text-zinc-300 font-medium tabular-nums">${precioPorDia.toLocaleString("es-AR")}</span>
-              </div>
-
-              <div className="flex justify-between items-center pt-3 border-t border-white/[0.06]">
-                <span className="text-sm font-semibold text-zinc-200">Total</span>
-                <motion.span
-                  key={totalFinal}
-                  initial={{ scale: 0.94, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  className="text-4xl font-black text-orange-400 tabular-nums tracking-tight"
-                >
-                  ${totalFinal.toLocaleString("es-AR")}
-                </motion.span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <PaymentBlock
-                containerId="wallet_container_planes"
-                mpFallbackVisible={mpFallbackVisible}
-                processingPayment={processingPayment}
-                pagoConSaldoCompleto={pagoConSaldoCompleto}
-                onFallbackPayment={onFallbackPayment}
-              />
-            </div>
-        </DesktopCheckoutSummary>
       </div>
+
+      {/* ── Desktop summary (right, fixed full-height) ── */}
+      <DesktopCheckoutSummary>
+        <div className="w-full space-y-8">
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-6">
+              <ShoppingBag className="w-3 h-3" />
+              Resumen
+            </span>
+            <h2 className="text-4xl font-bold text-white tracking-tight mb-2">{plan.dias} días</h2>
+            <p className="text-sm text-zinc-500 font-medium">
+              Protección para {plan.connection_limit} {plan.connection_limit === 1 ? "dispositivo" : "dispositivos"} simultáneos.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Pago único</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-6xl font-black text-white tracking-tighter">${totalFinal.toLocaleString("es-AR")}</span>
+              <span className="text-xs font-bold text-zinc-600 tracking-widest uppercase">ARS</span>
+            </div>
+            {precioPorDia > 0 && (
+              <p className="text-sm font-medium text-emerald-400 mt-2">
+                Valor equivalente <span className="ml-1">${precioPorDia.toLocaleString("es-AR")}/día</span>
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-4 py-8 border-y border-white/[0.05]">
+            <BenefitItem text="Servidores premium en +15 países" />
+            <BenefitItem text="Cambio de ubicaciones sin límites" />
+            <BenefitItem text="Soporte humano 24/7" />
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <PaymentBlock
+              containerId="wallet_container_planes"
+              mpFallbackVisible={mpFallbackVisible}
+              processingPayment={processingPayment}
+              pagoConSaldoCompleto={pagoConSaldoCompleto}
+              onFallbackPayment={onFallbackPayment}
+            />
+          </div>
+        </div>
+      </DesktopCheckoutSummary>
     </div>
   );
 };
+
+/* ── Helper components ── */
+
+const BenefitItem = ({ text }: { text: string }) => (
+  <div className="flex items-center gap-3">
+    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+    <span className="text-sm text-zinc-400">{text}</span>
+  </div>
+);
 
 const SectionLabel = ({ icon, label, step, optional }: { icon: ReactNode; label: string; step: string; optional?: boolean }) => (
   <div className="flex items-center justify-between">
@@ -391,97 +348,46 @@ const FieldWrapper = ({ label, children }: { label: string; children: ReactNode 
   </div>
 );
 
-const FeaturePill = ({ icon, text, color }: { icon: ReactNode; text: string; color: "orange" | "emerald" | "blue" | "violet" }) => {
-  const colors = {
-    orange: "text-orange-400 bg-orange-500/10",
-    emerald: "text-emerald-400 bg-emerald-500/10",
-    blue: "text-blue-400 bg-blue-500/10",
-    violet: "text-violet-400 bg-violet-500/10",
-  };
-
-  return (
-    <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${colors[color]} text-[11px] font-medium`}>
-      {icon}
-      <span>{text}</span>
+const PaymentBlock = ({ containerId, mpFallbackVisible, processingPayment, pagoConSaldoCompleto, onFallbackPayment }: { containerId: string; mpFallbackVisible: boolean; processingPayment: boolean; pagoConSaldoCompleto: boolean; onFallbackPayment: () => void }) => (
+  <div className="w-full space-y-4">
+    <div className={pagoConSaldoCompleto ? "hidden" : "block space-y-4"}>
+      <div id={containerId} className="min-h-[54px]" />
+      {mpFallbackVisible && (
+        <button
+          onClick={onFallbackPayment}
+          disabled={processingPayment}
+          className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-xl"
+        >
+          {processingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continuar al pago"}
+          {!processingPayment && <X className="w-4 h-4 rotate-45" />} {/* Arrow replacement if needed, using X rotated */}
+        </button>
+      )}
     </div>
-  );
-};
+    
+    {pagoConSaldoCompleto && (
+      <button
+        onClick={onFallbackPayment}
+        disabled={processingPayment}
+        className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-xl"
+      >
+        {processingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : "Pagar con mi saldo"}
+        {!processingPayment && <X className="w-4 h-4 rotate-45" />}
+      </button>
+    )}
 
-const AnimatedLine = ({ children }: { children: ReactNode }) => (
-  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-    {children}
-  </motion.div>
-);
-
-const PriceLine = ({
-  label,
-  value,
-  icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  icon?: ReactNode;
-  accent?: "emerald";
-}) => (
-  <div className="flex justify-between items-center text-sm gap-3">
-    <span className={`flex items-center gap-1.5 ${accent === "emerald" ? "text-emerald-400" : "text-zinc-500"}`}>
-      {icon}
-      {label}
-    </span>
-    <span className={`font-medium tabular-nums ${accent === "emerald" ? "text-emerald-400" : "text-zinc-300"}`}>{value}</span>
+    <div className="flex items-center justify-center gap-2 pt-4">
+      <Shield className="w-3.5 h-3.5 text-zinc-600" />
+      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Pago cifrado y seguro</span>
+    </div>
   </div>
 );
 
-const PaymentBlock = ({
-  containerId,
-  mpFallbackVisible,
-  processingPayment,
-  pagoConSaldoCompleto,
-  onFallbackPayment,
-}: {
-  containerId: string;
-  mpFallbackVisible: boolean;
-  processingPayment: boolean;
-  pagoConSaldoCompleto: boolean;
-  onFallbackPayment: () => void;
-}) => (
-  <>
-    <div className={pagoConSaldoCompleto ? "hidden" : "block space-y-3"}>
-      <div id={containerId} className="min-h-[54px]" />
-      {mpFallbackVisible && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} label="Pagar con Mercado Pago" />}
-    </div>
-    {pagoConSaldoCompleto && <FallbackButton loading={processingPayment} onClick={onFallbackPayment} label="Pagar con mi saldo" emerald />}
-    <SecurityBadge />
-  </>
-);
-
-const MobilePlanCard = ({
-  plan,
-  totalFinal,
-  subtotal,
-  descuentoAplicado,
-  descuentoReferido,
-  saldoUsado,
-  cuponData,
-  codigoReferido,
-}: {
-  plan: Plan;
-  totalFinal: number;
-  subtotal: number;
-  descuentoAplicado: number;
-  descuentoReferido: number;
-  saldoUsado: number;
-  cuponData: ValidacionCupon["cupon"] | null;
-  codigoReferido: string | null;
-}) => (
+const MobilePlanCard = ({ plan, totalFinal, subtotal, descuentoAplicado, descuentoReferido, saldoUsado, cuponData, codigoReferido }: { plan: Plan; totalFinal: number; subtotal: number; descuentoAplicado: number; descuentoReferido: number; saldoUsado: number; cuponData: ValidacionCupon["cupon"] | null; codigoReferido: string | null }) => (
   <div className="space-y-3 pt-4">
     <div className="flex justify-between items-start gap-4">
       <div>
         <p className="font-semibold text-white text-base">{plan.nombre}</p>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          {plan.dias} días · {plan.connection_limit} dispositivos
-        </p>
+        <p className="text-xs text-zinc-500 mt-0.5">{plan.dias} días · {plan.connection_limit} dispositivos</p>
       </div>
       <div className="text-right">
         <p className="text-2xl font-black text-orange-400 tabular-nums">${totalFinal.toLocaleString("es-AR")}</p>
@@ -490,15 +396,9 @@ const MobilePlanCard = ({
         )}
       </div>
     </div>
-    {descuentoAplicado > 0 && (
-      <DiscountBadge icon={<Tag className="w-3 h-3 text-emerald-400" />} text={`Cupón ${cuponData?.codigo || "aplicado"} · −$${descuentoAplicado.toLocaleString("es-AR")}`} />
-    )}
-    {descuentoReferido > 0 && (
-      <DiscountBadge icon={<Gift className="w-3 h-3 text-emerald-400" />} text={`${codigoReferido ? `Referido ${codigoReferido}` : "Descuento referido"} · −$${descuentoReferido.toLocaleString("es-AR")}`} />
-    )}
-    {saldoUsado > 0 && (
-      <DiscountBadge icon={<Wallet className="w-3 h-3 text-emerald-400" />} text={`Saldo aplicado · −$${saldoUsado.toLocaleString("es-AR")}`} />
-    )}
+    {descuentoAplicado > 0 && <DiscountBadge icon={<Tag className="w-3 h-3 text-emerald-400" />} text={`Cupón ${cuponData?.codigo || "aplicado"} · −$${descuentoAplicado.toLocaleString("es-AR")}`} />}
+    {descuentoReferido > 0 && <DiscountBadge icon={<Gift className="w-3 h-3 text-emerald-400" />} text={`${codigoReferido ? `Referido ${codigoReferido}` : "Descuento referido"} · −$${descuentoReferido.toLocaleString("es-AR")}`} />}
+    {saldoUsado > 0 && <DiscountBadge icon={<Wallet className="w-3 h-3 text-emerald-400" />} text={`Saldo aplicado · −$${saldoUsado.toLocaleString("es-AR")}`} />}
   </div>
 );
 
@@ -506,45 +406,5 @@ const DiscountBadge = ({ icon, text }: { icon: ReactNode; text: string }) => (
   <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
     {icon}
     <span className="text-xs text-emerald-400 font-medium">{text}</span>
-  </div>
-);
-
-const FallbackButton = ({
-  loading,
-  onClick,
-  label,
-  emerald,
-}: {
-  loading: boolean;
-  onClick: () => void;
-  label: string;
-  emerald?: boolean;
-}) => (
-  <button
-    onClick={onClick}
-    disabled={loading}
-    className={`w-full py-3.5 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${
-      emerald
-        ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20 disabled:bg-zinc-800 disabled:text-zinc-500"
-        : "bg-orange-500 hover:bg-orange-400 text-white shadow-orange-500/20 disabled:bg-zinc-800 disabled:text-zinc-500"
-    }`}
-  >
-    {loading ? (
-      <>
-        <Loader2 className="w-4 h-4 animate-spin" />
-        Procesando…
-      </>
-    ) : (
-      label
-    )}
-  </button>
-);
-
-const SecurityBadge = () => (
-  <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-    <Shield className="w-4 h-4 text-zinc-600 flex-shrink-0" />
-    <p className="text-[11px] text-zinc-600 leading-tight">
-      <span className="text-zinc-500 font-medium">Pago 100% seguro</span> · Procesado por Mercado Pago · SSL encriptado
-    </p>
   </div>
 );

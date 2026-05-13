@@ -16,7 +16,7 @@ interface HomePageProps {
 }
 
 // eslint-disable-next-line no-empty-pattern
-const HomePage = ({}: HomePageProps) => {
+const HomePage = ({ }: HomePageProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Verificar si el usuario vuelve de MercadoPago
@@ -48,48 +48,36 @@ const HomePage = ({}: HomePageProps) => {
     <div className="relative overflow-x-hidden">
       {/* Decorative Background Elements - Standardized large SVGs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Lines 1: Top Right */}
+        {/* Lines 1: Top Right (Hero Area - Smaller) */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 0.6, x: 0 }}
+          animate={{ opacity: 0.7, x: 0 }}
           transition={{ duration: 2 }}
-          className="absolute top-0 -right-[10%] w-[600px] md:w-[900px] h-auto opacity-40"
+          className="absolute top-0 right-[2%] w-[300px] md:w-[450px] h-auto opacity-70"
         >
-          <img src="/lines-1-6ac7ba4c47562c61c5018028fd2b7a0e.svg" alt="" className="w-full h-auto" />
+          <img src="/lines-1-6ac7ba4c47562c61c5018028fd2b7a0e.svg" alt="" className="w-full h-auto brightness-125" />
         </motion.div>
-
-        {/* Lines 2: Right Middle */}
+        {/* Lines 2: Right Middle - Smaller */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 0.5, x: 0 }}
+          animate={{ opacity: 0.8, x: 0 }}
           transition={{ duration: 2.5, delay: 0.5 }}
-          className="absolute top-[20%] -right-[10%] w-[700px] md:w-[1000px] h-auto opacity-30"
+          className="absolute top-[20%] right-[0%] w-[400px] md:w-[600px] h-auto opacity-80"
         >
-          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto" />
-        </motion.div>
-
-        {/* Lines 3: Left Middle */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 0.4, x: 0 }}
-          transition={{ duration: 3, delay: 1 }}
-          className="absolute top-[55%] -left-[5%] w-[800px] md:w-[1100px] h-auto opacity-40"
-        >
-          <img src="/lines-3-4541e35a1939230404d773f7eeddcc9b.svg" alt="" className="w-full h-auto" />
+          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto brightness-125" />
         </motion.div>
 
         {/* Lines 4: Bottom Left */}
         <motion.div
           initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 0.3, y: 0 }}
+          animate={{ opacity: 0.6, y: 0 }}
           transition={{ duration: 3.5, delay: 1.5 }}
-          className="absolute bottom-0 -left-[10%] w-[600px] md:w-[900px] h-auto opacity-30"
+          className="absolute bottom-0 -left-[10%] w-[600px] md:w-[900px] h-auto opacity-60"
         >
-          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto" />
+          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto brightness-125" />
         </motion.div>
-      </div>
 
-      {/* Main Content */}
+      </div>
       <main className="relative z-10">
         {/* Hero Section */}
         <div id="section-hero">
@@ -120,8 +108,8 @@ const HomePage = ({}: HomePageProps) => {
         {/* Split Text Animation Section */}
         <section className="relative py-20 overflow-x-clip">
           <div className="container mx-auto px-4 flex flex-col items-center justify-center relative z-20">
-            <SplitText 
-              text="SECURE VPN" 
+            <SplitText
+              text="SECURE VPN"
               className="text-primary"
             />
           </div>

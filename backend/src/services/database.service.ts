@@ -2,16 +2,10 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import {
-  Plan,
-  PlanRow,
   Pago,
   PagoRow,
-  CrearPlanInput,
-  PlanRevendedor,
-  PlanRevendedorRow,
   PagoRevendedor,
   PagoRevendedorRow,
-  CrearPlanRevendedorInput,
   Donacion,
   DonacionRow,
   Sponsor,
@@ -45,19 +39,6 @@ export class DatabaseService {
   }
 
   private inicializarTablas(): void {
-    // Tabla de planes
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS planes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL UNIQUE,
-        descripcion TEXT,
-        precio REAL NOT NULL,
-        dias INTEGER NOT NULL,
-        connection_limit INTEGER NOT NULL DEFAULT 1,
-        activo INTEGER NOT NULL DEFAULT 1,
-        fecha_creacion TEXT NOT NULL DEFAULT (datetime('now'))
-      )
-    `);
 
     // Tabla de pagos
     this.db.exec(`
@@ -263,20 +244,6 @@ export class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_renovaciones_mp_payment ON renovaciones(mp_payment_id);
     `);
 
-    // Tabla para planes de revendedores
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS planes_revendedores (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        descripcion TEXT,
-        precio REAL NOT NULL,
-        max_users INTEGER NOT NULL,
-        account_type TEXT NOT NULL CHECK(account_type IN ('validity', 'credit')),
-        dias INTEGER,
-        activo INTEGER DEFAULT 1,
-        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
 
     // Tabla para pagos de revendedores
     this.db.exec(`
@@ -313,43 +280,6 @@ export class DatabaseService {
     `);
   }
 
-  // ============================================
-  // MÉTODOS PARA PLANES
-  // ============================================
-
-  obtenerPlanes(): Plan[] {
-    const stmt = this.db.prepare(
-      "SELECT * FROM planes WHERE activo = 1 ORDER BY precio ASC"
-    );
-    const rows = stmt.all() as PlanRow[];
-    return rows.map(this.mapPlanRowToPlan);
-  }
-
-  obtenerPlanPorId(id: number): Plan | null {
-    const stmt = this.db.prepare("SELECT * FROM planes WHERE id = ?");
-    const row = stmt.get(id) as PlanRow | undefined;
-    return row ? this.mapPlanRowToPlan(row) : null;
-  }
-
-  crearPlan(input: CrearPlanInput): Plan {
-    const stmt = this.db.prepare(`
-      INSERT INTO planes (nombre, descripcion, precio, dias, connection_limit, activo)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
-      input.nombre,
-      input.descripcion || "",
-      input.precio,
-      input.dias,
-      input.connection_limit,
-      input.activo ? 1 : 0
-    );
-
-    const plan = this.obtenerPlanPorId(result.lastInsertRowid as number);
-    if (!plan) throw new Error("Error al crear plan");
-    return plan;
-  }
 
   // ============================================
   // MÉTODOS PARA PAGOS
@@ -707,18 +637,6 @@ export class DatabaseService {
     };
   }
 
-  private mapPlanRowToPlan(row: PlanRow): Plan {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      descripcion: row.descripcion,
-      precio: row.precio,
-      dias: row.dias,
-      connection_limit: row.connection_limit,
-      activo: row.activo === 1,
-      fecha_creacion: new Date(row.fecha_creacion),
-    };
-  }
 
   private mapPagoRowToPago(row: PagoRow): Pago {
     return {
@@ -761,54 +679,6 @@ export class DatabaseService {
     };
   }
 
-  // ============================================
-  // PLANES DE REVENDEDORES
-  // ============================================
-
-  obtenerPlanesRevendedores(): PlanRevendedor[] {
-    const stmt = this.db.prepare(`
-      SELECT * FROM planes_revendedores 
-      WHERE activo = 1 
-      ORDER BY precio ASC
-    `);
-    const rows = stmt.all() as PlanRevendedorRow[];
-    return rows.map(this.mapRowToPlanRevendedor);
-  }
-
-  obtenerPlanRevendedorPorId(id: number): PlanRevendedor | null {
-    const stmt = this.db.prepare(
-      "SELECT * FROM planes_revendedores WHERE id = ?"
-    );
-    const row = stmt.get(id) as PlanRevendedorRow | undefined;
-    return row ? this.mapRowToPlanRevendedor(row) : null;
-  }
-
-  crearPlanRevendedor(input: CrearPlanRevendedorInput): PlanRevendedor {
-    const stmt = this.db.prepare(`
-      INSERT INTO planes_revendedores 
-      (nombre, descripcion, precio, max_users, account_type, dias, activo)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
-      input.nombre,
-      input.descripcion || null,
-      input.precio,
-      input.max_users,
-      input.account_type,
-      input.dias || null,
-      input.activo !== undefined ? (input.activo ? 1 : 0) : 1
-    );
-
-    const planCreado = this.obtenerPlanRevendedorPorId(
-      result.lastInsertRowid as number
-    );
-    if (!planCreado) {
-      throw new Error("Error al crear el plan de revendedor");
-    }
-
-    return planCreado;
-  }
 
   // ============================================
   // PAGOS DE REVENDEDORES
@@ -962,19 +832,6 @@ export class DatabaseService {
   // MAPPERS PARA REVENDEDORES
   // ============================================
 
-  private mapRowToPlanRevendedor(row: PlanRevendedorRow): PlanRevendedor {
-    return {
-      id: row.id,
-      nombre: row.nombre,
-      descripcion: row.descripcion,
-      precio: row.precio,
-      max_users: row.max_users,
-      account_type: row.account_type as "validity" | "credit",
-      dias: row.dias || undefined,
-      activo: row.activo === 1,
-      fecha_creacion: new Date(row.fecha_creacion),
-    };
-  }
 
   private mapRowToPagoRevendedor(row: PagoRevendedorRow): PagoRevendedor {
     return {

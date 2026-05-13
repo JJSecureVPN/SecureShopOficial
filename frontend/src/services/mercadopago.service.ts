@@ -14,21 +14,22 @@ class MercadoPagoService {
   private onSubmitCallback: (() => Promise<string>) | null = null;
   private createdContainers: Set<string> = new Set();
   private creationAttempts: Map<string, number> = new Map();
-  private containerCreated: boolean = false;
 
   private constructor() {
     console.log('[MercadoPagoService] Instancia creada (singleton)');
-    this.ensureContainerExists();
   }
 
-  private ensureContainerExists(): void {
-    if (this.containerCreated) return;
-    
-    // El contenedor ya está en CheckoutPage, no creamos uno en el body
-    // Solo marcamos que verificamos
-    if (document.getElementById('mp-wallet-container-unique')) {
-      console.log('[MercadoPagoService] ✅ Contenedor ya existe en el DOM');
-      this.containerCreated = true;
+  public resetContainers(): void {
+    console.log('[MercadoPagoService] Reseteando estado de contenedores');
+    this.createdContainers.clear();
+    this.creationAttempts.clear();
+    if (this.buttonInstance) {
+      try {
+        this.buttonInstance.unmount();
+      } catch (e) {
+        console.warn('[MercadoPagoService] Error unmounting button during reset:', e);
+      }
+      this.buttonInstance = null;
     }
   }
 
@@ -57,7 +58,16 @@ class MercadoPagoService {
       }
 
       if (!window.MercadoPago) {
-        throw new Error('SDK de MercadoPago no está cargado');
+        // Reintentar un par de veces si el script aún no carga
+        for (let i = 0; i < 5; i++) {
+          if (window.MercadoPago) break;
+          console.log(`[MercadoPago] Esperando SDK... intento ${i+1}`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        if (!window.MercadoPago) {
+          throw new Error('SDK de MercadoPago no está cargado después de esperar');
+        }
       }
       
       if (!config.publicKey) {
@@ -110,22 +120,20 @@ class MercadoPagoService {
       await this.initialize();
     }
 
-    // Si el botón ya existe en este contenedor, NUNCA lo volvemos a crear
+    // Si el botón ya existe en este contenedor, verificar si sigue en el DOM
     if (this.createdContainers.has(containerId)) {
-      console.log(`[MercadoPago] Contenedor ${containerId} ya tiene botón creado, solo actualizando callback`);
-      this.onSubmitCallback = onSubmit;
-      return;
-    }
-
-    // Contar intentos de creación
-    const attempts = (this.creationAttempts.get(containerId) || 0) + 1;
-    this.creationAttempts.set(containerId, attempts);
-    console.log(`[MercadoPago] Intento #${attempts} de crear botón en ${containerId}`);
-
-    if (attempts > 1) {
-      console.warn(`[MercadoPago] ⚠️ INTENTO MÚLTIPLE #${attempts} de crear botón en ${containerId} - previniendo creación`);
-      this.onSubmitCallback = onSubmit;
-      return;
+      const el = document.getElementById(containerId);
+      const hasContent = el && el.innerHTML.trim().length > 0;
+      
+      if (hasContent) {
+        console.log(`[MercadoPago] Contenedor ${containerId} ya tiene botón visible, actualizando callback`);
+        this.onSubmitCallback = onSubmit;
+        return;
+      } else {
+        console.log(`[MercadoPago] Contenedor ${containerId} marcado como creado pero está VACÍO en el DOM. Re-creando...`);
+        this.createdContainers.delete(containerId);
+        this.creationAttempts.delete(containerId);
+      }
     }
 
     this.onSubmitCallback = onSubmit;

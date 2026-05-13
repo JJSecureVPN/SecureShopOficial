@@ -190,6 +190,15 @@ export default function PlanesPage({ }: PlanesPageProps) {
     [planesRenovacion, planes]
   );
 
+  const diasDisponiblesRenovacion = useMemo(() => obtenerDiasDisponibles(planesParaRenovacion), [planesParaRenovacion]);
+  const dispositivosDisponiblesRenovacion = useMemo(() => {
+    const fromPlanes = obtenerDispositivosDisponibles(planesParaRenovacion);
+    if (connectionActual && !fromPlanes.includes(connectionActual)) {
+      return [...fromPlanes, connectionActual].sort((a, b) => a - b);
+    }
+    return fromPlanes;
+  }, [planesParaRenovacion, connectionActual]);
+
   const planRenovacionSeleccionado = useMemo(
     () => encontrarPlan(planesParaRenovacion, diasRenovacion, connectionDestino),
     [planesParaRenovacion, diasRenovacion, connectionDestino]
@@ -400,26 +409,36 @@ export default function PlanesPage({ }: PlanesPageProps) {
     <div className="text-zinc-100 min-h-screen relative overflow-x-hidden">
       <DemoModal isOpen={isDemoOpen} onClose={() => setIsDemoOpen(false)} />
 
-      {/* Decorative Background Elements - Positioned behind content */}
+      {/* Decorative Background Elements - Standardized large SVGs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Lines 2: Right Middle */}
+        {/* Lines 1: Top Right (Hero Area - Smaller) */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 0.5, x: 0 }}
-          transition={{ duration: 2.5, delay: 0.5 }}
-          className="absolute top-[20%] -right-[10%] w-[600px] md:w-[900px] h-auto opacity-30"
+          animate={{ opacity: 0.7, x: 0 }}
+          transition={{ duration: 2 }}
+          className="absolute top-0 right-[2%] w-[300px] md:w-[450px] h-auto opacity-70"
         >
-          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto" />
+          <img src="/lines-1-6ac7ba4c47562c61c5018028fd2b7a0e.svg" alt="" className="w-full h-auto brightness-125" />
         </motion.div>
 
-        {/* Lines 3: Flowing through Middle */}
+        {/* Lines 2: Right Middle - Smaller */}
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 0.4, x: 0 }}
-          transition={{ duration: 3, delay: 1 }}
-          className="absolute top-[55%] -left-[2%] w-[700px] md:w-[1000px] h-auto opacity-40"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 0.8, x: 0 }}
+          transition={{ duration: 2.5, delay: 0.5 }}
+          className="absolute top-[20%] right-[0%] w-[400px] md:w-[600px] h-auto opacity-80"
         >
-          <img src="/lines-3-4541e35a1939230404d773f7eeddcc9b.svg" alt="" className="w-full h-auto" />
+          <img src="/lines-2-4e66616a5ef291c3566a7ddfe1ffaaa8.svg" alt="" className="w-full h-auto brightness-125" />
+        </motion.div>
+
+        {/* Lines 4: Bottom Left */}
+        <motion.div
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 0.6, y: 0 }}
+          transition={{ duration: 3.5, delay: 1.5 }}
+          className="absolute bottom-0 -left-[10%] w-[600px] md:w-[900px] h-auto opacity-60"
+        >
+          <img src="/lines-4-4ea88270d73b7f6eaaa69e91aed97ddf.svg" alt="" className="w-full h-auto brightness-125" />
         </motion.div>
       </div>
 
@@ -626,6 +645,8 @@ export default function PlanesPage({ }: PlanesPageProps) {
                 onSaldoRemovido={handleSaldoRemovido}
                 descuentoReferido={descuentoReferidoRenovacion}
                 userEmail={user?.email}
+                diasDisponibles={diasDisponiblesRenovacion}
+                dispositivosDisponibles={dispositivosDisponiblesRenovacion}
               />
             )}
           </div>

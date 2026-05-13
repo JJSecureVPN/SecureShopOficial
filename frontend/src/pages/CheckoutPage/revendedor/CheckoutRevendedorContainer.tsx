@@ -180,27 +180,57 @@ const CheckoutRevendedorContainer: React.FC = () => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const init = async () => {
+      // Pequeño delay para asegurar que el DOM esté listo
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!mounted) return;
+
       try {
         await mercadoPagoService.initialize();
+        if (!mounted) return;
+
         if (plan) {
-          await mercadoPagoService.createButton("wallet_container_revendedor", getPreferenceIdForPayment);
-          try {
-            await mercadoPagoService.createButton("wallet_container_revendedor_mobile", getPreferenceIdForPayment);
-          } catch {
-            // ignore if mobile container is missing
+          const createWithRetry = async (cid: string) => {
+            for (let i = 0; i < 3; i++) {
+              try {
+                if (document.getElementById(cid)) {
+                  await mercadoPagoService.createButton(cid, getPreferenceIdForPayment);
+                  return true;
+                }
+              } catch (e) {
+                console.warn(`[CheckoutRevendedor] Intento ${i+1} fallido para ${cid}:`, e);
+              }
+              await new Promise(r => setTimeout(r, 500));
+            }
+            return false;
+          };
+
+          const successDesktop = await createWithRetry("wallet_container_revendedor");
+          const successMobile = await createWithRetry("wallet_container_revendedor_mobile");
+
+          if (mounted) {
+            setMpFallbackVisible(!successDesktop && !successMobile);
           }
-          setMpFallbackVisible(false);
         }
-      } catch {
-        setMpFallbackVisible(true);
-        setError("Error de conexión con MercadoPago. Usando método alternativo.");
+      } catch (err) {
+        console.error('[CheckoutRevendedor] Error fatal inicializando MP:', err);
+        if (mounted) {
+          setMpFallbackVisible(true);
+          setError("Error de conexión con MercadoPago. Usando método alternativo.");
+        }
       }
     };
 
     if (plan) {
       void init();
     }
+
+    return () => {
+      mounted = false;
+      mercadoPagoService.resetContainers();
+    };
   }, [plan, getPreferenceIdForPayment]);
 
   return (
