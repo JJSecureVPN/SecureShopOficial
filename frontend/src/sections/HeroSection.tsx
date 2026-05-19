@@ -177,17 +177,16 @@ export default function HeroSection() {
           >
             <button
               onClick={() => setIsRepairOpen(true)}
-              className="group flex items-center gap-3 px-4 py-2 rounded-full border border-white/5 hover:border-white/10 transition-all"
+              className="group flex items-center gap-3 px-5 py-2.5 rounded-full border border-zinc-800/80 hover:border-emerald-500/30 bg-[#0d0d0f] transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
             >
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest group-hover:text-zinc-400 transition-colors">
-                System Status: <span className="text-zinc-400">Operational</span>
+              <Zap className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                ¿Problemas tras renovar?
               </span>
               <div className="h-3 w-px bg-white/10 mx-1" />
-              <span className="text-[10px] font-mono text-zinc-600 group-hover:text-white transition-colors underline underline-offset-4 decoration-zinc-800">
-                Repair Sync
+              <span className="text-[10.5px] font-bold text-emerald-400 group-hover:text-white transition-colors underline underline-offset-4 decoration-emerald-500/30">
+                Reparar / Sincronizar Cuenta
               </span>
-              <Zap className="w-3 h-3 text-zinc-700 group-hover:text-white transition-colors" />
             </button>
           </motion.div>
 

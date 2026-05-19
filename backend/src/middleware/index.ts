@@ -107,7 +107,12 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
  */
 export const loggerMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const start = Date.now();
-  const { method, originalUrl, ip } = req;
+  const { method, originalUrl } = req;
+  const ip = (req.headers["cf-connecting-ip"] as string) || 
+             (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || 
+             req.ip || 
+             req.socket?.remoteAddress || 
+             "unknown";
 
   res.on('finish', () => {
     const duration = Date.now() - start;

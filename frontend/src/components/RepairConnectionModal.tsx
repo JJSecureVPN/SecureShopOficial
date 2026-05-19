@@ -102,10 +102,13 @@ const RepairConnectionModal: React.FC<RepairConnectionModalProps> = ({
                 <div className="w-20 h-20 rounded-full bg-emerald-500/5 flex items-center justify-center border border-emerald-500/10">
                   <CheckCircle className="w-10 h-10 text-emerald-400" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <h3 className="text-2xl font-extrabold text-white">¡Reparado!</h3>
-                  <p className="text-zinc-500 text-sm">
+                  <p className="text-zinc-400 text-sm">
                     Hemos actualizado tu cuenta <span className="text-white font-mono">@{username}</span> en el cluster.
+                  </p>
+                  <p className="text-emerald-400 font-semibold text-sm leading-relaxed">
+                    Intenta conectar ahora. Si el error persiste, repite esta acción una vez más.
                   </p>
                 </div>
               </div>

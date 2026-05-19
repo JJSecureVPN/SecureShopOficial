@@ -47,12 +47,49 @@ export class WebSocketService extends EventEmitter {
     super();
     this.servexToken = process.env.SERVEX_API_KEY || '';
     this.debugLogging = (process.env.NODE_ENV || 'development') !== 'production';
+    this.inicializarServidoresPredeterminados();
     this.iniciarLimpiezaAutomatica();
   }
 
   /**
+   * Inicializa los servidores predeterminados en la caché para evitar demoras
+   * al cargar la web por primera vez o después de reiniciar el servidor backend.
+   */
+  private inicializarServidoresPredeterminados(): void {
+    const ahora = new Date();
+    this.NOMBRES_PERSONALIZADOS.forEach((nombre, serverId) => {
+      const serverKey = `server-${serverId}`;
+      
+      // Determinar ubicación por nombre
+      const nombreLower = nombre.toLowerCase();
+      let location = 'Desconocido';
+      if (nombreLower.includes('ar') || nombreLower.includes('argentina') || /\bar\b|arg/.test(nombreLower)) {
+        location = 'Argentina';
+      } else if (nombreLower.includes('br') || nombreLower.includes('brasil')) {
+        location = 'Brasil';
+      } else if (nombreLower.includes('usa') || nombreLower.includes('us')) {
+        location = 'USA';
+      }
+
+      // Solo inicializar si no existe en la caché aún
+      if (!this.stats.has(serverKey)) {
+        this.stats.set(serverKey, {
+          serverId: serverId,
+          serverName: nombre,
+          location: location,
+          status: 'online', // Asumir online por defecto
+          connectedUsers: 0,
+          lastUpdate: ahora,
+          cpuUsage: 0,
+          memoryUsage: 0,
+        });
+      }
+    });
+  }
+
+  /**
    * Limpia periódicamente servidores que no han enviado actualizaciones
-   * (Servidores fantasma o IDs antiguos)
+   * (Servidores fantasma o IDs antiguos). Protege los servidores principales.
    */
   private iniciarLimpiezaAutomatica(): void {
     if (this.statsCleanupInterval) {
@@ -65,6 +102,19 @@ export class WebSocketService extends EventEmitter {
       let huboCambios = false;
 
       for (const [key, stat] of this.stats.entries()) {
+        // Si el servidor es parte de nuestros servidores principales, NO lo eliminamos
+        if (stat.serverId && this.NOMBRES_PERSONALIZADOS.has(stat.serverId)) {
+          // Si pasa demasiado tiempo sin reportarse (ej: 15 minutos), lo marcamos como offline
+          // pero lo mantenemos visible para el usuario en la web
+          const antiguedad = ahora - stat.lastUpdate.getTime();
+          if (antiguedad > UMBRAL_INACTIVIDAD * 3 && stat.status === 'online') {
+            console.log(`[WebSocket] ⚠️ Servidor principal sin responder por 15min: ${stat.serverName}. Manteniendo pero marcando offline.`);
+            stat.status = 'offline';
+            huboCambios = true;
+          }
+          continue;
+        }
+
         const antiguedad = ahora - stat.lastUpdate.getTime();
         if (antiguedad > UMBRAL_INACTIVIDAD) {
           console.log(`[WebSocket] 🧹 Limpiando servidor inactivo: ${stat.serverName} (ID: ${stat.serverId})`);
@@ -316,9 +366,10 @@ export class WebSocketService extends EventEmitter {
       this.reconnectTimeout = null;
     }
     
-    // Limpiar cache
+    // Limpiar cache y volver a inicializar los predeterminados
     this.stats.clear();
-    console.log('[WebSocket] Cache limpiado. Reconectando...');
+    this.inicializarServidoresPredeterminados();
+    console.log('[WebSocket] Cache limpiado e inicializado. Reconectando...');
     
     // Reconectar
     this.connectionAttempts = 0;

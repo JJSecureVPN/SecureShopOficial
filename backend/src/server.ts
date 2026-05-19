@@ -188,7 +188,7 @@ class Server {
     // Seguridad
     this.app.use(helmet());
 
-    // Rate limiting con configuración correcta para proxy
+    // Rate limiting con configuración correcta para proxy y Cloudflare
     const limiter = rateLimit({
       windowMs: config.rateLimit.windowMs,
       max: config.rateLimit.max,
@@ -199,22 +199,31 @@ class Server {
         error: "Demasiadas solicitudes, por favor intente más tarde",
       },
       keyGenerator: (req) => {
-        // Obtener IP real del cliente detrás del proxy
-        return req.ip || req.connection.remoteAddress || "unknown";
+        // Obtener IP real del cliente detrás de Cloudflare o Nginx
+        return (req.headers["cf-connecting-ip"] as string) || 
+               (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || 
+               req.ip || 
+               req.socket?.remoteAddress || 
+               "unknown";
       },
       skip: (req) => {
         if (req.path === "/health" || req.path === "/api/health") {
           return true;
         }
 
-          // Endpoints de lectura que se consultan con alta frecuencia desde el frontend
-          const readHeavyPrefixes = [
-            "/api/realtime",
-            "/api/config",
-            "/api/cupones",
-            "/api/clients",
-            "/api/stats",
-          ];
+        // Endpoints de lectura pública que se consultan con alta frecuencia desde el frontend
+        const readHeavyPrefixes = [
+          "/api/realtime",
+          "/api/config",
+          "/api/cupones",
+          "/api/clients",
+          "/api/stats",
+          "/api/noticias",
+          "/api/planes",
+          "/api/planes-revendedores",
+          "/api/promociones",
+          "/api/sponsors",
+        ];
 
         if (req.method === "GET" && readHeavyPrefixes.some((prefix) => req.path.startsWith(prefix))) {
           return true;

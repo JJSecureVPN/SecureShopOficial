@@ -21,6 +21,7 @@ export function crearRutasRealtime(realtimeService: RealtimeService): Router {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // Desactivar almacenamiento en búfer de Nginx para SSE
 
     const heartbeat = setInterval(() => {
       res.write(": heartbeat\n\n");

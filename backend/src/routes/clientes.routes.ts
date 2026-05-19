@@ -230,9 +230,8 @@ export function crearRutasClientes(
 
       console.log(`[Clientes] 🔧 Iniciando reparación/sincronización para: ${username}`);
 
-      // 1. Buscar el cliente/revendedor actual
+      // 1. Buscar el cliente actual
       let cuenta: any = null;
-      let esRevendedor = false;
 
       try {
         cuenta = await servexService.buscarClientePorUsername(username.trim());
@@ -241,16 +240,7 @@ export function crearRutasClientes(
       }
 
       if (!cuenta) {
-        try {
-          cuenta = await servexService.buscarRevendedorPorUsername(username.trim());
-          esRevendedor = cuenta !== null;
-        } catch (err: any) {
-          console.warn(`[Clientes] ⚠️ Error buscando revendedor: ${err.message}`);
-        }
-      }
-
-      if (!cuenta) {
-        console.log(`[Clientes] ❌ Cuenta no encontrada en Servex: ${username}`);
+        console.log(`[Clientes] ❌ Cliente no encontrado en Servex: ${username}`);
         res.status(404).json({
           success: false,
           error: `La cuenta "${username}" no fue encontrada en nuestros registros de VPN`
@@ -259,57 +249,51 @@ export function crearRutasClientes(
       }
 
       // 2. Ejecutar la sincronización
-      // La experiencia indica que a veces el "Guardar" no es suficiente si la cuenta estaba bloqueada/expirada.
-      // El ciclo "Suspender -> Activar" fuerza una actualización profunda en los nodos de VPN.
+      // Para evitar condiciones de carrera en Servex y en los nodos VPN le damos un retardo de 1.5s (1500ms) a cada acción.
+      // 2 ciclos con intervalos saludables de 1500ms son mucho más efectivos que peticiones encadenadas demasiado rápido.
 
-      if (esRevendedor) {
-        console.log(`[Clientes] 🔧 Forzando ciclo de estado para revendedor: ${username}`);
+      console.log(`[Clientes] 🔧 Forzando ciclo de estado saludable para cliente (2 ciclos, 1500ms de delay): ${username}`);
+      const payload: any = {
+        username: cuenta.username,
+        category_id: cuenta.category_id,
+        connection_limit: cuenta.connection_limit || 1,
+        type: 'user', 
+        ...(cuenta.observation && { observation: cuenta.observation }),
+        ...(cuenta.v2ray_uuid && { v2ray_uuid: cuenta.v2ray_uuid })
+      };
+
+      for (let i = 1; i <= 2; i++) {
+        console.log(`[Clientes] Ciclo ${i}/2 (saludable) para cliente: ${username}`);
         try {
-          // Primer toggle (Suspender si estaba activo, o Activar si estaba suspendido)
-          await servexService.toggleStatusRevendedor(cuenta.id);
-          // Esperar un breve momento para que Servex procese
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          // Segundo toggle (Volver al estado original, que debería ser Activo tras la renovación)
-          await servexService.toggleStatusRevendedor(cuenta.id);
-        } catch (err: any) {
-          console.warn(`[Clientes] ⚠️ Error en ciclo de toggle revendedor: ${err.message}`);
-        }
+          // Guardar/Actualizar en cada ciclo
+          await servexService.actualizarCliente(cuenta.id, payload);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Esperar a que la BD asimile los datos
 
-        // Finalmente el Guardar (Update) para sincronizar todos los datos
-        await servexService.actualizarRevendedor(cuenta.id, {
-          name: cuenta.name,
-          username: cuenta.username,
-          max_users: cuenta.max_users,
-          account_type: cuenta.account_type || 'validity',
-          expiration_date: cuenta.expiration_date
-        }, cuenta.username);
-      } else {
-        console.log(`[Clientes] 🔧 Forzando ciclo de estado para cliente: ${username}`);
-        try {
-          // Ciclo de suspensión para forzar refresco en nodos
+          // Toggle suspender
           await servexService.suspenderCliente(cuenta.id);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Esperar a que se propague la suspensión
+          
+          // Toggle reactivar
           await servexService.suspenderCliente(cuenta.id);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Esperar a que se propague la reactivación
         } catch (err: any) {
-          console.warn(`[Clientes] ⚠️ Error en ciclo de suspensión cliente: ${err.message}`);
+          console.warn(`[Clientes] ⚠️ Error en ciclo ${i} de cliente: ${err.message}`);
         }
-
-        const payload: any = {
-          username: cuenta.username,
-          category_id: cuenta.category_id,
-          connection_limit: cuenta.connection_limit || 1,
-          type: 'user', 
-          ...(cuenta.observation && { observation: cuenta.observation }),
-          ...(cuenta.v2ray_uuid && { v2ray_uuid: cuenta.v2ray_uuid })
-        };
-        await servexService.actualizarCliente(cuenta.id, payload);
       }
 
-      console.log(`[Clientes] ✅ Sincronización profunda completada para: ${username}`);
+      // Un guardado final de consolidación
+      try {
+        await servexService.actualizarCliente(cuenta.id, payload);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Espera corta final de consolidación
+      } catch (err: any) {
+        console.error(`[Clientes] Error en guardado final de cliente: ${err.message}`);
+      }
+
+      console.log(`[Clientes] ✅ Sincronización profunda y saludable de 2 ciclos completada para: ${username}`);
 
       res.json({
         success: true,
-        message: 'Cuenta reparada y sincronizada con éxito. Ya puedes intentar conectar.'
+        message: 'Cuenta reparada y sincronizada con éxito. Intenta conectar ahora, si el error persiste repite esta acción una vez más.'
       } as ApiResponse);
 
     } catch (error: any) {

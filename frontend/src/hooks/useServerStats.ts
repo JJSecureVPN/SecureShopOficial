@@ -38,6 +38,7 @@ export function useServerStats(
   const [totalUsers, setTotalUsers] = useState(0);
   const [onlineServers, setOnlineServers] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sseFailed, setSseFailed] = useState(false);
 
   const apiBase = useMemo(() => {
     const raw = import.meta.env.VITE_API_URL || "/api";
@@ -66,6 +67,7 @@ export function useServerStats(
     setLoading(false);
   }, []);
 
+  // Efecto principal: conectar SSE y cargar el primer snapshot
   useEffect(() => {
     let isMounted = true;
 
@@ -85,13 +87,20 @@ export function useServerStats(
 
     fetchSnapshot();
 
-  const eventSource = new EventSource(streamUrl, { withCredentials: false });
+    const eventSource = new EventSource(streamUrl, { withCredentials: false });
+
+    eventSource.onopen = () => {
+      if (isMounted) {
+        setSseFailed(false);
+      }
+    };
 
     const handleServerStats = (event: MessageEvent) => {
       try {
         const payload = JSON.parse(event.data) as ServerStatsRealtimePayload;
         if (isMounted) {
           applyPayload(payload);
+          setSseFailed(false); // Si llega datos por SSE, el canal está operativo
         }
       } catch (error) {
         console.error("Error parsing server-stats event", error);
@@ -102,7 +111,10 @@ export function useServerStats(
     eventSource.addEventListener("server-stats", listener);
 
     eventSource.onerror = (error) => {
-      console.error("Server stats event stream error", error);
+      console.warn("Server stats event stream error - Activating polling fallback...", error);
+      if (isMounted) {
+        setSseFailed(true);
+      }
     };
 
     return () => {
@@ -111,6 +123,36 @@ export function useServerStats(
       eventSource.close();
     };
   }, [applyPayload, snapshotUrl, streamUrl]);
+
+  // Polling de respaldo: se activa ÚNICAMENTE si el canal de EventSource (SSE) falla
+  useEffect(() => {
+    if (!sseFailed) return;
+
+    let isMounted = true;
+    console.log(`[useServerStats] Iniciando polling de respaldo cada ${_refreshInterval}ms`);
+
+    const fetchSnapshot = async () => {
+      try {
+        const response = await fetch(snapshotUrl);
+        const result = await response.json();
+        const payload: ServerStatsRealtimePayload | undefined =
+          result?.data?.serverStats;
+        if (payload && isMounted) {
+          applyPayload(payload);
+        }
+      } catch (error) {
+        console.error("Error fetching server stats snapshot (polling fallback)", error);
+      }
+    };
+
+    // Polling recurrente
+    const interval = setInterval(fetchSnapshot, _refreshInterval);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [sseFailed, snapshotUrl, applyPayload, _refreshInterval]);
 
   return {
     servers,
